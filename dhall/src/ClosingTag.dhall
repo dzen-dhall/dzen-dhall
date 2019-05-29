@@ -1,0 +1,1 @@
+< Marquee : Text | Color : Text >

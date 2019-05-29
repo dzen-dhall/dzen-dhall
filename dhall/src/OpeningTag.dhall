@@ -1,0 +1,1 @@
+< Marquee : Integer | Color : Text >

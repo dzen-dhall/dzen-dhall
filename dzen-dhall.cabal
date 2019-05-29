@@ -1,0 +1,32 @@
+cabal-version:       2.4
+
+name:                dzen-dhall
+version:             0.0.0.1
+synopsis:            Configure dzen2 bars in Dhall language.
+-- description:
+homepage:            https://github.com/klntsky/dzen-dhall
+-- bug-reports:
+license:             BSD-3-Clause
+license-file:        LICENSE
+author:              klntsky
+maintainer:          klntsky@gmail.com
+-- copyright:
+-- category:
+extra-source-files:  CHANGELOG.md
+data-files:          dhall/*.dhall
+
+library
+  exposed-modules:     DzenDhall.Config
+  -- other-modules:
+  -- other-extensions:
+  build-depends:       base ^>=4.12.0.0, dhall
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+
+executable dzen-dhall
+  main-is:             Main.hs
+  other-modules:       DzenDhall.Arguments, Paths_dzen_dhall
+  -- other-extensions:
+  build-depends:       base ^>=4.12.0.0, dzen-dhall, dhall, optparse-applicative, directory, unix
+  hs-source-dirs:      app
+  default-language:    Haskell2010
