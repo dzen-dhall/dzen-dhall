@@ -13,20 +13,49 @@ maintainer:          klntsky@gmail.com
 -- copyright:
 -- category:
 extra-source-files:  CHANGELOG.md
-data-files:          dhall/*.dhall
+data-files:          dhall/config.dhall
+                     dhall/src/MarqueeSettings.dhall
+                     dhall/src/Color.dhall
+                     dhall/src/Plugin.dhall
+                     dhall/src/ClosingTag.dhall
+                     dhall/src/settings/bar/type.dhall
+                     dhall/src/settings/bar/default.dhall
+                     dhall/src/Bar.dhall
+                     dhall/src/OpeningTag.dhall
+                     dhall/src/Token.dhall
+                     dhall/src/makeBar.dhall
+                     dhall/src/BarSettings.dhall
 
 library
-  exposed-modules:     DzenDhall.Config
-  -- other-modules:
-  -- other-extensions:
-  build-depends:       base ^>=4.12.0.0, dhall
+  exposed-modules:     DzenDhall,
+                       DzenDhall.Config,
+                       DzenDhall.Arguments,
+                       DzenDhall.Runtime,
+                       Paths_dzen_dhall
+  other-modules:
+  other-extensions:
+  default-extensions:  OverloadedStrings
+  build-depends:       base ^>=4.12.0.0, dhall, optparse-applicative, directory, unix, filepath, text
   hs-source-dirs:      src
   default-language:    Haskell2010
 
 executable dzen-dhall
+
   main-is:             Main.hs
-  other-modules:       DzenDhall.Arguments, Paths_dzen_dhall
-  -- other-extensions:
-  build-depends:       base ^>=4.12.0.0, dzen-dhall, dhall, optparse-applicative, directory, unix
+  other-modules:
+  other-extensions:
+  build-depends:       base ^>=4.12.0.0, dzen-dhall
   hs-source-dirs:      app
+  default-language:    Haskell2010
+
+test-suite tasty
+  type:                exitcode-stdio-1.0
+  other-modules:       Paths_dzen_dhall
+                       FileQuoter
+                       DzenDhall.Test.Config
+  default-extensions:  OverloadedStrings, QuasiQuotes
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  main-is:             Main.hs
+  build-depends:       base, dzen-dhall, dhall, filepath, text, microlens, template-haskell, microlens, HUnit, tasty, tasty-hunit
+  hs-source-dirs:      test
   default-language:    Haskell2010

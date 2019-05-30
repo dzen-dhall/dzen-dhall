@@ -1,5 +1,6 @@
-{ mkDerivation, base, dhall, directory, optparse-applicative
-, stdenv, unix
+{ mkDerivation, base, dhall, directory, filepath, HUnit, microlens
+, optparse-applicative, stdenv, tasty, tasty-hunit
+, template-haskell, text, unix
 }:
 mkDerivation {
   pname = "dzen-dhall";
@@ -8,9 +9,13 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   enableSeparateDataOutput = true;
-  libraryHaskellDepends = [ base dhall ];
-  executableHaskellDepends = [
-    base dhall directory optparse-applicative unix
+  libraryHaskellDepends = [
+    base dhall directory filepath optparse-applicative text unix
+  ];
+  executableHaskellDepends = [ base ];
+  testHaskellDepends = [
+    base dhall filepath HUnit microlens tasty tasty-hunit
+    template-haskell text
   ];
   homepage = "https://github.com/klntsky/dzen-dhall";
   description = "Configure dzen2 bars in Dhall language";

@@ -1,4 +1,4 @@
-.PHONY: cabal2nix build run
+.PHONY: cabal2nix build run find-data
 
 cabal2nix:
 	cd nix && cabal2nix ../ > dzen-dhall.nix
@@ -9,3 +9,6 @@ build:
 
 run: build
 	./result/bin/dzen-dhall
+
+find-data:
+	find ./dhall -type f | sed 's#./##'

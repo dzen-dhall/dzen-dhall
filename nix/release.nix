@@ -10,7 +10,6 @@ let
   };
 
   # See https://github.com/Gabriel439/haskell-nix/blob/master/project1/README.md#changing-versions
-
   config = {
     packageOverrides = pkgs: rec {
       haskellPackages = pkgs.haskellPackages.override {
