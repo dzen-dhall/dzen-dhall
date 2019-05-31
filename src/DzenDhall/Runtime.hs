@@ -1,13 +1,12 @@
-{-# LANGUAGE RecordWildCards #-}
 module DzenDhall.Runtime where
 
+import Control.Applicative
+import Control.Monad
 import DzenDhall.Arguments
 import Paths_dzen_dhall
-import           System.Posix.Files
-import           System.Directory
-import Control.Monad
+import System.Directory
 import System.FilePath ((</>))
-import Control.Applicative
+import System.Posix.Files
 
 
 data Runtime = Runtime
@@ -44,6 +43,7 @@ copyDir src dst fileCreationHook dirCreationHook = do
   forM_ content $ \name -> do
     let srcPath = src </> name
     let dstPath = dst </> name
+
     isDirectory <- doesDirectoryExist srcPath
     if isDirectory
       then do

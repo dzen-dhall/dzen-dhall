@@ -1,20 +1,29 @@
-module DzenDhall.Tree where
+module DzenDhall.Data where
+
 import GHC.Generics
 import Data.Text
 import Data.Data
+import Data.IORef
+import Data.Time.Clock.POSIX
 
 type Color = ()
 
 type Token = ()
 type Position = ()
 
-data Plugin
+data SourceHandle
+  = SourceHandle
+  { cache :: Text
+  , lastUpdate :: POSIXTime
+  }
+
+data Plugin ref
   = Raw Text
-  | Shell Text
+  | Source ref Text
   | Txt Text
-  | Marquee Integer Plugin
-  | Color Text Plugin
-  | Plugins [Plugin]
+  | Marquee Integer (Plugin ref)
+  | Color Text (Plugin ref)
+  | Plugins [Plugin ref]
   deriving (Show, Eq, Generic, Data, Typeable)
 
 data AST =

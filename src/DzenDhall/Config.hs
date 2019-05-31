@@ -21,18 +21,18 @@ data BarSettings = BarSettings
 data Token
   = TokOpen OpeningTag
   | TokRaw Text
-  | TokShell Text
+  | TokSource Text
   | TokTxt Text
   | TokClose
   deriving (Show, Eq, Generic)
 
 token :: Type Token
 token = union
-  $  (TokOpen  <$> constructor "Open"  openingTag)
-  <> (TokRaw   <$> constructor "Raw"   strictText)
-  <> (TokShell <$> constructor "Shell" strictText)
-  <> (TokTxt   <$> constructor "Txt"   strictText)
-  <> (TokClose <$  constructor "Close" unit)
+  $  (TokOpen   <$> constructor "Open"  openingTag)
+  <> (TokRaw    <$> constructor "Raw"   strictText)
+  <> (TokSource <$> constructor "Shell" strictText)
+  <> (TokTxt    <$> constructor "Txt"   strictText)
+  <> (TokClose  <$  constructor "Close" unit)
 
 type Bar = [Token]
 
