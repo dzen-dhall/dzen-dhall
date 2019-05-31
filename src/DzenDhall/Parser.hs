@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
-module DzenDhall.Parse where
+module DzenDhall.Parser where
 
 import DzenDhall.Config
 import DzenDhall.Tree
@@ -68,7 +68,7 @@ plugin = do
         $   Raw   <$> raw
         <|> Txt   <$> txt
         <|> Shell <$> shell
-        <|> plugin
+        <|> plugin'
       closing
       pure $ case tag of
         OMarquee speed -> Marquee speed children

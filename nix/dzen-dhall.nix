@@ -14,7 +14,7 @@ mkDerivation {
   ];
   executableHaskellDepends = [ base ];
   testHaskellDepends = [
-    base dhall filepath HUnit microlens tasty tasty-hunit
+    base dhall filepath HUnit microlens parsec tasty tasty-hunit
     template-haskell text
   ];
   homepage = "https://github.com/klntsky/dzen-dhall";

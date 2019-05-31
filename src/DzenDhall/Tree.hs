@@ -1,6 +1,7 @@
 module DzenDhall.Tree where
 import GHC.Generics
 import Data.Text
+import Data.Data
 
 type Color = ()
 
@@ -14,7 +15,7 @@ data Plugin
   | Marquee Integer Plugin
   | Color Text Plugin
   | Plugins [Plugin]
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Data, Typeable)
 
 data AST =
   -- | Text.
