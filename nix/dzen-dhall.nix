@@ -1,5 +1,5 @@
 { mkDerivation, base, dhall, directory, filepath, HUnit, microlens
-, optparse-applicative, stdenv, tasty, tasty-hunit
+, optparse-applicative, parsec, stdenv, tasty, tasty-hunit
 , template-haskell, text, unix
 }:
 mkDerivation {
@@ -10,7 +10,7 @@ mkDerivation {
   isExecutable = true;
   enableSeparateDataOutput = true;
   libraryHaskellDepends = [
-    base dhall directory filepath optparse-applicative text unix
+    base dhall directory filepath optparse-applicative parsec text unix
   ];
   executableHaskellDepends = [ base ];
   testHaskellDepends = [

@@ -1,10 +1,9 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
 module DzenDhall.Config where
 
 import Dhall
 import Dhall.Core
 import Data.Text
+import Data.Functor
 
 data OpeningTag
   = OMarquee Integer
@@ -16,34 +15,24 @@ openingTag = union
   $  (OMarquee <$> constructor "Marquee" integer)
   <> (OColor   <$> constructor "Color" strictText)
 
-data ClosingTag
-  = CMarquee
-  | CColor
-  deriving (Show, Eq, Generic)
-
-closingTag :: Type ClosingTag
-closingTag = union
-  $  (CMarquee <$ constructor "Marquee" unit)
-  <> (CColor   <$ constructor "Color"   unit)
-
 data BarSettings = BarSettings
   deriving (Show, Eq, Generic)
 
 data Token
-  = Open OpeningTag
-  | Raw Text
-  | Shell Text
-  | Txt Text
-  | Close ClosingTag
+  = TokOpen OpeningTag
+  | TokRaw Text
+  | TokShell Text
+  | TokTxt Text
+  | TokClose
   deriving (Show, Eq, Generic)
 
 token :: Type Token
 token = union
-  $  (Open  <$> constructor "Open"  openingTag)
-  <> (Raw   <$> constructor "Raw"   strictText)
-  <> (Shell <$> constructor "Shell" strictText)
-  <> (Txt   <$> constructor "Txt"   strictText)
-  <> (Close <$> constructor "Close" closingTag)
+  $  (TokOpen  <$> constructor "Open"  openingTag)
+  <> (TokRaw   <$> constructor "Raw"   strictText)
+  <> (TokShell <$> constructor "Shell" strictText)
+  <> (TokTxt   <$> constructor "Txt"   strictText)
+  <> (TokClose <$  constructor "Close" unit)
 
 type Bar = [Token]
 
@@ -51,3 +40,4 @@ data Config = Config
   { bar :: Bar
   , settings :: BarSettings
   }
+  deriving (Show, Eq, Generic)

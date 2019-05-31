@@ -7,6 +7,7 @@ import qualified GHC.IO.Encoding
 import qualified System.IO
 import Test.Tasty
 import DzenDhall.Test.Config
+import DzenDhall.Test.Parser
 
 main :: IO ()
 main = do
@@ -16,6 +17,7 @@ main = do
 
   allTests <- testGroup "DzenDhall" <$> sequence
               [ DzenDhall.Test.Config.getTests dhallDir
+              , DzenDhall.Test.Parser.getTests
               ]
 
   Test.Tasty.defaultMain allTests

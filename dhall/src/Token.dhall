@@ -6,6 +6,5 @@
 	Text
 | Txt :
 	Text
-| Close :
-	./ClosingTag.dhall
+| Close
 >

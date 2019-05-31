@@ -1,1 +1,1 @@
-< Marquee | Color >
+< Closing >

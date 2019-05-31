@@ -14,7 +14,6 @@ getTests :: FilePath -> IO TestTree
 getTests dhallDir =
   testGroup "Config data marshalling" <$>
   Prelude.sequence [ testOpeningTag dhallDir
-                   , testClosingTag dhallDir
                    , testToken      dhallDir
                    ]
 
@@ -25,21 +24,13 @@ testOpeningTag dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "OpeningTag marshalling" $
     [OMarquee 3, OColor "red"] @?= input
 
-testClosingTag :: FilePath -> IO TestTree
-testClosingTag dhallDir = do
-  input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
-          (list closingTag) [litFile|test/dhall/ClosingTag.dhall|]
-  pure $ Test.Tasty.HUnit.testCase "ClosingTag marshalling" $
-    [CMarquee, CColor] @?= input
-
-
 testToken :: FilePath -> IO TestTree
 testToken dhallDir = do
   input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
           (list token) [litFile|test/dhall/Token.dhall|]
   pure $ Test.Tasty.HUnit.testCase "Token marshalling" $
-    [ Open (OMarquee 1)
-    , Raw "raw"
-    , Shell "shell"
-    , Txt "txt"
-    , Close CMarquee] @?= input
+    [ TokOpen (OMarquee 1)
+    , TokRaw "raw"
+    , TokShell "shell"
+    , TokTxt "txt"
+    , TokClose ] @?= input
