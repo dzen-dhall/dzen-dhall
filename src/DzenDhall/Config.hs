@@ -34,6 +34,20 @@ token = union
   <> (TokTxt    <$> constructor "Txt"   strictText)
   <> (TokClose  <$  constructor "Close" unit)
 
+data SourceSettings
+  = SourceSettings
+  { updateInterval :: Maybe Natural
+  , command :: [Text]
+  , stdin :: Maybe Text
+  } deriving (Show, Eq, Generic)
+
+sourceSettings :: Type SourceSettings
+sourceSettings = record
+  ( SourceSettings <$> field "updateInterval" (Dhall.maybe natural)
+                   <*> field "command"        (list strictText)
+                   <*> field "stdin"          (Dhall.maybe strictText)
+  )
+
 type Bar = [Token]
 
 data Config = Config

@@ -13,8 +13,9 @@ import Test.Tasty.HUnit
 getTests :: FilePath -> IO TestTree
 getTests dhallDir =
   testGroup "Config data marshalling" <$>
-  Prelude.sequence [ testOpeningTag dhallDir
-                   , testToken      dhallDir
+  Prelude.sequence [ testOpeningTag     dhallDir
+                   , testToken          dhallDir
+                   , testSourceSettings dhallDir
                    ]
 
 testOpeningTag :: FilePath -> IO TestTree
@@ -34,3 +35,14 @@ testToken dhallDir = do
     , TokSource "shell"
     , TokTxt "txt"
     , TokClose ] @?= input
+
+testSourceSettings :: FilePath -> IO TestTree
+testSourceSettings dhallDir = do
+  input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+          sourceSettings [litFile|test/dhall/SourceSettings.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "SourceSettings marshalling" $
+    SourceSettings { updateInterval = Just 1
+                   , command = [ "bash" ]
+                   , stdin = Just "echo hi"
+                   }
+    @?= input

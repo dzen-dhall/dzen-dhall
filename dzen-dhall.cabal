@@ -24,6 +24,7 @@ data-files:          dhall/config.dhall
                      dhall/src/OpeningTag.dhall
                      dhall/src/Token.dhall
                      dhall/src/makeBar.dhall
+                     dhall/src/SourceSettings.dhall
                      dhall/src/BarSettings.dhall
 
 library
