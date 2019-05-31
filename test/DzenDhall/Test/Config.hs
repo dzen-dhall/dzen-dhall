@@ -32,7 +32,10 @@ testToken dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "Token marshalling" $
     [ TokOpen (OMarquee 1)
     , TokRaw "raw"
-    , TokSource "shell"
+    , TokSource (SourceSettings { updateInterval = Just 1
+                                , command = [ "bash" ]
+                                , stdin = Just "echo 1"
+                                })
     , TokTxt "txt"
     , TokClose ] @?= input
 

@@ -8,19 +8,18 @@ import Data.Time.Clock.POSIX
 
 type Color = ()
 
-type Token = ()
 type Position = ()
 
 data SourceHandle
   = SourceHandle
   { output :: IORef Text
-  , updateInterval :: POSIXTime
+--  , updateInterval :: POSIXTime
   , lastUpdate :: IORef POSIXTime
   }
 
 data Plugin ref
   = Raw Text
-  | Source ref Text
+  | Source ref
   | Txt Text
   | Marquee Integer (Plugin ref)
   | Color Text (Plugin ref)
@@ -29,12 +28,12 @@ data Plugin ref
 
 initialize :: Plugin () -> IO (Plugin SourceHandle)
 initialize (Raw text) = pure $ Raw text
-initialize (Source () text) = do
+initialize (Source ()) = do
   output <- newIORef ""
   let updateInterval = 10 :: POSIXTime
   currentTime <- getPOSIXTime
   lastUpdate <- newIORef currentTime
-  pure $ Source (SourceHandle {..}) text
+  pure $ Source (SourceHandle {..})
 initialize (Txt text) = pure $ Txt text
 initialize (Marquee i p) = Marquee i <$> initialize p
 initialize (Color color p) = Color color <$> initialize p
@@ -46,7 +45,8 @@ data AST =
   -- | Raw text (no escaping)
   RawText String |
   -- | Raw list of tokens. Use with care - it may break the code!
-  RawTokens [Token] |
+  -- RawTokens [Token] |
+
   -- | Padding. Numeric argument represents width (in characters).
   Padding Int |
   -- | Just branching

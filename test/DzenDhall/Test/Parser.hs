@@ -29,7 +29,10 @@ getTests = pure $
     , TokRaw "raw"
     , TokTxt "txt"
     , TokOpen (OMarquee 0)
-    , TokSource "shell"
+    , TokSource (SourceSettings { updateInterval = Nothing
+                                , command = []
+                                , stdin = Nothing
+                                })
     , TokClose
     , TokClose
     ]
@@ -37,7 +40,10 @@ getTests = pure $
     [ Raw "raw"
     , Txt "txt"
     , Marquee 0 $ Plugins
-      [ Source () "shell"
+      [ Source (SourceSettings { updateInterval = Nothing
+                               , command = []
+                               , stdin = Nothing
+                               })
       ]
     ]
   ]

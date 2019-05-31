@@ -2,8 +2,8 @@
 	./OpeningTag.dhall
 | Raw :
 	Text
-| Shell :
-	Text
+| Source :
+	./SourceSettings.dhall
 | Txt :
 	Text
 | Close

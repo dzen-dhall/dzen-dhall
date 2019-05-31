@@ -35,20 +35,20 @@ txt = withPreview $ \case
         TokTxt txt -> Just txt
         _          -> Nothing
 
-source :: Preview Tokens Text
+source :: Preview Tokens SourceSettings
 source = withPreview $ \case
-        TokSource txt -> Just txt
-        _             -> Nothing
+        TokSource settings -> Just settings
+        _                  -> Nothing
 
-plugin :: Parser (Plugin ())
+plugin :: Parser (Plugin SourceSettings)
 plugin = plugin' <* eof
   where
     plugin' = do
       tag      <- opening
       children <- fmap Plugins $ many
-        $   Raw       <$> raw
-        <|> Txt       <$> txt
-        <|> Source () <$> source
+        $   Raw    <$> raw
+        <|> Txt    <$> txt
+        <|> Source <$> source
         <|> plugin'
       closing
       pure $ case tag of
