@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS -Wno-name-shadowing #-}
 module DzenDhall.Parser where
 
 import Data.Text

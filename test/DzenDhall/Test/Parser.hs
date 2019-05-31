@@ -1,11 +1,11 @@
 module DzenDhall.Test.Parser where
 
+import DzenDhall.Config
+import DzenDhall.Data
 import DzenDhall.Parser
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 import Text.Parsec
-import DzenDhall.Config
-import DzenDhall.Tree
 
 mkTest name tokens expected =
   Test.Tasty.HUnit.testCase name $
@@ -29,7 +29,7 @@ getTests = pure $
     , TokRaw "raw"
     , TokTxt "txt"
     , TokOpen (OMarquee 0)
-    , TokShell "shell"
+    , TokSource "shell"
     , TokClose
     , TokClose
     ]
@@ -37,7 +37,7 @@ getTests = pure $
     [ Raw "raw"
     , Txt "txt"
     , Marquee 0 $ Plugins
-      [ Shell "shell"
+      [ Source () "shell"
       ]
     ]
   ]
