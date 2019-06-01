@@ -6,8 +6,9 @@ import System.FilePath ((</>))
 import qualified GHC.IO.Encoding
 import qualified System.IO
 import Test.Tasty
-import DzenDhall.Test.Config
-import DzenDhall.Test.Parser
+import qualified DzenDhall.Test.Config
+import qualified DzenDhall.Test.Parser
+import qualified DzenDhall.Test.AST
 
 main :: IO ()
 main = do
@@ -18,6 +19,7 @@ main = do
   allTests <- testGroup "DzenDhall" <$> sequence
               [ DzenDhall.Test.Config.getTests dhallDir
               , DzenDhall.Test.Parser.getTests
+              , DzenDhall.Test.AST.getTests
               ]
 
   Test.Tasty.defaultMain allTests

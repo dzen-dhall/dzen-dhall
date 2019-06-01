@@ -12,7 +12,6 @@ import System.Process
 import GHC.IO.Handle
 
 initialize :: Plugin SourceSettings -> IO (Plugin SourceHandle)
-initialize (Raw text) = pure $ Raw text
 initialize (Source settings) = do
   outputRef <- newIORef ""
   threadId <- forkIO (mkThread settings outputRef)
@@ -41,7 +40,6 @@ mkThread (SourceSettings { updateInterval, command = (binary : args), stdin }) o
     Nothing -> do
       runSourceProcess (proc binary args) outputRef stdin
 
-
 runSourceProcess :: CreateProcess -> IORef Text -> Maybe Text -> IO ()
 runSourceProcess cp outputRef mbInput = do
   (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, _) <- createProcess cp
@@ -60,8 +58,21 @@ runSourceProcess cp outputRef mbInput = do
       loopWhileM (not <$> hIsEOF stdout_hdl) $ do
         line <- Data.Text.IO.hGetLine stdout_hdl
         writeIORef outputRef line
+
     _ -> do
       writeIORef outputRef "dzen-dhall error: Couldn't open IO handle(s)"
+
+collectSources :: Plugin SourceHandle -> IO AST
+collectSources (Source SourceHandle { outputRef })
+  = ASTText <$> readIORef outputRef
+collectSources (Txt text)
+  = pure $ ASTText text
+collectSources (Marquee speed p)
+  = collectSources p -- TODO
+collectSources (Color color p)
+  = Prop (FG color) <$> collectSources p -- TODO
+collectSources (Plugins ps)
+  = mconcat <$> mapM collectSources ps
 
 loopWhileM :: Monad m => m Bool -> m () -> m ()
 loopWhileM pr act = do

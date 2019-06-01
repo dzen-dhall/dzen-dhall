@@ -67,20 +67,22 @@ test-suite tasty
                        FileQuoter
                        DzenDhall.Test.Config
                        DzenDhall.Test.Parser
+                       DzenDhall.Test.AST
   default-extensions:  OverloadedStrings, QuasiQuotes
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   main-is:             Main.hs
-  build-depends:       base,
-                       dzen-dhall,
+  build-depends:       dzen-dhall,
+                       base,
                        dhall,
                        filepath,
                        text,
                        microlens,
                        template-haskell,
-                       microlens,
                        HUnit,
                        tasty,
                        tasty-hunit,
+                       tasty-hspec,
+                       hspec,
                        parsec
   hs-source-dirs:      test
   default-language:    Haskell2010
