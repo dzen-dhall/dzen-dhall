@@ -4,6 +4,7 @@ module DzenDhall.Run where
 import Control.Concurrent
 import Control.Monad
 import Data.IORef
+import qualified Data.Text
 import Data.Text (Text)
 import Data.Text.IO
 import DzenDhall.Config
@@ -14,18 +15,22 @@ import GHC.IO.Handle
 initialize :: Plugin SourceSettings -> IO (Plugin SourceHandle)
 initialize (Source settings) = do
   outputRef <- newIORef ""
-  threadId <- forkIO (mkThread settings outputRef)
+  cacheRef <- newIORef Nothing
+  threadId <- forkIO (mkThread settings outputRef cacheRef)
   pure $ Source (SourceHandle {..})
 initialize (Txt text) = pure $ Txt text
 initialize (Marquee i p) = Marquee i <$> initialize p
 initialize (Color color p) = Color color <$> initialize p
 initialize (Plugins ps) = Plugins <$> mapM initialize ps
+initialize (Raw text) = pure $ Raw text
 
 -- | Run shell command either once or forever.
-mkThread :: SourceSettings -> IORef Text -> IO ()
-mkThread (SourceSettings { command = [] }) outputRef =
-  writeIORef outputRef "dzen-dhall error: no command specified"
-mkThread (SourceSettings { updateInterval, command = (binary : args), stdin }) outputRef =
+mkThread :: SourceSettings -> IORef Text -> Cache -> IO ()
+mkThread (SourceSettings { command = [] }) outputRef cacheRef = do
+  let message = "dzen-dhall error: no command specified"
+  writeIORef cacheRef $ Just message
+  writeIORef outputRef message
+mkThread (SourceSettings { updateInterval, command = (binary : args), stdin }) outputRef cacheRef =
   case updateInterval of
 
     -- If update interval is specified, loop forever.
@@ -33,15 +38,15 @@ mkThread (SourceSettings { updateInterval, command = (binary : args), stdin }) o
       let delay = interval * 1000000
 
       forever $ do
-        runSourceProcess (proc binary args) outputRef stdin
+        runSourceProcess (proc binary args) outputRef cacheRef stdin
         threadDelay delay
 
     -- If update interval is not specified, run the source once.
     Nothing -> do
-      runSourceProcess (proc binary args) outputRef stdin
+      runSourceProcess (proc binary args) outputRef cacheRef stdin
 
-runSourceProcess :: CreateProcess -> IORef Text -> Maybe Text -> IO ()
-runSourceProcess cp outputRef mbInput = do
+runSourceProcess :: CreateProcess -> IORef Text -> Cache -> Maybe Text -> IO ()
+runSourceProcess cp outputRef cacheRef mbInput = do
   (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, _) <- createProcess cp
 
   case (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl) of
@@ -57,14 +62,24 @@ runSourceProcess cp outputRef mbInput = do
       -- Loop until EOF, updating outputRef on each line
       loopWhileM (not <$> hIsEOF stdout_hdl) $ do
         line <- Data.Text.IO.hGetLine stdout_hdl
+        writeIORef cacheRef Nothing
         writeIORef outputRef line
 
     _ -> do
       writeIORef outputRef "dzen-dhall error: Couldn't open IO handle(s)"
 
 collectSources :: Plugin SourceHandle -> IO AST
-collectSources (Source SourceHandle { outputRef })
-  = ASTText <$> readIORef outputRef
+collectSources (Source SourceHandle { outputRef, cacheRef })
+  = do
+  cache <- readIORef cacheRef
+  case cache of
+    Just escaped ->
+      pure $ ASTText escaped
+    Nothing -> do
+      newText <- readIORef outputRef
+      let escaped = escape newText
+      writeIORef cacheRef (Just escaped)
+      pure $ ASTText escaped
 collectSources (Txt text)
   = pure $ ASTText text
 collectSources (Marquee speed p)
@@ -73,6 +88,55 @@ collectSources (Color color p)
   = Prop (FG color) <$> collectSources p -- TODO
 collectSources (Plugins ps)
   = mconcat <$> mapM collectSources ps
+
+escape :: Text -> Text
+escape = Data.Text.replace "^" "^^"
+
+renderAST :: AST -> Text
+renderAST (ASTText text) = text
+renderAST (ASTs a b) = renderAST a <> renderAST b
+renderAST (Prop property ast) =
+  let inner = renderAST ast in
+
+    case property of
+      BG color ->
+        "^bg" <> color <> ")" <> inner <> "^bg()"
+      FG color ->
+        "^fg" <> color <> ")" <> inner <> "^fg()"
+      IB ->
+        "^ib(1)" <> inner <> "^ib(0)"
+      CA (event, handler) ->
+        "^ca(" <> event <> "," <> handler <> ")" <> inner <> "^ca()"
+      P position -> spec <> inner
+        where
+          spec =
+            case position of
+              XY (x, y)  -> "^p(" <> showPack x <> ";" <> showPack y <> ")"
+              ResetY     -> "^p()"
+              P_LOCK_X   -> "^p(_LOCK_X)"
+              P_UNLOCK_X -> "^p(_UNLOCK_X)"
+              P_LEFT     -> "^p(_LEFT)"
+              P_RIGHT    -> "^p(_RIGHT)"
+              P_TOP      -> "^p(_TOP)"
+              P_CENTER   -> "^p(_CENTER)"
+              P_BOTTOM   -> "^p(_BOTTOM)"
+
+renderAST (Container shape width) =
+  "^p(_LOCK_X)" <> spec <> "^p(_UNLOCK_X)^ib(1)" <> padding <> "^ib(0)"
+  where
+    padding = Data.Text.justifyRight width ' ' ""
+    spec =
+      case shape of
+        I path -> "^i("  <> path       <> ")"
+        R w h  -> "^r("  <> showPack w <> "x" <> showPack h <> ")"
+        RO w h -> "^ro(" <> showPack w <> "x" <> showPack h <> ")"
+        C r    -> "^c("  <> showPack r <> ")"
+        CO r   -> "^co(" <> showPack r <> ")"
+        Padding -> ""
+renderAST EmptyAST = ""
+
+showPack :: Show a => a -> Text
+showPack = Data.Text.pack . show
 
 loopWhileM :: Monad m => m Bool -> m () -> m ()
 loopWhileM pr act = do

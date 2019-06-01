@@ -1,1 +1,3 @@
-{ speed : Integer }
+{ speed : Integer
+, framesPerCharacter : Natural
+, width : Natural }

@@ -3,7 +3,6 @@ module DzenDhall.Data where
 import Data.Data
 import Data.IORef
 import Data.Text (Text)
-import Data.Time.Clock.POSIX
 import DzenDhall.Config
 import GHC.Generics
 import Control.Concurrent
@@ -14,9 +13,11 @@ type Color = Text
 data SourceHandle
   = SourceHandle
   { outputRef :: IORef Text
-  --  , updateInterval :: POSIXTime
+  , cacheRef :: Cache
   , threadId :: ThreadId
   }
+
+type Cache = IORef (Maybe Text)
 
 type ParsedPlugin = Plugin SourceSettings
 
@@ -33,7 +34,7 @@ data Plugin ref
 
 data Property
   = BG Color
-  | IB Bool
+  | IB
   | FG Color
   | CA (Event, Handler)
   | P Position
@@ -83,7 +84,7 @@ _BOTTOM          Move current y-position to the bottom edge
 data Position =
   -- | 1-4
   XY (Int, Int) |
-  -- | Reset the Y position to it's defaults.
+  -- | Reset the Y position to it's defaults, equivalent to ^p().
   ResetY |
   -- | _LOCK_X          Lock the current X position, useful if you want to align things vertically
   P_LOCK_X |
@@ -197,4 +198,4 @@ splitAST n res@(Container _ l)
   | otherwise = EmptyR res l
   where
     spaces :: Int -> Text
-    spaces = Data.Text.pack . flip replicate ' '
+    spaces n = Data.Text.justifyRight n ' ' ""

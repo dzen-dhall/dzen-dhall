@@ -1,10 +1,7 @@
 module DzenDhall.Config where
 
 import Dhall
-import Dhall.Core
 import Data.Text (Text)
-import Data.Functor
-import Data.Time.Clock.POSIX
 
 data OpeningTag
   = OMarquee Integer
@@ -50,8 +47,22 @@ sourceSettings = record $
 
 type Bar = [Token]
 
+data MarqueeSettings
+  = MarqueeSettings
+  { marqueeSpeed :: Int
+  , marqueeFramesPerChar :: Int
+  , marqueeWidth :: Int
+  }
+  deriving (Show, Eq, Generic)
+
+marqueeSettings :: Type MarqueeSettings
+marqueeSettings = record $
+  MarqueeSettings <$> field "speed"              (fromIntegral <$> integer)
+                  <*> field "framesPerCharacter" (fromIntegral <$> natural)
+                  <*> field "width"              (fromIntegral <$> natural)
+
 data Config = Config
-  { bar :: Bar
+  { bar :: [Token]
   , settings :: BarSettings
   }
   deriving (Show, Eq, Generic)
