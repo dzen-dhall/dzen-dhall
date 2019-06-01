@@ -2,8 +2,9 @@ module DzenDhall.Config where
 
 import Dhall
 import Dhall.Core
-import Data.Text
+import Data.Text (Text)
 import Data.Functor
+import Data.Time.Clock.POSIX
 
 data OpeningTag
   = OMarquee Integer
@@ -36,17 +37,16 @@ token = union
 
 data SourceSettings
   = SourceSettings
-  { updateInterval :: Maybe Natural
-  , command :: [Text]
+  { updateInterval :: Maybe Int
+  , command :: [String]
   , stdin :: Maybe Text
   } deriving (Show, Eq, Generic)
 
 sourceSettings :: Type SourceSettings
-sourceSettings = record
-  ( SourceSettings <$> field "updateInterval" (Dhall.maybe natural)
-                   <*> field "command"        (list strictText)
-                   <*> field "stdin"          (Dhall.maybe strictText)
-  )
+sourceSettings = record $
+  SourceSettings <$> field "updateInterval" (Dhall.maybe $ fromIntegral <$> natural)
+                 <*> field "command"        (list string)
+                 <*> field "stdin"          (Dhall.maybe strictText)
 
 type Bar = [Token]
 

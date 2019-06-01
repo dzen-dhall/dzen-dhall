@@ -1,10 +1,12 @@
 module DzenDhall.Data where
 
-import GHC.Generics
-import Data.Text (Text)
 import Data.Data
 import Data.IORef
+import Data.Text (Text)
 import Data.Time.Clock.POSIX
+import DzenDhall.Config
+import GHC.Generics
+import Control.Concurrent
 
 type Color = ()
 
@@ -12,10 +14,14 @@ type Position = ()
 
 data SourceHandle
   = SourceHandle
-  { output :: IORef Text
---  , updateInterval :: POSIXTime
-  , lastUpdate :: IORef POSIXTime
+  { outputRef :: IORef Text
+  --  , updateInterval :: POSIXTime
+  , threadId :: ThreadId
   }
+
+type ParsedPlugin = Plugin SourceSettings
+
+type InitializedPlugin = Plugin SourceHandle
 
 data Plugin ref
   = Raw Text
@@ -25,19 +31,6 @@ data Plugin ref
   | Color Text (Plugin ref)
   | Plugins [Plugin ref]
   deriving (Show, Eq, Generic, Data, Typeable)
-
-initialize :: Plugin () -> IO (Plugin SourceHandle)
-initialize (Raw text) = pure $ Raw text
-initialize (Source ()) = do
-  output <- newIORef ""
-  let updateInterval = 10 :: POSIXTime
-  currentTime <- getPOSIXTime
-  lastUpdate <- newIORef currentTime
-  pure $ Source (SourceHandle {..})
-initialize (Txt text) = pure $ Txt text
-initialize (Marquee i p) = Marquee i <$> initialize p
-initialize (Color color p) = Color color <$> initialize p
-initialize (Plugins ps) = Plugins <$> mapM initialize ps
 
 data AST =
   -- | Text.

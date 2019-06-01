@@ -46,7 +46,8 @@ library
                        DeriveDataTypeable
                        RecordWildCards
                        DeriveFunctor
-  build-depends:       base ^>=4.12.0.0, dhall, optparse-applicative, directory, unix, filepath, text, parsec, time
+                       NamedFieldPuns
+  build-depends:       base ^>=4.12.0.0, dhall, optparse-applicative, directory, unix, filepath, text, parsec, time, process
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010
