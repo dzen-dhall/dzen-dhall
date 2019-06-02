@@ -13,8 +13,17 @@ openingTag = union
   $  (OMarquee <$> constructor "Marquee" integer)
   <> (OColor   <$> constructor "Color" strictText)
 
-data BarSettings = BarSettings
+data BarSettings
+  = BarSettings
+  { monitor :: Int
+  , extraFlags :: [String]
+  }
   deriving (Show, Eq, Generic)
+
+barSettings :: Type BarSettings
+barSettings = record $
+  BarSettings <$> field "monitor"    (fromIntegral <$> natural)
+              <*> field "extraFlags" (list string)
 
 data Token
   = TokOpen OpeningTag
@@ -61,8 +70,13 @@ marqueeSettings = record $
 
 type BarSpec = [Token]
 
-data Config = Config
+data Configuration = Configuration
   { bar :: BarSpec
   , settings :: BarSettings
   }
   deriving (Show, Eq, Generic)
+
+configuration :: Type Configuration
+configuration = record $
+  Configuration <$> field "bar" (list token)
+                <*> field "settings" barSettings

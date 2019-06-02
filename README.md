@@ -16,5 +16,10 @@ If one wants each program's output to appear on its own fixed position on the sc
 
 Some input sources (shell scripts or commands used to provide the data) take too long to produce the output, some change their outputs rarely, but some are expected to update very frequently (like those that output current time or volume indicators on your screen). That means that the `while true; do ...; done | dzen2` pattern is not ideal. Some clever scheduling should be done to avoid delays and excessive resource waste.
 
-Obviously, all these issues can be handled with the use of one's `$LANGUAGE_OF_CHOICE`. My `$LANGUAGE_OF_CHOICE` is [Dhall](https://dhall-lang.org/). It is [total](https://en.wikipedia.org/wiki/Total_functional_programming) (in particular, always-terminating) and statically-typed, which makes it ideal for describing complex configurations.
+Obviously, all these issues can be handled with the use of one's `$LANGUAGE_OF_CHOICE`. My `$LANGUAGE_OF_CHOICE` is [Dhall](https://dhall-lang.org/). It is [total](https://en.wikipedia.org/wiki/Total_functional_programming) (in particular, always-terminating) and statically-typed, which makes it ideal for complex user-defined configurations.
 
+On the backend, Haskell is used to read the configuration and do the heavy lifting.
+
+## Example
+
+## Implementation details

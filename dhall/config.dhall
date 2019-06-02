@@ -1,3 +1,5 @@
+let Configuration = ./src/Configuration.dhall
+
 let Bar : Type = ./src/Bar.dhall
 
 let BarSpec : Type = ./src/BarSpec.dhall
@@ -21,9 +23,10 @@ let defaultBar
 
 		in  join [ text "Foo", text "bar", fg "red" [ text "moo" ] ]
 
-in  [ { spec =
-		  mkSpec defaultBar : BarSpec
-	  , settings =
-		  defaultBarSettings : BarSettings
-	  }
-	]
+in    [ { bar =
+			mkSpec defaultBar : BarSpec
+		, settings =
+			defaultBarSettings : BarSettings
+		}
+	  ]
+	: Configuration

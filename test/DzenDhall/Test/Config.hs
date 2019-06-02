@@ -17,6 +17,8 @@ getTests dhallDir =
                    , testToken           dhallDir
                    , testSourceSettings  dhallDir
                    , testMarqueeSettings dhallDir
+                   , testBarSettings     dhallDir
+                   , testConfiguration   dhallDir
                    ]
 
 testOpeningTag :: FilePath -> IO TestTree
@@ -60,4 +62,27 @@ testMarqueeSettings dhallDir = do
                     , marqueeFramesPerChar = 2
                     , marqueeWidth = 3
                     }
+    @?= input
+
+testBarSettings :: FilePath -> IO TestTree
+testBarSettings dhallDir = do
+  input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+           barSettings [litFile|test/dhall/BarSettings.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "MarqueeSettings marshalling" $
+    BarSettings { monitor = 1
+                , extraFlags = [ "-l", "10" ]
+                }
+    @?= input
+
+testConfiguration :: FilePath -> IO TestTree
+testConfiguration dhallDir = do
+  input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+           (list configuration) [litFile|test/dhall/Configuration.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "MarqueeSettings marshalling" $
+    [ Configuration { bar = [ TokClose ]
+                    , settings = BarSettings { monitor = 1
+                                             , extraFlags = [ "-l", "10" ]
+                                             }
+                    }
+    ]
     @?= input

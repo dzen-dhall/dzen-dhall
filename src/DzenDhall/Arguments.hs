@@ -15,8 +15,10 @@ argParser = Arguments
       (  strOption
       $  long "config-dir"
       <> metavar "DIRECTORY"
-      <> help "Config directory, used to store your config.dhall and some dhall source code. Default value is $XDG_CONFIG_HOME/dzen-dhall/" )
+      <> help "Config directory, used to store your config.dhall and some dhall source code. Default value is $XDG_CONFIG_HOME/dzen-dhall/"
+      )
 
+  <*> optional
       (  strOption
       $  long "dzen-binary"
       <> metavar "FILE"

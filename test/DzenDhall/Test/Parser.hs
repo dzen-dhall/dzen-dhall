@@ -9,7 +9,7 @@ import Text.Parsec
 
 mkTest name tokens expected =
   Test.Tasty.HUnit.testCase name $
-    runParser bar () name tokens @?= expected
+    runParser DzenDhall.Parser.bar () name tokens @?= expected
 
 getTests :: IO TestTree
 getTests = pure $
