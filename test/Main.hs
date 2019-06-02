@@ -9,6 +9,7 @@ import Test.Tasty
 import qualified DzenDhall.Test.Config
 import qualified DzenDhall.Test.Parser
 import qualified DzenDhall.Test.AST
+import qualified DzenDhall.Test.Arguments
 
 main :: IO ()
 main = do
@@ -20,6 +21,7 @@ main = do
               [ DzenDhall.Test.Config.getTests dhallDir
               , DzenDhall.Test.Parser.getTests
               , DzenDhall.Test.AST.getTests
+              , DzenDhall.Test.Arguments.getTests
               ]
 
   Test.Tasty.defaultMain allTests
