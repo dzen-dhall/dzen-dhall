@@ -14,42 +14,42 @@ type Preview t a = forall m u . Monad m => ParsecT t u m a
 
 opening :: Preview Tokens OpeningTag
 opening = withPreview $ \case
-        TokOpen tag -> Just tag
-        _           -> Nothing
+  TokOpen tag -> Just tag
+  _           -> Nothing
 
 closing :: Preview Tokens ()
 closing = withPreview $ \case
-        TokClose -> Just ()
-        _        -> Nothing
+  TokClose -> Just ()
+  _        -> Nothing
 
 withPreview :: Stream s m t => Show t => (t -> Maybe a) -> ParsecT s u m a
 withPreview = tokenPrim show (\pos _ _ -> pos)
 
 raw :: Preview Tokens Text
 raw = withPreview $ \case
-        TokRaw txt -> Just txt
-        _          -> Nothing
+  TokRaw txt -> Just txt
+  _          -> Nothing
 
 txt :: Preview Tokens Text
 txt = withPreview $ \case
-        TokTxt txt -> Just txt
-        _          -> Nothing
+  TokTxt txt -> Just txt
+  _          -> Nothing
 
 source :: Preview Tokens SourceSettings
 source = withPreview $ \case
-        TokSource settings -> Just settings
-        _                  -> Nothing
+  TokSource settings -> Just settings
+  _                  -> Nothing
 
-plugin :: Parser (Plugin SourceSettings)
-plugin = plugin' <* eof
+bar :: Parser (Bar SourceSettings)
+bar = bar' <* eof
   where
-    plugin' = do
+    bar' = do
       tag      <- opening
-      children <- fmap Plugins $ many
+      children <- fmap Bars $ many
         $   Raw    <$> raw
         <|> Txt    <$> txt
         <|> Source <$> source
-        <|> plugin'
+        <|> bar'
       closing
       pure $ case tag of
                OMarquee speed -> Marquee speed children

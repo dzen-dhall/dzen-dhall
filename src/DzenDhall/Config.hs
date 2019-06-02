@@ -45,8 +45,6 @@ sourceSettings = record $
                  <*> field "command"        (list string)
                  <*> field "stdin"          (Dhall.maybe strictText)
 
-type Bar = [Token]
-
 data MarqueeSettings
   = MarqueeSettings
   { marqueeSpeed :: Int
@@ -61,8 +59,10 @@ marqueeSettings = record $
                   <*> field "framesPerCharacter" (fromIntegral <$> natural)
                   <*> field "width"              (fromIntegral <$> natural)
 
+type BarSpec = [Token]
+
 data Config = Config
-  { bar :: [Token]
+  { bar :: BarSpec
   , settings :: BarSettings
   }
   deriving (Show, Eq, Generic)

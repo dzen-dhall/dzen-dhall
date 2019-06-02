@@ -14,7 +14,7 @@ import GHC.IO.Handle
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates outputs.
-initialize :: Plugin SourceSettings -> IO (Plugin SourceHandle)
+initialize :: Bar SourceSettings -> IO (Bar SourceHandle)
 initialize (Source settings) = do
   outputRef <- newIORef ""
   cacheRef <- newIORef Nothing
@@ -23,7 +23,7 @@ initialize (Source settings) = do
 initialize (Txt text) = pure $ Txt text
 initialize (Marquee i p) = Marquee i <$> initialize p
 initialize (Color color p) = Color color <$> initialize p
-initialize (Plugins ps) = Plugins <$> mapM initialize ps
+initialize (Bars ps) = Bars <$> mapM initialize ps
 initialize (Raw text) = pure $ Raw text
 
 -- | Run source process either once or forever, depending on source settings.
@@ -71,8 +71,8 @@ runSourceProcess cp outputRef cacheRef mbInput = do
     _ -> do
       writeIORef outputRef "dzen-dhall error: Couldn't open IO handle(s)"
 
--- | Produces an AST from 'Plugin' tree.
-collectSources :: Plugin SourceHandle -> IO AST
+-- | Produces an AST from 'Bar'.
+collectSources :: Bar SourceHandle -> IO AST
 collectSources (Source SourceHandle { outputRef, cacheRef })
   = do
   cache <- readIORef cacheRef
@@ -90,7 +90,7 @@ collectSources (Marquee speed p)
   = collectSources p -- TODO
 collectSources (Color color p)
   = Prop (FG color) <$> collectSources p -- TODO
-collectSources (Plugins ps)
+collectSources (Bars ps)
   = mconcat <$> mapM collectSources ps
 
 -- | Remove all formatting from string, so that dzen2 will interpret it literally.

@@ -3,7 +3,7 @@ module DzenDhall.Data where
 import Data.Data
 import Data.IORef
 import Data.Text (Text)
-import DzenDhall.Config
+import DzenDhall.Config (SourceSettings(..))
 import GHC.Generics
 import Control.Concurrent
 import qualified Data.Text
@@ -19,17 +19,13 @@ data SourceHandle
 
 type Cache = IORef (Maybe Text)
 
-type ParsedPlugin = Plugin SourceSettings
-
-type InitializedPlugin = Plugin SourceHandle
-
-data Plugin ref
+data Bar ref
   = Raw Text
   | Source ref
   | Txt Text
-  | Marquee Integer (Plugin ref)
-  | Color Text (Plugin ref)
-  | Plugins [Plugin ref]
+  | Marquee Integer (Bar ref)
+  | Color Text (Bar ref)
+  | Bars [Bar ref]
   deriving (Show, Eq, Generic, Data, Typeable)
 
 data Property

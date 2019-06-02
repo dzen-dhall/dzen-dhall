@@ -9,11 +9,11 @@ import Text.Parsec
 
 mkTest name tokens expected =
   Test.Tasty.HUnit.testCase name $
-    runParser plugin () name tokens @?= expected
+    runParser bar () name tokens @?= expected
 
 getTests :: IO TestTree
 getTests = pure $
-  testGroup "Plugin data parsing"
+  testGroup "Bar data parsing"
 
   [ mkTest
     "parsing #1"
@@ -21,7 +21,7 @@ getTests = pure $
     , TokRaw "txt"
     , TokClose
     ]
-    (Right $ Marquee 3 $ Plugins [ Raw "txt" ])
+    (Right $ Marquee 3 $ Bars [ Raw "txt" ])
 
   , mkTest
     "parsing #2"
@@ -36,10 +36,10 @@ getTests = pure $
     , TokClose
     , TokClose
     ]
-    $ Right $ Color "red" $ Plugins
+    $ Right $ Color "red" $ Bars
     [ Raw "raw"
     , Txt "txt"
-    , Marquee 0 $ Plugins
+    , Marquee 0 $ Bars
       [ Source (SourceSettings { updateInterval = Nothing
                                , command = []
                                , stdin = Nothing
