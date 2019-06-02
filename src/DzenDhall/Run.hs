@@ -12,6 +12,8 @@ import DzenDhall.Data
 import System.Process
 import GHC.IO.Handle
 
+-- | During initialization, IORefs for source outputs and caches are created.
+-- Also, new thread for each source is created. This thread then updates outputs.
 initialize :: Plugin SourceSettings -> IO (Plugin SourceHandle)
 initialize (Source settings) = do
   outputRef <- newIORef ""
@@ -24,7 +26,7 @@ initialize (Color color p) = Color color <$> initialize p
 initialize (Plugins ps) = Plugins <$> mapM initialize ps
 initialize (Raw text) = pure $ Raw text
 
--- | Run shell command either once or forever.
+-- | Run source process either once or forever, depending on source settings.
 mkThread :: SourceSettings -> IORef Text -> Cache -> IO ()
 mkThread (SourceSettings { command = [] }) outputRef cacheRef = do
   let message = "dzen-dhall error: no command specified"
@@ -45,6 +47,7 @@ mkThread (SourceSettings { updateInterval, command = (binary : args), stdin }) o
     Nothing -> do
       runSourceProcess (proc binary args) outputRef cacheRef stdin
 
+-- | Creates a process, subscribes to its stdout handle and updates the output ref.
 runSourceProcess :: CreateProcess -> IORef Text -> Cache -> Maybe Text -> IO ()
 runSourceProcess cp outputRef cacheRef mbInput = do
   (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, _) <- createProcess cp
@@ -68,6 +71,7 @@ runSourceProcess cp outputRef cacheRef mbInput = do
     _ -> do
       writeIORef outputRef "dzen-dhall error: Couldn't open IO handle(s)"
 
+-- | Produces an AST from 'Plugin' tree.
 collectSources :: Plugin SourceHandle -> IO AST
 collectSources (Source SourceHandle { outputRef, cacheRef })
   = do
@@ -89,6 +93,12 @@ collectSources (Color color p)
 collectSources (Plugins ps)
   = mconcat <$> mapM collectSources ps
 
+-- | Remove all formatting from string, so that dzen2 will interpret it literally.
+--
+-- e.g.
+-- @
+-- escape "^bg(red) ^^ ^bg()" = "^^bg(red) ^^^^ ^^bg()"
+-- @
 escape :: Text -> Text
 escape = Data.Text.replace "^" "^^"
 

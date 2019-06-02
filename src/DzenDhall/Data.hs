@@ -53,52 +53,26 @@ data Shape
   | Padding
   deriving (Eq, Show)
 
-{- | From dzen docs:
-
-@
-^p(+-X)          move X pixels to the right or left of the current position (on the X axis)
-^p(+-X;+-Y)      move X pixels to the right or left and Y pixels up or down of the current
-                 position (on the X and Y axis)
-^p(;+-Y)         move Y pixels up or down of the current position (on the Y axis)
-^p()             without parameters resets the Y position to its default
-@ -}
-
-{- | @
-^p(+-X)          move X pixels to the right or left of the current position (on the X axis)
-^p(+-X;+-Y)      move X pixels to the right or left and Y pixels up or down of the current
-                 position (on the X and Y axis)
-^p(;+-Y)         move Y pixels up or down of the current position (on the Y axis)
-^p()             without parameters resets the Y position to its default
-
-Further ^p() also takes some symbolic names as argument:
-
-_LOCK_X          Lock the current X position, useful if you want to
-                 align things vertically
-_UNLOCK_X        Unlock the X position
-_LEFT            Move current x-position to the left edge
-_RIGHT           Move current x-position to the right edge
-_TOP             Move current y-position to the top edge
-_CENTER          Move current x-position to center of the window
-_BOTTOM          Move current y-position to the bottom edge
-@ -}
+{- | Specify position that will be passed to @^p()@. -}
 data Position =
-  -- | 1-4
+  -- | @^p(+-X;+-Y)@      - move X pixels to the right or left and Y pixels up or down of the current
+  --                      position (on the X and Y axis).
   XY (Int, Int) |
-  -- | Reset the Y position to it's defaults, equivalent to ^p().
+  -- | @^p()@             - Reset the Y position to its default.
   ResetY |
-  -- | _LOCK_X          Lock the current X position, useful if you want to align things vertically
+  -- | @_LOCK_X@          - Lock the current X position, useful if you want to align things vertically
   P_LOCK_X |
-  -- | _UNLOCK_X        Unlock the X position
+  -- | @_UNLOCK_X@        - Unlock the X position
   P_UNLOCK_X |
-  -- | _LEFT            Move current x-position to the left edge
+  -- | @_LEFT@            - Move current x-position to the left edge
   P_LEFT |
-  -- | _RIGHT           Move current x-position to the right edge
+  -- | @_RIGHT@           - Move current x-position to the right edge
   P_RIGHT |
-  -- | _TOP             Move current y-position to the top edge
+  -- | @_TOP@             - Move current y-position to the top edge
   P_TOP |
-  -- | _CENTER          Move current x-position to the center of the window
+  -- | @_CENTER@          - Move current x-position to the center of the window
   P_CENTER |
-  -- | _BOTTOM          Move current y-position to the bottom edge
+  -- | @_BOTTOM@          - Move current y-position to the bottom edge
   P_BOTTOM
   deriving (Eq, Show)
 
@@ -107,11 +81,10 @@ data AST =
   ASTText Text |
   -- | Branching
   ASTs AST AST |
-  -- | Some property that does not change the size
+  -- | Some property that does not change the visible size of the inner AST.
   Prop Property AST |
-  -- | Some shape (@^r, ^i, ^co, etc.@) together with its size in characters
+  -- | Some shape (@^r, ^i, ^co, etc.@) together with its size in characters.
   Container Shape Int |
-  -- | @mempty@
   EmptyAST
   deriving (Eq, Show)
 

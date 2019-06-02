@@ -16,11 +16,10 @@ extra-source-files:  CHANGELOG.md
 data-files:          dhall/config.dhall
                      dhall/src/MarqueeSettings.dhall
                      dhall/src/Color.dhall
-                     dhall/src/Plugin.dhall
                      dhall/src/ClosingTag.dhall
-                     dhall/src/settings/bar/type.dhall
-                     dhall/src/settings/bar/default.dhall
                      dhall/src/Bar.dhall
+                     dhall/src/defaultBarSettings.dhall
+                     dhall/src/BarSpec.dhall
                      dhall/src/OpeningTag.dhall
                      dhall/src/Token.dhall
                      dhall/src/makeBar.dhall

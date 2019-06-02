@@ -1,24 +1,29 @@
-let Plugin : Type = ./src/Plugin.dhall
-
 let Bar : Type = ./src/Bar.dhall
 
-let makeBar : Plugin → Bar = ./src/makeBar.dhall
+let BarSpec : Type = ./src/BarSpec.dhall
 
-let BarSettings : Type = ./src/settings/bar/type.dhall
+let makeBar : Bar → BarSpec = ./src/makeBar.dhall
 
-let defaultBarSettings : BarSettings = ./src/settings/bar/default.dhall
+let BarSettings : Type = ./src/BarSettings.dhall
 
-let defaultPlugin
-	: Plugin
-	=   λ(Plugin : Type)
-	  → λ(join : List Plugin → Plugin)
-	  → λ(text : Text → Plugin)
-	  → λ(fg : Text → List Plugin → Plugin)
-	  → λ(marquee : ./src/MarqueeSettings.dhall → List Plugin → Plugin)
-	  → join [ text "Foo", text "bar", fg "red" [ text "moo" ] ]
+let defaultBarSettings : BarSettings = ./src/defaultBarSettings.dhall
 
-in  [ { bar =
-		  makeBar defaultPlugin : Bar
-	  , settings = defaultBarSettings : BarSettings
+let MarqueeSettings = ./src/MarqueeSettings.dhall
+
+let defaultBar
+	: Bar
+	=   λ(Bar : Type)
+	  → λ(join : List Bar → Bar)
+	  → λ(text : Text → Bar)
+	  → λ(fg : Text → List Bar → Bar)
+	  → λ(marquee : MarqueeSettings → List Bar → Bar)
+	  → let space = text " "
+
+		in  join [ text "Foo", text "bar", fg "red" [ text "moo" ] ]
+
+in  [ { spec =
+		  mkSpec defaultBar : BarSpec
+	  , settings =
+		  defaultBarSettings : BarSettings
 	  }
 	]

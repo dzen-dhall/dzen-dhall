@@ -1,1 +1,1 @@
-Integer
+{ monitor : Natural, extraFlags : List Text }
