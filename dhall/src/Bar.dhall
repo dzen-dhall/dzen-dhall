@@ -1,6 +1,6 @@
-  ∀(Plugin : Type)
-→ ∀(join : List Plugin → Plugin)
-→ ∀(text : Text → Plugin)
-→ ∀(fg : Text → List Plugin → Plugin)
-→ ∀(marquee : ./MarqueeSettings.dhall → List Plugin → Plugin)
-→ Plugin
+  ∀(Bar : Type)
+→ ∀(join : List Bar → Bar)
+→ ∀(text : Text → Bar)
+→ ∀(fg : Text → List Bar → Bar)
+→ ∀(marquee : ./MarqueeSettings.dhall → List Bar → Bar)
+→ Bar

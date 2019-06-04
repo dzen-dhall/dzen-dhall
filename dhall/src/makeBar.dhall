@@ -1,10 +1,10 @@
-let Plugin = ./Plugin.dhall
+let Bar = ./Bar.dhall
 
 let Token = ./Token.dhall
 
 let concat = http://prelude.dhall-lang.org/List/concat
 
-in    λ(x : Plugin)
+in    λ(x : Bar)
 	→ x
 	  (List Token)
 	  (λ(tokens : List (List Token)) → concat Token tokens)
