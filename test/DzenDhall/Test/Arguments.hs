@@ -2,7 +2,7 @@ module DzenDhall.Test.Arguments where
 
 import DzenDhall.Arguments
 import Options.Applicative
-import Test.Tasty (TestTree, testGroup)
+import Test.Tasty (TestTree)
 import Test.Hspec
 import Test.Tasty.Hspec
 import Control.Category
@@ -13,8 +13,8 @@ getTests = testSpec "Argument parser" $ do
     it "test #1" $ do
       runArgParser [ "--config-dir", ".", "--dzen-binary", "dzen", "init" ]
         `shouldBe`
-        pure Arguments { configPath = Just "."
-                       , dzenBinary = Just "dzen"
+        pure Arguments { mbConfigDir = Just "."
+                       , mbDzenBinary = Just "dzen"
                        , mbCommand = Just Init
                        }
 

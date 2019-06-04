@@ -10,29 +10,29 @@ import System.Posix.Files
 
 
 data Runtime = Runtime
-  { configPath :: String
+  { configDir :: String
   }
   deriving (Eq, Show)
 
 mkRuntime :: Arguments -> IO Runtime
-mkRuntime Arguments{configPath = configPath'} = do
-  configPath <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure configPath'
-  exists <- doesDirectoryExist configPath
+mkRuntime Arguments{mbConfigDir} = do
+  configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
+  exists <- doesDirectoryExist configDir
   when (not exists) $ do
-    putStrLn $ "Configuration directory does not exist, creating " <> configPath
+    putStrLn $ "Configuration directory does not exist, creating " <> configDir
     dataDir <- getDataDir
-    createDirectoryIfMissing True configPath
+    createDirectoryIfMissing True configDir
 
     let mode400 = ownerReadMode
         mode600 = mode400 `unionFileModes` ownerWriteMode
         mode700 = mode600 `unionFileModes` ownerExecuteMode
 
-    copyDir (dataDir </> "dhall") configPath
+    copyDir (dataDir </> "dhall") configDir
       (flip setFileMode mode400)
       (flip setFileMode mode700)
 
-    setFileMode configPath mode700
-    setFileMode (configPath </> "config.dhall") mode600
+    setFileMode configDir mode700
+    setFileMode (configDir </> "config.dhall") mode600
   pure $ Runtime {..}
 
 type Hook = FilePath -> IO ()

@@ -1,4 +1,5 @@
 let Configuration = ./src/Configuration.dhall
+
 let Token = ./src/Token.dhall
 
 in  [ { bar =

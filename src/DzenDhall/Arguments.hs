@@ -5,8 +5,8 @@ import Data.Semigroup ((<>))
 
 data Arguments
   = Arguments
-  { configPath :: Maybe String
-  , dzenBinary :: Maybe String
+  { mbConfigDir :: Maybe String
+  , mbDzenBinary :: Maybe String
   , mbCommand  :: Maybe Command
   }
   deriving (Show, Eq)
