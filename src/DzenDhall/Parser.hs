@@ -8,7 +8,7 @@ import DzenDhall.Data
 import Text.Parsec.Combinator
 import Text.Parsec.Prim
 
-type Parser a = Parsec [DzenDhall.Config.Token] () a
+type Parser a = Parsec Tokens () a
 type Tokens = [DzenDhall.Config.Token]
 type Preview t a = forall m u . Monad m => ParsecT t u m a
 

@@ -26,6 +26,7 @@ data-files:          dhall/config.dhall
                      dhall/src/makeBar.dhall
                      dhall/src/SourceSettings.dhall
                      dhall/src/BarSettings.dhall
+                     dhall/src/EscapeMode.dhall
 
 library
   exposed-modules:     DzenDhall

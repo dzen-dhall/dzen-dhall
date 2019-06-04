@@ -13,6 +13,8 @@ in  [ Token.Open (OpeningTag.Marquee +1)
 			  [ "bash" ]
 		  , stdin =
 			  Some "echo 1"
+		  , escapeMode =
+			  { joinLines = True, escapeMarkup = True }
 		  }
 		: SourceSettings
 	  )

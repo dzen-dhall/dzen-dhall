@@ -13,7 +13,7 @@ import System.Process
 import GHC.IO.Handle
 
 -- | During initialization, IORefs for source outputs and caches are created.
--- Also, new thread for each source is created. This thread then updates outputs.
+-- Also, new thread for each source is created. This thread then updates the outputs.
 initialize :: Bar SourceSettings -> IO (Bar SourceHandle)
 initialize (Source settings) = do
   outputRef <- newIORef ""
@@ -53,18 +53,18 @@ runSourceProcess cp outputRef cacheRef mbInput = do
   (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, _) <- createProcess cp
 
   case (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl) of
-    (Just stdin_hdl, Just stdout_hdl, Just stderr_hdl) -> do
+    (Just stdin_hdl, Just stdout_hdl, _) -> do
       hSetBuffering stdin_hdl  LineBuffering
       hSetBuffering stdout_hdl LineBuffering
-      hSetBuffering stderr_hdl LineBuffering
 
-      -- If stdin is specified, write it to the handle
+      -- If the input is specified, write it to the stdin handle
       whenJust mbInput $ \text -> do
         Data.Text.IO.hPutStrLn stdin_hdl text
 
       -- Loop until EOF, updating outputRef on each line
       loopWhileM (not <$> hIsEOF stdout_hdl) $ do
         line <- Data.Text.IO.hGetLine stdout_hdl
+        -- Drop cache
         writeIORef cacheRef Nothing
         writeIORef outputRef line
 
@@ -93,16 +93,25 @@ collectSources (Color color p)
 collectSources (Bars ps)
   = mconcat <$> mapM collectSources ps
 
+-- | Escape formatting and join all lines into one.
+escape :: Text -> Text
+escape = escapeFormatting . removeNewLines
+
 -- | Remove all formatting from string, so that dzen2 will interpret it literally.
 --
 -- e.g.
 -- @
 -- escape "^bg(red) ^^ ^bg()" = "^^bg(red) ^^^^ ^^bg()"
 -- @
-escape :: Text -> Text
-escape = Data.Text.replace "^" "^^"
+escapeFormatting :: Text -> Text
+escapeFormatting = Data.Text.replace "^" "^^"
+
+-- | Join multiple lines into one (using space character as a separator).
+removeNewLines :: Text -> Text
+removeNewLines = Data.Text.replace "\n" " "
 
 renderAST :: AST -> Text
+renderAST EmptyAST = ""
 renderAST (ASTText text) = text
 renderAST (ASTs a b) = renderAST a <> renderAST b
 renderAST (Prop property ast) =
@@ -143,7 +152,6 @@ renderAST (Container shape width) =
         C r    -> "^c("  <> showPack r <> ")"
         CO r   -> "^co(" <> showPack r <> ")"
         Padding -> ""
-renderAST EmptyAST = ""
 
 showPack :: Show a => a -> Text
 showPack = Data.Text.pack . show
