@@ -1,1 +1,1 @@
-{ monitor = 0, extraFlags = [] : List Text, updateInterval = 250000 } : ./BarSettings.dhall
+{ monitor = 0, extraFlags = [] : List Text, updateInterval = 250 } : ./BarSettings.dhall

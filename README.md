@@ -22,6 +22,14 @@ On the backend, Haskell is used to read the configuration and do the heavy lifti
 
 ## Example
 
+See [the default config file](dhall/config.dhall).
+
+## Sources of confusion
+
+### Writing shell scripts using Dhall
+
+Dhall's string interpolation syntactically conflicts with bash syntax for array expansion and indexing. E.g. `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` (in a double-quoted string) or as `'' ''${arr[ ix ]} ''` in a multiline string (that is, `''` serves as both an escape sequence and a quote symbol). See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
+
 ## Implementation details
 
 Read this section if you want to understand how dzen-dhall works.

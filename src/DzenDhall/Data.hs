@@ -14,7 +14,6 @@ data SourceHandle
   = SourceHandle
   { outputRef :: IORef Text
   , cacheRef :: Cache
-  , threadId :: ThreadId
   , shEscapeMode :: EscapeMode
   }
 

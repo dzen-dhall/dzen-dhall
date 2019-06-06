@@ -20,7 +20,7 @@ data BarSettings
   , bsExtraFlags :: [String]
   -- ^ Extra flags to pass to dzen binary
   , bsUpdateInterval :: Int
-  -- ^ in microseconds
+  -- ^ In microseconds
   }
   deriving (Show, Eq, Generic)
 
@@ -60,6 +60,7 @@ escapeModeType = record $
 data SourceSettings
   = SourceSettings
   { updateInterval :: Maybe Int
+  -- ^ In microseconds
   , command :: [String]
   , stdin :: Maybe Text
   , escapeMode :: EscapeMode
@@ -67,7 +68,7 @@ data SourceSettings
 
 sourceSettingsType :: Type SourceSettings
 sourceSettingsType = record $
-  SourceSettings <$> field "updateInterval" (Dhall.maybe $ fromIntegral <$> natural)
+  SourceSettings <$> field "updateInterval" (Dhall.maybe $ (* 1000) . fromIntegral <$> natural)
                  <*> field "command"        (list string)
                  <*> field "stdin"          (Dhall.maybe strictText)
                  <*> field "escapeMode"     escapeModeType

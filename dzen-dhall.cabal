@@ -61,7 +61,7 @@ library
                        process,
                        async
   hs-source-dirs:      src
-  ghc-options:         -Wall
+  ghc-options:         -Wall -threaded
   default-language:    Haskell2010
 
 executable dzen-dhall
@@ -72,6 +72,7 @@ executable dzen-dhall
   build-depends:       base ^>=4.12.0.0, dzen-dhall
   hs-source-dirs:      app
   default-language:    Haskell2010
+  ghc-options:         -threaded
 
 test-suite tasty
   type:                exitcode-stdio-1.0

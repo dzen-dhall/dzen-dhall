@@ -36,24 +36,26 @@ initialize (Raw text) = pure $ Raw text
 
 -- | Run source process either once or forever, depending on source settings.
 mkThread :: SourceSettings -> IORef Text -> Cache -> IO ()
-mkThread (SourceSettings { command = [] }) outputRef cacheRef = do
+mkThread SourceSettings { command = [] } outputRef cacheRef = do
   let message = "dzen-dhall error: no command specified"
   writeIORef cacheRef $ Just message
   writeIORef outputRef message
-mkThread (SourceSettings { updateInterval, command = (binary : args), stdin }) outputRef cacheRef =
+mkThread SourceSettings { updateInterval, command = (binary : args), stdin } outputRef cacheRef = do
+
+  let sourceProcess =
+        (proc binary args) { std_out = CreatePipe
+                           , std_in  = CreatePipe
+                           }
+
   case updateInterval of
 
     -- If update interval is specified, loop forever.
     Just interval -> do
-      let delay = interval * 1000000
 
       forever $ do
-        let sourceProcess =
-              (proc binary args) { std_out = CreatePipe
-                                 , std_in  = CreatePipe
-                                 }
         runSourceProcess sourceProcess outputRef cacheRef stdin
-        threadDelay delay
+
+        threadDelay interval
 
     -- If update interval is not specified, run the source once.
     Nothing -> do
@@ -65,24 +67,23 @@ runSourceProcess cp outputRef cacheRef mbInput = do
   (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, _) <- createProcess cp
 
   case (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl) of
-    (Just stdin_hdl, Just stdout_hdl, _) -> do
-      hSetBuffering stdin_hdl  LineBuffering
-      hSetBuffering stdout_hdl LineBuffering
+    (Just stdin, Just stdout, _) -> do
+      hSetBuffering stdin  LineBuffering
+      hSetBuffering stdout LineBuffering
 
       -- If the input is specified, write it to the stdin handle
       whenJust mbInput $ \text -> do
-        Data.Text.IO.hPutStrLn stdin_hdl text
+        Data.Text.IO.hPutStrLn stdin text
+        hClose stdin
 
-      -- Loop until EOF, updating outputRef on each line
-      loopWhileM (not <$> hIsEOF stdout_hdl) $ do
-        line <- Data.Text.IO.hGetLine stdout_hdl
+      output <- Data.Text.IO.hGetContents stdout
 
-        -- Drop cache
-        writeIORef cacheRef Nothing
-        writeIORef outputRef line
+      -- Drop cache
+      writeIORef cacheRef Nothing
+      writeIORef outputRef output
 
     _ -> do
-      writeIORef outputRef "dzen-dhall error: Couldn't open IO handle(s)"
+      putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
 
 -- | Produces an AST from 'Bar'.
 collectSources :: Bar SourceHandle -> IO AST
@@ -111,7 +112,7 @@ collectSources (Bars ps)
 escape :: EscapeMode -> Text -> Text
 escape EscapeMode{joinLines, escapeMarkup} =
   (if escapeMarkup then Data.Text.replace "^" "^^" else id) .
-  (if joinLines    then Data.Text.replace "\n" " " else id)
+  (Data.Text.replace "\n" $ if joinLines then " " else "")
 
 renderAST :: AST -> Text
 renderAST EmptyAST = ""

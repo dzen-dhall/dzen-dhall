@@ -2,6 +2,8 @@ let Bar = ./Bar.dhall
 
 let Token = ./Token.dhall
 
+let SourceSettings = ./SourceSettings.dhall
+
 let concat = http://prelude.dhall-lang.org/List/concat
 
 in    λ(x : Bar)
@@ -15,6 +17,7 @@ in    λ(x : Bar)
 		  # concat Token children
 		  # [ Token.Raw "^fg()" ]
 	  )
+	  (λ(ss : SourceSettings) → [ Token.Source ss ])
 	  (   λ(settings : ./MarqueeSettings.dhall)
 		→ λ(children : List (List Token))
 		→ concat Token children

@@ -10,6 +10,8 @@ let BarSettings : Type = ./src/BarSettings.dhall
 
 let defaultBarSettings : BarSettings = ./src/defaultBarSettings.dhall
 
+let SourceSettings : Type = ./src/SourceSettings.dhall
+
 let MarqueeSettings = ./src/MarqueeSettings.dhall
 
 let defaultBar
@@ -18,15 +20,69 @@ let defaultBar
 	  → λ(join : List Bar → Bar)
 	  → λ(text : Text → Bar)
 	  → λ(fg : Text → List Bar → Bar)
+	  → λ(source : SourceSettings → Bar)
 	  → λ(marquee : MarqueeSettings → List Bar → Bar)
 	  → let space = text " "
 
-		in  join [ text "Foo", text "bar", fg "red" [ text "moo" ] ]
+		let bash
+			: Natural → Text → Bar
+			=   λ(interval : Natural)
+			  → λ(input : Text)
+			  → source
+				{ command =
+					[ "bash" ]
+				, stdin =
+					Some input
+				, updateInterval =
+					Some interval
+				, escapeMode =
+					{ joinLines = False, escapeMarkup = True }
+				}
 
-in    [ { bar =
-			mkSpec defaultBar : BarSpec
-		, settings =
-			defaultBarSettings : BarSettings
-		}
-	  ]
-	: Configuration
+		let memoryUsage
+			: Bar
+			= bash
+			  5000
+			  ''
+			  TMP=`free -b | grep 'Mem'`;
+			  TMP=( $TMP );
+			  TotalMem="''${TMP[ 1 ]}"
+			  UsedMem="''${TMP[ 2 ]}"
+			  echo "$((UsedMem * 100 / TotalMem))"
+			  ''
+
+		let swapUsage
+			: Bar
+			= bash
+			  5000
+			  ''
+			  TMP=`free -b | grep 'Swap'`;
+			  TMP=( $TMP );
+			  TotalSwap="''${TMP[ 1 ]}"
+			  UsedSwap="''${TMP[ 2 ]}"
+			  echo "$((UsedSwap * 100 / TotalSwap))"
+			  ''
+
+		let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
+
+		let separator = text " "
+
+		let swapAndMemory =
+			  join
+			  [ text "Mem: "
+			  , memoryUsage
+			  , text "%"
+			  , separator
+			  , text "Swap: "
+			  , swapUsage
+			  , text "%"
+			  ]
+
+		in  join [ swapAndMemory, separator, clocks ]
+
+in  [ { bar =
+		  mkSpec defaultBar : BarSpec
+	  , settings =
+		  defaultBarSettings : BarSettings
+	  }
+	] : List Configuration
