@@ -15,15 +15,20 @@ openingTagType = union
 
 data BarSettings
   = BarSettings
-  { monitor :: Int
-  , extraFlags :: [String]
+  { bsMonitor :: Int
+  -- ^ Xinerama monitor number
+  , bsExtraFlags :: [String]
+  -- ^ Extra flags to pass to dzen binary
+  , bsUpdateInterval :: Int
+  -- ^ in microseconds
   }
   deriving (Show, Eq, Generic)
 
 barSettingsType :: Type BarSettings
 barSettingsType = record $
-  BarSettings <$> field "monitor"    (fromIntegral <$> natural)
-              <*> field "extraFlags" (list string)
+  BarSettings <$> field "monitor"        (fromIntegral <$> natural)
+              <*> field "extraFlags"     (list string)
+              <*> field "updateInterval" ((* 1000) . fromIntegral <$> natural)
 
 data Token
   = TokOpen OpeningTag
@@ -69,9 +74,9 @@ sourceSettingsType = record $
 
 data MarqueeSettings
   = MarqueeSettings
-  { marqueeSpeed :: Int
-  , marqueeFramesPerChar :: Int
-  , marqueeWidth :: Int
+  { mqSpeed :: Int
+  , mqFramesPerChar :: Int
+  , mqWidth :: Int
   }
   deriving (Show, Eq, Generic)
 

@@ -4,7 +4,7 @@ let Bar : Type = ./src/Bar.dhall
 
 let BarSpec : Type = ./src/BarSpec.dhall
 
-let makeBar : Bar → BarSpec = ./src/makeBar.dhall
+let mkSpec : Bar → BarSpec = ./src/mkSpec.dhall
 
 let BarSettings : Type = ./src/BarSettings.dhall
 

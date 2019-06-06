@@ -41,15 +41,16 @@ source = withPreview $ \case
   _                  -> Nothing
 
 bar :: Parser (Bar SourceSettings)
-bar = bar' <* eof
+bar = topLevel <* eof
   where
-    bar' = do
+    topLevel = fmap Bars $ many $
+          Raw    <$> raw
+      <|> Txt    <$> txt
+      <|> Source <$> source
+      <|> wrapped
+    wrapped = do
       tag      <- opening
-      children <- fmap Bars $ many
-        $   Raw    <$> raw
-        <|> Txt    <$> txt
-        <|> Source <$> source
-        <|> bar'
+      children <- topLevel
       closing
       pure $ case tag of
                OMarquee speed -> Marquee speed children

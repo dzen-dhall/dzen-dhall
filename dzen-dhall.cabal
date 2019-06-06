@@ -16,6 +16,7 @@ extra-source-files:  CHANGELOG.md
 data-files:          dhall/config.dhall
                      dhall/src/MarqueeSettings.dhall
                      dhall/src/Color.dhall
+                     dhall/src/mkSpec.dhall
                      dhall/src/Configuration.dhall
                      dhall/src/ClosingTag.dhall
                      dhall/src/Bar.dhall
@@ -23,10 +24,9 @@ data-files:          dhall/config.dhall
                      dhall/src/BarSpec.dhall
                      dhall/src/OpeningTag.dhall
                      dhall/src/Token.dhall
-                     dhall/src/makeBar.dhall
                      dhall/src/SourceSettings.dhall
-                     dhall/src/BarSettings.dhall
                      dhall/src/EscapeMode.dhall
+                     dhall/src/BarSettings.dhall
 
 library
   exposed-modules:     DzenDhall
@@ -48,7 +48,18 @@ library
                        RecordWildCards
                        DeriveFunctor
                        NamedFieldPuns
-  build-depends:       base ^>=4.12.0.0, dhall, optparse-applicative, directory, unix, filepath, text, parsec, time, process
+                       ScopedTypeVariables
+  build-depends:       base ^>=4.12.0.0,
+                       dhall,
+                       optparse-applicative,
+                       directory,
+                       unix,
+                       filepath,
+                       text,
+                       parsec,
+                       time,
+                       process,
+                       async
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010

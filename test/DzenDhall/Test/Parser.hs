@@ -22,7 +22,7 @@ getTests = pure $
     , TokRaw "txt"
     , TokClose
     ]
-    (Right $ Marquee 3 $ Bars [ Raw "txt" ])
+    (Right $ Bars [ Marquee 3 $ Bars [ Raw "txt" ] ])
 
   , mkTest
     "parsing #2"
@@ -38,15 +38,18 @@ getTests = pure $
     , TokClose
     , TokClose
     ]
-    $ Right $ Color "red" $ Bars
-    [ Raw "raw"
-    , Txt "txt"
-    , Marquee 0 $ Bars
-      [ Source (SourceSettings { updateInterval = Nothing
-                               , command = []
-                               , stdin = Nothing
-                               , escapeMode = EscapeMode True True
-                               })
-      ]
-    ]
+
+    $ Right $
+    Bars [ Color "red" $
+           Bars [ Raw "raw"
+                , Txt "txt"
+                , Marquee 0 $ Bars
+                  [ Source (SourceSettings { updateInterval = Nothing
+                                           , command = []
+                                           , stdin = Nothing
+                                           , escapeMode = EscapeMode True True
+                                           })
+                  ]
+                ]
+         ]
   ]

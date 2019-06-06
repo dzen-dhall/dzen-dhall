@@ -14,14 +14,13 @@ let
     packageOverrides = pkgs: rec {
       haskellPackages = pkgs.haskellPackages.override {
         overrides = haskellPackagesNew: haskellPackagesOld: rec {
-          dzen-dhall =
-            haskellPackagesNew.callPackage ./dzen-dhall.nix { };
 
-          dhall =
-            haskellPackagesNew.callPackage ./dhall.nix { };
+          # Direct dependencies
+          dhall = haskellPackagesNew.callPackage ./hackage/dhall.nix { };
 
-          repline =
-            haskellPackagesNew.callPackage ./repline.nix { };
+          # Indirect dependencies
+          repline = haskellPackagesNew.callPackage ./hackage/repline.nix { };
+
         };
       };
     };

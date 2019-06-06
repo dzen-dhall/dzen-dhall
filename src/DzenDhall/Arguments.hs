@@ -36,7 +36,7 @@ argParser = Arguments
       ( command "init" (info (pure Init) ( progDesc "Write default configuration files to configuration directory." )))
       )
 
-parserInfo :: ParserInfo Arguments
-parserInfo = info (argParser <**> helper)
+argumentsParser :: ParserInfo Arguments
+argumentsParser = info (argParser <**> helper)
              (  fullDesc
              <> progDesc "Configure dzen2 bars in Dhall language." )

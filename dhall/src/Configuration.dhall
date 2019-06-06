@@ -1,1 +1,1 @@
-{ bar : ./BarSpec.dhall, settings : ./BarSettings.dhall }
+List { bar : ./BarSpec.dhall, settings : ./BarSettings.dhall }

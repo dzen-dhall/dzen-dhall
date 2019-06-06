@@ -3,7 +3,7 @@ module DzenDhall.Data where
 import Data.Data
 import Data.IORef
 import Data.Text (Text)
-import DzenDhall.Config (SourceSettings(..))
+import DzenDhall.Config (EscapeMode(..))
 import GHC.Generics
 import Control.Concurrent
 import qualified Data.Text
@@ -15,6 +15,7 @@ data SourceHandle
   { outputRef :: IORef Text
   , cacheRef :: Cache
   , threadId :: ThreadId
+  , shEscapeMode :: EscapeMode
   }
 
 type Cache = IORef (Maybe Text)

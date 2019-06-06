@@ -60,9 +60,9 @@ testMarqueeSettings dhallDir = do
   input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
            marqueeSettingsType [litFile|test/dhall/MarqueeSettings.dhall|]
   pure $ Test.Tasty.HUnit.testCase "MarqueeSettings marshalling" $
-    MarqueeSettings { marqueeSpeed = 1
-                    , marqueeFramesPerChar = 2
-                    , marqueeWidth = 3
+    MarqueeSettings { mqSpeed = 1
+                    , mqFramesPerChar = 2
+                    , mqWidth = 3
                     }
     @?= input
 
@@ -71,8 +71,9 @@ testBarSettings dhallDir = do
   input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
            barSettingsType [litFile|test/dhall/BarSettings.dhall|]
   pure $ Test.Tasty.HUnit.testCase "MarqueeSettings marshalling" $
-    BarSettings { monitor = 1
-                , extraFlags = [ "-l", "10" ]
+    BarSettings { bsMonitor = 1
+                , bsExtraFlags = [ "-l", "10" ]
+                , bsUpdateInterval = 250000
                 }
     @?= input
 
@@ -82,8 +83,9 @@ testConfiguration dhallDir = do
            (list configurationType) [litFile|test/dhall/Configuration.dhall|]
   pure $ Test.Tasty.HUnit.testCase "MarqueeSettings marshalling" $
     [ Configuration { bar = [ TokClose ]
-                    , settings = BarSettings { monitor = 1
-                                             , extraFlags = [ "-l", "10" ]
+                    , settings = BarSettings { bsMonitor = 1
+                                             , bsExtraFlags = [ "-l", "10" ]
+                                             , bsUpdateInterval = 250000
                                              }
                     }
     ]

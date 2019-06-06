@@ -6,20 +6,28 @@ import Control.Monad
 import Data.IORef
 import qualified Data.Text
 import Data.Text (Text)
-import Data.Text.IO
+import qualified Data.Text.IO
 import DzenDhall.Config
 import DzenDhall.Data
 import System.Process
 import GHC.IO.Handle
+import qualified DzenDhall.Parser
+import qualified Text.Parsec
+import System.Exit (ExitCode(..), exitWith)
+import DzenDhall.Runtime (Runtime(..))
+import Control.Concurrent.Async
+
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
 initialize :: Bar SourceSettings -> IO (Bar SourceHandle)
-initialize (Source settings) = do
+initialize (Source settings@(SourceSettings{..})) = do
   outputRef <- newIORef ""
   cacheRef <- newIORef Nothing
-  threadId <- forkIO (mkThread settings outputRef cacheRef)
+  void $ async (mkThread settings outputRef cacheRef)
+  let shEscapeMode = escapeMode
   pure $ Source (SourceHandle {..})
+
 initialize (Txt text) = pure $ Txt text
 initialize (Marquee i p) = Marquee i <$> initialize p
 initialize (Color color p) = Color color <$> initialize p
@@ -40,7 +48,11 @@ mkThread (SourceSettings { updateInterval, command = (binary : args), stdin }) o
       let delay = interval * 1000000
 
       forever $ do
-        runSourceProcess (proc binary args) outputRef cacheRef stdin
+        let sourceProcess =
+              (proc binary args) { std_out = CreatePipe
+                                 , std_in  = CreatePipe
+                                 }
+        runSourceProcess sourceProcess outputRef cacheRef stdin
         threadDelay delay
 
     -- If update interval is not specified, run the source once.
@@ -64,6 +76,7 @@ runSourceProcess cp outputRef cacheRef mbInput = do
       -- Loop until EOF, updating outputRef on each line
       loopWhileM (not <$> hIsEOF stdout_hdl) $ do
         line <- Data.Text.IO.hGetLine stdout_hdl
+
         -- Drop cache
         writeIORef cacheRef Nothing
         writeIORef outputRef line
@@ -73,42 +86,32 @@ runSourceProcess cp outputRef cacheRef mbInput = do
 
 -- | Produces an AST from 'Bar'.
 collectSources :: Bar SourceHandle -> IO AST
-collectSources (Source SourceHandle { outputRef, cacheRef })
+collectSources (Source SourceHandle { outputRef, cacheRef, shEscapeMode })
   = do
   cache <- readIORef cacheRef
   case cache of
     Just escaped ->
       pure $ ASTText escaped
     Nothing -> do
-      newText <- readIORef outputRef
-      let escaped = escape newText
+      raw <- readIORef outputRef
+      let escaped = escape shEscapeMode raw
       writeIORef cacheRef (Just escaped)
       pure $ ASTText escaped
 collectSources (Txt text)
   = pure $ ASTText text
-collectSources (Marquee speed p)
+collectSources (Raw text)
+  = pure $ ASTText text
+collectSources (Marquee mqSettings p)
   = collectSources p -- TODO
 collectSources (Color color p)
   = Prop (FG color) <$> collectSources p -- TODO
 collectSources (Bars ps)
   = mconcat <$> mapM collectSources ps
 
--- | Escape formatting and join all lines into one.
-escape :: Text -> Text
-escape = escapeFormatting . removeNewLines
-
--- | Remove all formatting from string, so that dzen2 will interpret it literally.
---
--- e.g.
--- @
--- escape "^bg(red) ^^ ^bg()" = "^^bg(red) ^^^^ ^^bg()"
--- @
-escapeFormatting :: Text -> Text
-escapeFormatting = Data.Text.replace "^" "^^"
-
--- | Join multiple lines into one (using space character as a separator).
-removeNewLines :: Text -> Text
-removeNewLines = Data.Text.replace "\n" " "
+escape :: EscapeMode -> Text -> Text
+escape EscapeMode{joinLines, escapeMarkup} =
+  (if escapeMarkup then Data.Text.replace "^" "^^" else id) .
+  (if joinLines    then Data.Text.replace "\n" " " else id)
 
 renderAST :: AST -> Text
 renderAST EmptyAST = ""
@@ -126,9 +129,9 @@ renderAST (Prop property ast) =
         "^ib(1)" <> inner <> "^ib(0)"
       CA (event, handler) ->
         "^ca(" <> event <> "," <> handler <> ")" <> inner <> "^ca()"
-      P position -> spec <> inner
+      P position -> positionSpec <> inner
         where
-          spec =
+          positionSpec =
             case position of
               XY (x, y)  -> "^p(" <> showPack x <> ";" <> showPack y <> ")"
               ResetY     -> "^p()"
@@ -141,10 +144,10 @@ renderAST (Prop property ast) =
               P_BOTTOM   -> "^p(_BOTTOM)"
 
 renderAST (Container shape width) =
-  "^p(_LOCK_X)" <> spec <> "^p(_UNLOCK_X)^ib(1)" <> padding <> "^ib(0)"
+  "^p(_LOCK_X)" <> shapeSpec <> "^p(_UNLOCK_X)^ib(1)" <> padding <> "^ib(0)"
   where
     padding = Data.Text.justifyRight width ' ' ""
-    spec =
+    shapeSpec =
       case shape of
         I path -> "^i("  <> path       <> ")"
         R w h  -> "^r("  <> showPack w <> "x" <> showPack h <> ")"
@@ -165,3 +168,49 @@ loopWhileM pr act = do
 
 whenJust :: (Monad m, Monoid b) => Maybe a -> (a -> m b) -> m b
 whenJust = flip $ maybe (return mempty)
+
+useConfigurations :: Runtime -> IO [Async ()]
+useConfigurations runtime@Runtime{rtConfigurations} =
+  forM rtConfigurations (async . go)
+  where
+
+    go :: Configuration -> IO ()
+    go cfg@Configuration{bar} = do
+
+      let eiBarSpec = Text.Parsec.runParser DzenDhall.Parser.bar () "BarSpec #1" bar
+
+      case eiBarSpec of
+        Left err -> do
+          putStrLn $ "Internal error #1, debug info: " <> show bar
+          putStrLn $ "Error: " <> show err
+          exitWith (ExitFailure 3)
+
+        Right (barSS :: Bar SourceSettings) -> do
+          startDzenBinary runtime cfg barSS
+
+startDzenBinary :: Runtime -> Configuration -> Bar SourceSettings -> IO ()
+startDzenBinary
+  Runtime{rtDzenBinary}
+  Configuration{settings = BarSettings{bsExtraFlags, bsUpdateInterval}}
+  barSS = do
+
+  barSH :: Bar SourceHandle <- initialize barSS
+
+  (mb_stdin, mb_stdout, mb_stderr, _) <-
+    createProcess $ (proc rtDzenBinary bsExtraFlags) { std_out = CreatePipe
+                                                     , std_in  = CreatePipe
+                                                     }
+
+  case (mb_stdin, mb_stdout, mb_stderr) of
+
+    (Just stdin, Just stdout, _) -> do
+      hSetBuffering stdin  LineBuffering
+      hSetBuffering stdout LineBuffering
+
+      forever $ do
+        output <- renderAST <$> collectSources barSH
+        Data.Text.IO.hPutStrLn stdin output
+        threadDelay bsUpdateInterval
+
+    _ -> do
+      putStrLn $ "Couldn't open IO handles for dzen binary " <> show rtDzenBinary

@@ -1,1 +1,1 @@
-{ monitor : Natural, extraFlags : List Text }
+{ monitor : Natural, extraFlags : List Text, updateInterval : Natural }

@@ -8,7 +8,7 @@ in    λ(x : Bar)
 	→ x
 	  (List Token)
 	  (λ(tokens : List (List Token)) → concat Token tokens)
-	  (λ(text : Text) → [ Token.Raw text ])
+	  (λ(text : Text) → [ Token.Txt text ])
 	  (   λ(color : Text)
 		→ λ(children : List (List Token))
 		→   [ Token.Raw ("^fg(" ++ color ++ ")") ]

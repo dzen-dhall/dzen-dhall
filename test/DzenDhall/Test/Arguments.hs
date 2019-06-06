@@ -20,7 +20,7 @@ getTests = testSpec "Argument parser" $ do
 
 runArgParser :: [String] -> Maybe Arguments
 runArgParser =
-  execParserPure defaultPrefs parserInfo >>>
+  execParserPure defaultPrefs argumentsParser >>>
   \case
     Options.Applicative.Success r -> Just r
     _                             -> Nothing
