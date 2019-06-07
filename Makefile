@@ -4,7 +4,7 @@ cabal2nix:
 	cd nix && cabal2nix ../ > dzen-dhall.nix
 
 build:
-	unlink ./result || true # To make hash the same
+	unlink ./result 2>/dev/null || true # To make hash the same
 	nix-build --attr dzen-dhall nix/release.nix
 
 run: build

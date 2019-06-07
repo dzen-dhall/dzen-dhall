@@ -10,7 +10,7 @@ mkTest :: TestName -> MarqueeSettings -> AST -> [AST] -> TestTree
 mkTest name settings ast expected =
   Test.Tasty.HUnit.testCase name $
     let frames = length expected
-        actual = map (Marquee.run settings ast) [0..pred frames]
+        actual = map (Marquee.run 10 settings ast) [0..pred frames]
     in actual @?= expected
 
 getTests :: IO TestTree

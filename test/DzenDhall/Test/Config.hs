@@ -78,9 +78,11 @@ testBarSettings dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/BarSettings.dhall marshalling" $
     input @?=
 
-    BarSettings { bsMonitor = 1
-                , bsExtraFlags = [ "-l", "10" ]
-                , bsUpdateInterval = 250000
+    BarSettings { _bsMonitor = 1
+                , _bsExtraFlags = [ "-l", "10" ]
+                , _bsUpdateInterval = 250000
+                , _bsFont = Nothing
+                , _bsFontWidth = Nothing
                 }
 
 testConfiguration :: FilePath -> IO TestTree
@@ -90,11 +92,13 @@ testConfiguration dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/Configuration.dhall marshalling" $
     input @?=
 
-    [ Configuration { bar = [ TokClose ]
-                    , settings = BarSettings { bsMonitor = 1
-                                             , bsExtraFlags = [ "-l", "10" ]
-                                             , bsUpdateInterval = 250000
-                                             }
+    [ Configuration { _cfgBarSpec = [ TokClose ]
+                    , _cfgBarSettings = BarSettings { _bsMonitor = 1
+                                                    , _bsExtraFlags = [ "-l", "10" ]
+                                                    , _bsUpdateInterval = 250000
+                                                    , _bsFont = Nothing
+                                                    , _bsFontWidth = Nothing
+                                                    }
                     }
     ]
 

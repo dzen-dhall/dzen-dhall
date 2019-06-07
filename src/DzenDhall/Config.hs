@@ -32,20 +32,27 @@ openingTagType = union
 
 data BarSettings
   = BarSettings
-  { bsMonitor :: Int
+  { _bsMonitor :: Int
   -- ^ Xinerama monitor number
-  , bsExtraFlags :: [String]
+  , _bsExtraFlags :: [String]
   -- ^ Extra flags to pass to dzen binary
-  , bsUpdateInterval :: Int
+  , _bsUpdateInterval :: Int
   -- ^ In microseconds
+  , _bsFont :: Maybe String
+  -- ^ Font in XLFD format
+  , _bsFontWidth :: Maybe Int
   }
   deriving (Show, Eq, Generic)
+
+makeLenses ''BarSettings
 
 barSettingsType :: Type BarSettings
 barSettingsType = record $
   BarSettings <$> field "monitor"        (fromIntegral <$> natural)
               <*> field "extraFlags"     (list string)
               <*> field "updateInterval" ((* 1000) . fromIntegral <$> natural)
+              <*> field "font"           (Dhall.maybe string)
+              <*> field "fontWidth"      (fmap fromIntegral <$> Dhall.maybe natural)
 
 data Token
   = TokOpen OpeningTag
@@ -93,10 +100,12 @@ sourceSettingsType = record $
 type BarSpec = [Token]
 
 data Configuration = Configuration
-  { bar :: BarSpec
-  , settings :: BarSettings
+  { _cfgBarSpec :: BarSpec
+  , _cfgBarSettings :: BarSettings
   }
   deriving (Show, Eq, Generic)
+
+makeLenses ''Configuration
 
 configurationType :: Type Configuration
 configurationType = record $

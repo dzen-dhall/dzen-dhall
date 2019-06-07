@@ -8,7 +8,7 @@ let MarqueeSettings = ./MarqueeSettings.dhall
 
 let OpeningTag = ./OpeningTag.dhall
 
-let concat = http://prelude.dhall-lang.org/List/concat
+let concat = ../lib/List/concat.dhall
 
 in    λ(x : Bar)
 	→ x

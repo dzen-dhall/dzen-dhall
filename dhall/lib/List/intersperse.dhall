@@ -9,7 +9,7 @@ let List/intersperse
 	=   λ(e : Type)
 	  → λ(z : e)
 	  → λ(l : List e)
-	  → let null = https://prelude.dhall-lang.org/List/null
+	  → let null = ./null.dhall
 
 		let cons =
 				λ(e : Type)

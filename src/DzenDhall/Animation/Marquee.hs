@@ -5,10 +5,8 @@ import           DzenDhall.Data
 import qualified DzenDhall.Extra as Extra
 import           Lens.Micro.Extras
 
-charWidth = 10
-
-run :: MarqueeSettings -> AST -> Int -> AST
-run settings ast frameCounter =
+run :: Int -> MarqueeSettings -> AST -> Int -> AST
+run fontWidth settings ast frameCounter =
   let fpc          = view mqFramesPerChar settings
       desiredWidth = view mqWidth settings
       realWidth    = astWidth ast
@@ -26,10 +24,10 @@ run settings ast frameCounter =
              trimmed = fst $
                DzenDhall.Data.split desiredWidth shifted in
            if | fpc == 1  -> trimmed
-              | otherwise -> addShift frameCounter charWidth fpc trimmed
+              | otherwise -> addShift frameCounter fontWidth fpc trimmed
 
 addShift :: Int -> Int -> Int -> AST -> AST
-addShift frameCounter charWidth fpc ast =
+addShift frameCounter fontWidth fpc ast =
   let shift = frameCounter `mod` fpc
-      pxShift = charWidth `div` 2 - ((charWidth * shift) `div` fpc) in
+      pxShift = fontWidth `div` 2 - ((fontWidth * shift) `div` fpc) in
     Prop (P (XY (pxShift, 0))) ast

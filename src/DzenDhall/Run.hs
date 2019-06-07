@@ -1,10 +1,10 @@
-{-# LANGUAGE NamedFieldPuns #-}
 module DzenDhall.Run where
 
 import           Control.Concurrent
 import           Control.Concurrent.Async
 import           Control.Monad
 import           Data.IORef
+import           Data.Maybe
 import qualified Data.Text
 import           Data.Text (Text)
 import qualified Data.Text.IO
@@ -12,6 +12,7 @@ import qualified DzenDhall.Animation.Marquee as Marquee
 import           DzenDhall.App as App
 import           DzenDhall.Config
 import           DzenDhall.Data
+import           DzenDhall.Extra
 import qualified DzenDhall.Parser
 import           DzenDhall.Runtime
 import           GHC.IO.Handle
@@ -28,8 +29,12 @@ initialize (Source settings@(SourceSettings{..})) = liftIO $ do
   outputRef <- newIORef ""
   cacheRef <- newIORef Nothing
   void $ async (mkThread settings outputRef cacheRef)
-  let shEscapeMode = escapeMode
-  pure $ Source (SourceHandle {..})
+  pure $ Source $
+    SourceHandle
+    outputRef
+    cacheRef
+    escapeMode
+
 
 initialize (Txt text) = pure $ Txt text
 initialize (Marquee i p) = Marquee i <$> initialize p
@@ -89,30 +94,39 @@ runSourceProcess cp outputRef cacheRef mbInput = do
       putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
 
 -- | Produces an AST from 'Bar'.
-collectSources :: Bar SourceHandle -> App AST
-collectSources (Source SourceHandle { outputRef, cacheRef, shEscapeMode })
-  = liftIO $ do
+collectSources
+  :: Int
+  -> Bar SourceHandle
+  -> App AST
+collectSources _ (Source handle) = liftIO $ do
+  let outputRef  = handle ^. shOutputRef
+      cacheRef   = handle ^. shCacheRef
+      escapeMode = handle ^. shEscapeMode
+
   cache <- readIORef cacheRef
   case cache of
     Just escaped ->
       pure $ ASTText escaped
     Nothing -> do
       raw <- readIORef outputRef
-      let escaped = escape shEscapeMode raw
+      let escaped = escape escapeMode raw
       writeIORef cacheRef (Just escaped)
       pure $ ASTText escaped
-collectSources (Txt text)
-  = pure $ ASTText text
-collectSources (Raw text)
-  = pure $ ASTText text
-collectSources (Marquee settings p) = do
-  ast          <- collectSources p
+
+collectSources fontWidth (Marquee settings p) = do
+
+  ast          <- collectSources fontWidth p
   frameCounter <- view rtFrameCounter <$> App.getRuntime
-  pure $ Marquee.run settings ast frameCounter
-collectSources (Color color p)
-  = Prop (FG color) <$> collectSources p -- TODO
-collectSources (Bars ps)
-  = mconcat <$> mapM collectSources ps
+  pure $ Marquee.run fontWidth settings ast frameCounter
+
+collectSources fontWidth (Color color p)
+  = Prop (FG color) <$> collectSources fontWidth p -- TODO
+collectSources fontWidth (Bars ps)
+  = mconcat <$> mapM (collectSources fontWidth) ps
+collectSources _         (Txt text)
+  = pure $ ASTText text
+collectSources _         (Raw text)
+  = pure $ ASTText text
 
 escape :: EscapeMode -> Text -> Text
 escape EscapeMode{joinLines, escapeMarkup} =
@@ -162,27 +176,14 @@ renderAST (Container shape width) =
         CO r   -> "^co(" <> showPack r <> ")"
         Padding -> ""
 
-showPack :: Show a => a -> Text
-showPack = Data.Text.pack . show
-
-loopWhileM :: Monad m => m Bool -> m () -> m ()
-loopWhileM pr act = do
-    b <- pr
-    when b $ do
-      act
-      loopWhileM pr act
-
-whenJust :: (Monad m, Monoid b) => Maybe a -> (a -> m b) -> m b
-whenJust = flip $ maybe (return mempty)
-
 useConfigurations :: App [Async ()]
 useConfigurations = do
   runtime <- App.getRuntime
   forM (view rtConfigurations runtime) (App.mapApp async . go)
   where
     go :: Configuration -> App ()
-    go cfg@Configuration{bar} = do
-
+    go cfg = do
+      let bar       = cfg ^. cfgBarSpec
       let eiBarSpec = Text.Parsec.runParser DzenDhall.Parser.bar () "BarSpec #1" bar
 
       case eiBarSpec of
@@ -195,18 +196,23 @@ useConfigurations = do
           startDzenBinary cfg barSS
 
 startDzenBinary :: Configuration -> Bar SourceSettings -> App ()
-startDzenBinary
-  Configuration{settings = BarSettings{bsExtraFlags, bsUpdateInterval}}
-  barSS = do
+startDzenBinary cfg barSS = do
 
   runtime <- App.getRuntime
-  let dzenBinary = view rtDzenBinary runtime
+  let dzenBinary  = runtime ^. rtDzenBinary
+      barSettings = cfg ^. cfgBarSettings
+      fontWidth   = fromMaybe 10 $ barSettings ^. bsFontWidth
+
+      extraFlags  = barSettings ^. bsExtraFlags
+      fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
+      flags       = fontFlags <> extraFlags
+
   barSH :: Bar SourceHandle <- initialize barSS
 
-  (mb_stdin, mb_stdout, mb_stderr, _) <- liftIO $
-    createProcess $ (proc dzenBinary bsExtraFlags) { std_out = CreatePipe
-                                                   , std_in  = CreatePipe
-                                                   }
+  (mb_stdin, mb_stdout, mb_stderr, _) <- liftIO $ do
+    createProcess $ (proc dzenBinary flags) { std_out = CreatePipe
+                                            , std_in  = CreatePipe
+                                            }
 
   case (mb_stdin, mb_stdout, mb_stderr) of
 
@@ -216,11 +222,11 @@ startDzenBinary
         hSetBuffering stdout LineBuffering
 
       forever $ do
-        output <- renderAST <$> collectSources barSH
+        output <- renderAST <$> collectSources fontWidth barSH
         liftIO $ do
           Data.Text.IO.hPutStrLn stdin output
-          threadDelay bsUpdateInterval
-        modifyRuntime $ rtFrameCounter %~ (+ 1)
+          threadDelay (cfg ^. cfgBarSettings ^. bsUpdateInterval)
+        modifyRuntime $ rtFrameCounter +~ 1
 
     _ -> liftIO $ do
       putStrLn $ "Couldn't open IO handles for dzen binary " <> show dzenBinary

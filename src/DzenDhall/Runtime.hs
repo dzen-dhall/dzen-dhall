@@ -1,18 +1,18 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS -Wno-name-shadowing #-}
 module DzenDhall.Runtime where
 
 import Control.Monad
-import DzenDhall.Arguments
-import Paths_dzen_dhall
-import System.Directory
-import System.FilePath ((</>))
-import System.Posix.Files
-import System.Exit (ExitCode(..), exitWith)
-import DzenDhall.Config (Configuration(..), configurationType)
 import Data.Maybe
 import Dhall hiding (maybe)
+import DzenDhall.Arguments
+import DzenDhall.Config
+import Lens.Micro
 import Lens.Micro.TH
+import Paths_dzen_dhall
+import System.Directory
+import System.Exit (ExitCode(..), exitWith)
+import System.FilePath ((</>))
+import System.Posix.Files
 
 data Runtime = Runtime
   { _rtConfigDir :: String
@@ -35,11 +35,11 @@ readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
 
   unless exists $ do
     putStrLn "Configuration directory does not exist, you should create it first by running `dzen-dhall init`."
-    exitWith (ExitFailure 2)
+    exitWith $ ExitFailure 2
 
   let configFile = configDir </> "config.dhall"
 
-  configurations :: [Configuration] <-
+  configurations :: [Configuration] <- do
     detailed $ inputFile (list configurationType) configFile
 
   pure $ Runtime

@@ -1,22 +1,26 @@
-let Configuration = ./src/Configuration.dhall
+let types = ./src/types.dhall
 
-let Bar : Type = ./src/Bar.dhall
+let utils = ./src/utils.dhall
 
-let BarSpec : Type = ./src/BarSpec.dhall
+let lib = ./lib/index.dhall
 
-let mkSpec : Bar → BarSpec = ./src/mkSpec.dhall
+let Configuration = types.Configuration
 
-let BarSettings : Type = ./src/BarSettings.dhall
+let Bar = types.Bar
 
-let defaultBarSettings : BarSettings = ./src/defaultBarSettings.dhall
+let BarSpec = types.BarSpec
 
-let SourceSettings : Type = ./src/SourceSettings.dhall
+let BarSettings = types.BarSettings
 
-let MarqueeSettings = ./src/MarqueeSettings.dhall
+let SourceSettings = types.SourceSettings
 
-let List/intersperse
-	: ∀(e : Type) → e → List e → List e
-	= ./lib/List/intersperse.dhall
+let MarqueeSettings = types.MarqueeSettings
+
+let mkSpec : Bar → BarSpec = utils.mkSpec
+
+let defaultBarSettings : BarSettings = utils.defaultBarSettings
+
+let List/intersperse : ∀(e : Type) → e → List e → List e = lib.List/intersperse
 
 let defaultBar
 	: Bar

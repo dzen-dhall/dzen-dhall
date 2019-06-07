@@ -1,22 +1,25 @@
+{-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Data where
 
-import Data.Data
-import Data.IORef
-import Data.Text (Text)
-import DzenDhall.Config (EscapeMode(..), MarqueeSettings)
-import GHC.Generics
+import           Data.IORef
 import qualified Data.Text
+import           Data.Text (Text)
+import           DzenDhall.Config (EscapeMode(..), MarqueeSettings)
+import           GHC.Generics
+import           Lens.Micro.TH
 
 type Color = Text
 
+type Cache = IORef (Maybe Text)
+
 data SourceHandle
   = SourceHandle
-  { outputRef :: IORef Text
-  , cacheRef :: Cache
-  , shEscapeMode :: EscapeMode
+  { _shOutputRef :: IORef Text
+  , _shCacheRef :: Cache
+  , _shEscapeMode :: EscapeMode
   }
 
-type Cache = IORef (Maybe Text)
+makeLenses ''SourceHandle
 
 data Bar ref
   = Raw Text

@@ -12,22 +12,28 @@ author:              klntsky
 maintainer:          klntsky@gmail.com
 -- copyright:
 -- category:
-extra-source-files:  CHANGELOG.md
+extra-source-files:  CHANGELOG.md, README.md
 data-files:          dhall/config.dhall
+                     dhall/lib/List/concat.dhall
                      dhall/lib/List/intersperse.dhall
-                     dhall/src/MarqueeSettings.dhall
-                     dhall/src/Color.dhall
-                     dhall/src/mkSpec.dhall
-                     dhall/src/Configuration.dhall
-                     dhall/src/ClosingTag.dhall
+                     dhall/lib/List/null.dhall
+                     dhall/lib/index.dhall
+                     dhall/src/utils.dhall
+                     dhall/src/types.dhall
                      dhall/src/Bar.dhall
-                     dhall/src/defaultBarSettings.dhall
-                     dhall/src/BarSpec.dhall
-                     dhall/src/OpeningTag.dhall
-                     dhall/src/Token.dhall
-                     dhall/src/SourceSettings.dhall
-                     dhall/src/EscapeMode.dhall
                      dhall/src/BarSettings.dhall
+                     dhall/src/BarSpec.dhall
+                     dhall/src/ClosingTag.dhall
+                     dhall/src/Color.dhall
+                     dhall/src/Configuration.dhall
+                     dhall/src/EscapeMode.dhall
+                     dhall/src/MarqueeSettings.dhall
+                     dhall/src/OpeningTag.dhall
+                     dhall/src/SourceSettings.dhall
+                     dhall/src/Token.dhall
+                     dhall/src/defaultBarSettings.dhall
+                     dhall/src/definitions.dhall
+                     dhall/src/mkSpec.dhall
 
 library
   exposed-modules:     DzenDhall
@@ -43,31 +49,32 @@ library
                        Paths_dzen_dhall
   other-modules:
   other-extensions:
-  default-extensions:  OverloadedStrings
-                       FlexibleContexts
+  default-extensions:  DeriveFunctor
                        DeriveGeneric
+                       FlexibleContexts
+                       GeneralizedNewtypeDeriving
                        LambdaCase
                        MultiWayIf
-                       DeriveDataTypeable
-                       RecordWildCards
-                       DeriveFunctor
                        NamedFieldPuns
+                       OverloadedStrings
+                       RankNTypes
+                       RecordWildCards
                        ScopedTypeVariables
-                       GeneralizedNewtypeDeriving
+
   build-depends:       base ^>=4.12.0.0,
-                       dhall,
-                       optparse-applicative,
-                       directory,
-                       unix,
-                       filepath,
-                       text,
-                       parsec,
-                       time,
-                       process,
                        async,
-                       transformers,
+                       dhall,
+                       directory,
+                       filepath,
                        microlens,
-                       microlens-th
+                       microlens-th,
+                       optparse-applicative,
+                       parsec,
+                       process,
+                       text,
+                       time,
+                       transformers,
+                       unix
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010

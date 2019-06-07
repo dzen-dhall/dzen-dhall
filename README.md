@@ -18,17 +18,30 @@ Some output sources (shell scripts or commands used to provide the data) take to
 
 Obviously, all these issues can be handled with the use of one's `$LANGUAGE_OF_CHOICE`. My `$LANGUAGE_OF_CHOICE` is [Dhall](https://dhall-lang.org/). It is [total](https://en.wikipedia.org/wiki/Total_functional_programming) (in particular, always-terminating) and statically-typed, which makes it ideal for complex user-defined configurations.
 
-On the backend, Haskell is used to read the configuration and do the heavy lifting.
+On the backend, Haskell is used to read the configuration and do all the heavy lifting.
 
 ## Example
 
 See [the default config file](dhall/config.dhall).
 
-## Sources of confusion
+## Troubleshooting
 
-### Writing shell scripts using Dhall
+### Marquee jittering
 
-Dhall's string interpolation syntactically conflicts with bash syntax for array expansion and indexing. E.g. `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` (in a double-quoted string) or as `'' ''${arr[ ix ]} ''` in a multiline string (that is, `''` serves as both an escape sequence and a quote symbol). See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
+Jittering may appear if `fontWidth` parameter value is too large or too small. It can be fixed by specifying the width manually:
+
+```dhall
+[ { bar = ...
+  , settings = defaultBarSettings ⫽ { fontWidth = Some 10 }
+  }
+]
+```
+
+Another possible source of this problem is non-monospace font being used.
+
+### Shell scripts and string interpolation in Dhall
+
+String interpolation in Dhall syntactically conflicts with bash notation for array expansion and indexing. E.g. `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` (in a double-quoted string) or as `'' ''${arr[ ix ]} ''` in a multiline string (that is, `''` serves as both an escape sequence and a quote symbol). See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
 
 ## Implementation details
 
