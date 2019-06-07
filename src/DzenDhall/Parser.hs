@@ -25,8 +25,8 @@ bar = topLevel <* eof
       children <- topLevel
       closing
       pure $ case tag of
-               OMarquee speed -> Marquee speed children
-               OColor   color -> Color color children
+               OMarquee settings -> Marquee settings children
+               OColor   color    -> Color   color    children
 
 
 opening :: Preview Tokens OpeningTag

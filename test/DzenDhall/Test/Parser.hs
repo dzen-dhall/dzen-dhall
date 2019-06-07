@@ -12,24 +12,26 @@ mkTest name tokenList expected =
   Test.Tasty.HUnit.testCase name $
     runParser DzenDhall.Parser.bar () name tokenList @?= expected
 
+marqueeSettings = MarqueeSettings 0 0 0
+
 getTests :: IO TestTree
 getTests = pure $
   testGroup "Bar data parsing"
 
   [ mkTest
     "parsing #1"
-    [ TokOpen (OMarquee 3)
+    [ TokOpen (OMarquee marqueeSettings)
     , TokRaw "txt"
     , TokClose
     ]
-    (Right $ Bars [ Marquee 3 $ Bars [ Raw "txt" ] ])
+    (Right $ Bars [ Marquee marqueeSettings $ Bars [ Raw "txt" ] ])
 
   , mkTest
     "parsing #2"
     [ TokOpen (OColor "red")
     , TokRaw "raw"
     , TokTxt "txt"
-    , TokOpen (OMarquee 0)
+    , TokOpen (OMarquee marqueeSettings)
     , TokSource (SourceSettings { updateInterval = Nothing
                                 , command = []
                                 , stdin = Nothing
@@ -43,7 +45,7 @@ getTests = pure $
     Bars [ Color "red" $
            Bars [ Raw "raw"
                 , Txt "txt"
-                , Marquee 0 $ Bars
+                , Marquee marqueeSettings $ Bars
                   [ Source (SourceSettings { updateInterval = Nothing
                                            , command = []
                                            , stdin = Nothing

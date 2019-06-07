@@ -19,6 +19,9 @@ getRuntime = App get
 putRuntime :: Runtime -> App ()
 putRuntime rt = App $ put rt
 
+modifyRuntime :: (Runtime -> Runtime) -> App ()
+modifyRuntime f = getRuntime >>= putRuntime . f
+
 mapApp :: (IO a -> IO b) -> (App a -> App b)
 mapApp f app = do
   rt <- getRuntime

@@ -3,7 +3,7 @@ module DzenDhall.Data where
 import Data.Data
 import Data.IORef
 import Data.Text (Text)
-import DzenDhall.Config (EscapeMode(..))
+import DzenDhall.Config (EscapeMode(..), MarqueeSettings)
 import GHC.Generics
 import qualified Data.Text
 
@@ -22,10 +22,10 @@ data Bar ref
   = Raw Text
   | Source ref
   | Txt Text
-  | Marquee Integer (Bar ref)
+  | Marquee MarqueeSettings (Bar ref)
   | Color Text (Bar ref)
   | Bars [Bar ref]
-  deriving (Show, Eq, Generic, Data, Typeable)
+  deriving (Show, Eq, Generic)
 
 data Property
   = BG Color
@@ -167,3 +167,10 @@ splitAST n res@(Container _ l)
   where
     spaces :: Int -> Text
     spaces w = Data.Text.justifyRight w ' ' ""
+
+astWidth :: AST -> Int
+astWidth (ASTText txt) = Data.Text.length txt
+astWidth (ASTs a b) = astWidth a + astWidth b
+astWidth (Prop _ a) = astWidth a
+astWidth (Container _ w) = w
+astWidth EmptyAST = 0

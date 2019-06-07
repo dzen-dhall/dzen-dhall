@@ -1,23 +1,25 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module DzenDhall.Run where
 
-import Control.Concurrent
-import Control.Monad
-import Data.IORef
+import           Control.Concurrent
+import           Control.Concurrent.Async
+import           Control.Monad
+import           Data.IORef
 import qualified Data.Text
-import Data.Text (Text)
+import           Data.Text (Text)
 import qualified Data.Text.IO
-import DzenDhall.Config
-import DzenDhall.Data
-import System.Process
-import GHC.IO.Handle
+import qualified DzenDhall.Animation.Marquee as Marquee
+import           DzenDhall.App as App
+import           DzenDhall.Config
+import           DzenDhall.Data
 import qualified DzenDhall.Parser
+import           DzenDhall.Runtime
+import           GHC.IO.Handle
+import           Lens.Micro
+import           Lens.Micro.Extras
+import           System.Exit (ExitCode(..), exitWith)
+import           System.Process
 import qualified Text.Parsec
-import System.Exit (ExitCode(..), exitWith)
-import DzenDhall.Runtime (Runtime(..))
-import Control.Concurrent.Async
-import DzenDhall.App as App
-
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
@@ -87,9 +89,9 @@ runSourceProcess cp outputRef cacheRef mbInput = do
       putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
 
 -- | Produces an AST from 'Bar'.
-collectSources :: Bar SourceHandle -> IO AST
+collectSources :: Bar SourceHandle -> App AST
 collectSources (Source SourceHandle { outputRef, cacheRef, shEscapeMode })
-  = do
+  = liftIO $ do
   cache <- readIORef cacheRef
   case cache of
     Just escaped ->
@@ -103,8 +105,10 @@ collectSources (Txt text)
   = pure $ ASTText text
 collectSources (Raw text)
   = pure $ ASTText text
-collectSources (Marquee mqSettings p)
-  = collectSources p -- TODO
+collectSources (Marquee settings p) = do
+  ast          <- collectSources p
+  frameCounter <- view rtFrameCounter <$> App.getRuntime
+  pure $ Marquee.run settings ast frameCounter
 collectSources (Color color p)
   = Prop (FG color) <$> collectSources p -- TODO
 collectSources (Bars ps)
@@ -173,8 +177,8 @@ whenJust = flip $ maybe (return mempty)
 
 useConfigurations :: App [Async ()]
 useConfigurations = do
-  Runtime{rtConfigurations} <- App.getRuntime
-  forM rtConfigurations (App.mapApp async . go)
+  runtime <- App.getRuntime
+  forM (view rtConfigurations runtime) (App.mapApp async . go)
   where
     go :: Configuration -> App ()
     go cfg@Configuration{bar} = do
@@ -194,25 +198,29 @@ startDzenBinary :: Configuration -> Bar SourceSettings -> App ()
 startDzenBinary
   Configuration{settings = BarSettings{bsExtraFlags, bsUpdateInterval}}
   barSS = do
-  Runtime{rtDzenBinary} <- App.getRuntime
 
+  runtime <- App.getRuntime
+  let dzenBinary = view rtDzenBinary runtime
   barSH :: Bar SourceHandle <- initialize barSS
 
   (mb_stdin, mb_stdout, mb_stderr, _) <- liftIO $
-    createProcess $ (proc rtDzenBinary bsExtraFlags) { std_out = CreatePipe
-                                                     , std_in  = CreatePipe
-                                                     }
+    createProcess $ (proc dzenBinary bsExtraFlags) { std_out = CreatePipe
+                                                   , std_in  = CreatePipe
+                                                   }
 
   case (mb_stdin, mb_stdout, mb_stderr) of
 
-    (Just stdin, Just stdout, _) -> liftIO $ do
-      hSetBuffering stdin  LineBuffering
-      hSetBuffering stdout LineBuffering
+    (Just stdin, Just stdout, _) -> do
+      liftIO $ do
+        hSetBuffering stdin  LineBuffering
+        hSetBuffering stdout LineBuffering
 
       forever $ do
         output <- renderAST <$> collectSources barSH
-        Data.Text.IO.hPutStrLn stdin output
-        threadDelay bsUpdateInterval
+        liftIO $ do
+          Data.Text.IO.hPutStrLn stdin output
+          threadDelay bsUpdateInterval
+        modifyRuntime $ rtFrameCounter %~ (+ 1)
 
     _ -> liftIO $ do
-      putStrLn $ "Couldn't open IO handles for dzen binary " <> show rtDzenBinary
+      putStrLn $ "Couldn't open IO handles for dzen binary " <> show dzenBinary

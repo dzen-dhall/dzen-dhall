@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS -Wno-name-shadowing #-}
 module DzenDhall.Runtime where
 
 import Control.Monad
@@ -10,32 +12,41 @@ import System.Exit (ExitCode(..), exitWith)
 import DzenDhall.Config (Configuration(..), configurationType)
 import Data.Maybe
 import Dhall hiding (maybe)
+import Lens.Micro.TH
 
 data Runtime = Runtime
-  { rtConfigDir :: String
-  , rtConfigurations :: [Configuration]
-  , rtDzenBinary :: String
+  { _rtConfigDir :: String
+  , _rtConfigurations :: [Configuration]
+  , _rtDzenBinary :: String
+  , _rtFrameCounter :: Int
   }
   deriving (Eq, Show)
+
+makeLenses ''Runtime
 
 -- Read runtime from configuration file, if possible.
 readRuntime :: Arguments -> IO Runtime
 readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
-  let rtDzenBinary = fromMaybe "dzen2" mbDzenBinary
+  let dzenBinary = fromMaybe "dzen2" mbDzenBinary
+  let frameCounter = 0
 
-  rtConfigDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
-  exists <- doesDirectoryExist rtConfigDir
+  configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
+  exists <- doesDirectoryExist configDir
 
   unless exists $ do
     putStrLn "Configuration directory does not exist, you should create it first by running `dzen-dhall init`."
     exitWith (ExitFailure 2)
 
-  let configFile = rtConfigDir </> "config.dhall"
+  let configFile = configDir </> "config.dhall"
 
-  rtConfigurations :: [Configuration] <-
+  configurations :: [Configuration] <-
     detailed $ inputFile (list configurationType) configFile
 
-  pure $ Runtime {..}
+  pure $ Runtime
+    configDir
+    configurations
+    dzenBinary
+    frameCounter
 
 -- | Create config directory and set file permissions.
 initCommand :: Arguments -> IO ()

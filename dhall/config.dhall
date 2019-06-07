@@ -14,6 +14,10 @@ let SourceSettings : Type = ./src/SourceSettings.dhall
 
 let MarqueeSettings = ./src/MarqueeSettings.dhall
 
+let List/intersperse
+	: ∀(e : Type) → e → List e → List e
+	= ./lib/List/intersperse.dhall
+
 let defaultBar
 	: Bar
 	=   λ(Bar : Type)
@@ -21,8 +25,11 @@ let defaultBar
 	  → λ(text : Text → Bar)
 	  → λ(fg : Text → List Bar → Bar)
 	  → λ(source : SourceSettings → Bar)
-	  → λ(marquee : MarqueeSettings → List Bar → Bar)
-	  → let space = text " "
+	  → λ(marquee : MarqueeSettings → Bar → Bar)
+	  → let separateBy =
+			  λ(sep : Bar) → λ(l : List Bar) → join (List/intersperse Bar sep l)
+
+		let separate = separateBy (text " | ")
 
 		let bash
 			: Natural → Text → Bar
@@ -65,20 +72,11 @@ let defaultBar
 
 		let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
-		let separator = text " "
-
-		let swapAndMemory =
-			  join
-			  [ text "Mem: "
-			  , memoryUsage
-			  , text "%"
-			  , separator
-			  , text "Swap: "
-			  , swapUsage
-			  , text "%"
-			  ]
-
-		in  join [ swapAndMemory, separator, clocks ]
+		in  separate
+			[ join [ text "Mem: ", memoryUsage, text "%" ]
+			, join [ text "Swap: ", swapUsage, text "%" ]
+			, clocks
+			]
 
 in  [ { bar =
 		  mkSpec defaultBar : BarSpec

@@ -1,7 +1,7 @@
 { mkDerivation, async, base, dhall, directory, filepath, hspec
-, HUnit, microlens, optparse-applicative, parsec, process, stdenv
-, tasty, tasty-hspec, tasty-hunit, template-haskell, text, time
-, unix
+, HUnit, microlens, microlens-th, optparse-applicative, parsec
+, process, stdenv, tasty, tasty-hspec, tasty-hunit
+, template-haskell, text, time, transformers, unix
 }:
 mkDerivation {
   pname = "dzen-dhall";
@@ -11,8 +11,8 @@ mkDerivation {
   isExecutable = true;
   enableSeparateDataOutput = true;
   libraryHaskellDepends = [
-    async base dhall directory filepath optparse-applicative parsec
-    process text time unix
+    async base dhall directory filepath microlens microlens-th
+    optparse-applicative parsec process text time transformers unix
   ];
   executableHaskellDepends = [ base ];
   testHaskellDepends = [

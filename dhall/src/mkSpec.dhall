@@ -4,6 +4,10 @@ let Token = ./Token.dhall
 
 let SourceSettings = ./SourceSettings.dhall
 
+let MarqueeSettings = ./MarqueeSettings.dhall
+
+let OpeningTag = ./OpeningTag.dhall
+
 let concat = http://prelude.dhall-lang.org/List/concat
 
 in    λ(x : Bar)
@@ -18,7 +22,7 @@ in    λ(x : Bar)
 		  # [ Token.Raw "^fg()" ]
 	  )
 	  (λ(ss : SourceSettings) → [ Token.Source ss ])
-	  (   λ(settings : ./MarqueeSettings.dhall)
-		→ λ(children : List (List Token))
-		→ concat Token children
+	  (   λ(settings : MarqueeSettings)
+		→ λ(child : List Token)
+		→ [ Token.Open (OpeningTag.Marquee settings) ] # child # [ Token.Close ]
 	  )

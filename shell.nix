@@ -1,6 +1,6 @@
 { nixpkgs ? import <nixpkgs> {} }:
-let drv = (import ./nix/release.nix).dzen-dhall.env;
+let drv = (import ./nix/release.nix).dzen-dhall;
 in
-  if pkgs.lib.inNixShell
+  if nixpkgs.lib.inNixShell
   then drv.env
   else drv

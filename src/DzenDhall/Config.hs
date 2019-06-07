@@ -1,17 +1,36 @@
+{-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Config where
 
 import Dhall
 import Data.Text (Text)
+import Lens.Micro.TH
+import DzenDhall.Extra
+
+data MarqueeSettings
+  = MarqueeSettings
+  { _mqSpeed :: Int
+  , _mqFramesPerChar :: Int
+  , _mqWidth :: Int
+  }
+  deriving (Show, Eq, Generic)
+
+makeLenses ''MarqueeSettings
+
+marqueeSettingsType :: Type MarqueeSettings
+marqueeSettingsType = record $
+  MarqueeSettings <$> field "speed"              (fromIntegral <$> integer)
+                  <*> field "framesPerCharacter" (nonNegative . fromIntegral <$> natural)
+                  <*> field "width"              (nonNegative . fromIntegral <$> natural)
 
 data OpeningTag
-  = OMarquee Integer
+  = OMarquee MarqueeSettings
   | OColor Text
   deriving (Show, Eq, Generic)
 
 openingTagType :: Type OpeningTag
 openingTagType = union
-  $  (OMarquee <$> constructor "Marquee" integer)
-  <> (OColor   <$> constructor "Color" strictText)
+  $  (OMarquee <$> constructor "Marquee" marqueeSettingsType)
+  <> (OColor   <$> constructor "Color"   strictText)
 
 data BarSettings
   = BarSettings
@@ -72,20 +91,6 @@ sourceSettingsType = record $
                  <*> field "command"        (list string)
                  <*> field "stdin"          (Dhall.maybe strictText)
                  <*> field "escapeMode"     escapeModeType
-
-data MarqueeSettings
-  = MarqueeSettings
-  { mqSpeed :: Int
-  , mqFramesPerChar :: Int
-  , mqWidth :: Int
-  }
-  deriving (Show, Eq, Generic)
-
-marqueeSettingsType :: Type MarqueeSettings
-marqueeSettingsType = record $
-  MarqueeSettings <$> field "speed"              (fromIntegral <$> integer)
-                  <*> field "framesPerCharacter" (fromIntegral <$> natural)
-                  <*> field "width"              (fromIntegral <$> natural)
 
 type BarSpec = [Token]
 
