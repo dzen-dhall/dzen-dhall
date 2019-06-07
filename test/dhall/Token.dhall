@@ -8,7 +8,7 @@ let MarqueeSettings = ./src/MarqueeSettings.dhall
 
 in  [ Token.Open
 	  ( OpeningTag.Marquee
-		({ speed = +1, framesPerCharacter = 2, width = 3 } : MarqueeSettings)
+		({ framesPerCharacter = 2, width = 3 } : MarqueeSettings)
 	  )
 	, Token.Raw "raw"
 	, Token.Source

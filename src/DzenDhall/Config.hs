@@ -8,8 +8,7 @@ import DzenDhall.Extra
 
 data MarqueeSettings
   = MarqueeSettings
-  { _mqSpeed :: Int
-  , _mqFramesPerChar :: Int
+  { _mqFramesPerChar :: Int
   , _mqWidth :: Int
   }
   deriving (Show, Eq, Generic)
@@ -18,8 +17,7 @@ makeLenses ''MarqueeSettings
 
 marqueeSettingsType :: Type MarqueeSettings
 marqueeSettingsType = record $
-  MarqueeSettings <$> field "speed"              (fromIntegral <$> integer)
-                  <*> field "framesPerCharacter" (nonNegative . fromIntegral <$> natural)
+  MarqueeSettings <$> field "framesPerCharacter" (positive    . fromIntegral <$> natural)
                   <*> field "width"              (nonNegative . fromIntegral <$> natural)
 
 data OpeningTag

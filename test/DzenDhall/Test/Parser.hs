@@ -12,7 +12,7 @@ mkTest name tokenList expected =
   Test.Tasty.HUnit.testCase name $
     runParser DzenDhall.Parser.bar () name tokenList @?= expected
 
-marqueeSettings = MarqueeSettings 0 0 0
+marqueeSettings = MarqueeSettings 0 0
 
 getTests :: IO TestTree
 getTests = pure $

@@ -19,7 +19,7 @@ getTests = pure $
   [ let
       ast = ASTText "12345"
 
-      settings = MarqueeSettings 1 1 3
+      settings = MarqueeSettings 1 3
 
       expected = [ ASTText "123"
                  , ASTText "234"

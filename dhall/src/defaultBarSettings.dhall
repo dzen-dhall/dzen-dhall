@@ -1,1 +1,2 @@
-{ monitor = 0, extraFlags = [] : List Text, updateInterval = 250 } : ./BarSettings.dhall
+  { monitor = 0, extraFlags = [ "-ta", "l" ] : List Text, updateInterval = 250 }
+: ./BarSettings.dhall

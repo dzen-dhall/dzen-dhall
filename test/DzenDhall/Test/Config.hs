@@ -28,7 +28,7 @@ testOpeningTag dhallDir = do
            (list openingTagType) [litFile|test/dhall/OpeningTag.dhall|]
   pure $ Test.Tasty.HUnit.testCase "test/dhall/OpeningTag.dhall marshalling" $
     input @?=
-    [ OMarquee (MarqueeSettings 1 2 3), OColor "red" ]
+    [ OMarquee (MarqueeSettings 2 3), OColor "red" ]
 
 testToken :: FilePath -> IO TestTree
 testToken dhallDir = do
@@ -37,7 +37,7 @@ testToken dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/Token.dhall marshalling" $
     input @?=
 
-    [ TokOpen (OMarquee (MarqueeSettings 1 2 3))
+    [ TokOpen (OMarquee (MarqueeSettings 2 3))
     , TokRaw "raw"
     , TokSource (SourceSettings { updateInterval = Just 1000
                                 , command = [ "bash" ]
@@ -67,8 +67,7 @@ testMarqueeSettings dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/MarqueeSettings.dhall marshalling" $
     input @?=
 
-    MarqueeSettings { _mqSpeed = 1
-                    , _mqFramesPerChar = 2
+    MarqueeSettings { _mqFramesPerChar = 2
                     , _mqWidth = 3
                     }
 
