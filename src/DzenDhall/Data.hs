@@ -5,7 +5,6 @@ import Data.IORef
 import Data.Text (Text)
 import DzenDhall.Config (EscapeMode(..))
 import GHC.Generics
-import Control.Concurrent
 import qualified Data.Text
 
 type Color = Text
@@ -167,4 +166,4 @@ splitAST n res@(Container _ l)
   | otherwise = EmptyR res l
   where
     spaces :: Int -> Text
-    spaces n = Data.Text.justifyRight n ' ' ""
+    spaces w = Data.Text.justifyRight w ' ' ""

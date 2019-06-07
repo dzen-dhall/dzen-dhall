@@ -16,12 +16,13 @@ import qualified Text.Parsec
 import System.Exit (ExitCode(..), exitWith)
 import DzenDhall.Runtime (Runtime(..))
 import Control.Concurrent.Async
+import DzenDhall.App as App
 
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
-initialize :: Bar SourceSettings -> IO (Bar SourceHandle)
-initialize (Source settings@(SourceSettings{..})) = do
+initialize :: Bar SourceSettings -> App (Bar SourceHandle)
+initialize (Source settings@(SourceSettings{..})) = liftIO $ do
   outputRef <- newIORef ""
   cacheRef <- newIORef Nothing
   void $ async (mkThread settings outputRef cacheRef)
@@ -170,41 +171,41 @@ loopWhileM pr act = do
 whenJust :: (Monad m, Monoid b) => Maybe a -> (a -> m b) -> m b
 whenJust = flip $ maybe (return mempty)
 
-useConfigurations :: Runtime -> IO [Async ()]
-useConfigurations runtime@Runtime{rtConfigurations} =
-  forM rtConfigurations (async . go)
+useConfigurations :: App [Async ()]
+useConfigurations = do
+  Runtime{rtConfigurations} <- App.getRuntime
+  forM rtConfigurations (App.mapApp async . go)
   where
-
-    go :: Configuration -> IO ()
+    go :: Configuration -> App ()
     go cfg@Configuration{bar} = do
 
       let eiBarSpec = Text.Parsec.runParser DzenDhall.Parser.bar () "BarSpec #1" bar
 
       case eiBarSpec of
-        Left err -> do
+        Left err -> liftIO $ do
           putStrLn $ "Internal error #1, debug info: " <> show bar
           putStrLn $ "Error: " <> show err
           exitWith (ExitFailure 3)
 
         Right (barSS :: Bar SourceSettings) -> do
-          startDzenBinary runtime cfg barSS
+          startDzenBinary cfg barSS
 
-startDzenBinary :: Runtime -> Configuration -> Bar SourceSettings -> IO ()
+startDzenBinary :: Configuration -> Bar SourceSettings -> App ()
 startDzenBinary
-  Runtime{rtDzenBinary}
   Configuration{settings = BarSettings{bsExtraFlags, bsUpdateInterval}}
   barSS = do
+  Runtime{rtDzenBinary} <- App.getRuntime
 
   barSH :: Bar SourceHandle <- initialize barSS
 
-  (mb_stdin, mb_stdout, mb_stderr, _) <-
+  (mb_stdin, mb_stdout, mb_stderr, _) <- liftIO $
     createProcess $ (proc rtDzenBinary bsExtraFlags) { std_out = CreatePipe
                                                      , std_in  = CreatePipe
                                                      }
 
   case (mb_stdin, mb_stdout, mb_stderr) of
 
-    (Just stdin, Just stdout, _) -> do
+    (Just stdin, Just stdout, _) -> liftIO $ do
       hSetBuffering stdin  LineBuffering
       hSetBuffering stdout LineBuffering
 
@@ -213,5 +214,5 @@ startDzenBinary
         Data.Text.IO.hPutStrLn stdin output
         threadDelay bsUpdateInterval
 
-    _ -> do
+    _ -> liftIO $ do
       putStrLn $ "Couldn't open IO handles for dzen binary " <> show rtDzenBinary

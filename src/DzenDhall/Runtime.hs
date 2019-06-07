@@ -7,9 +7,9 @@ import System.Directory
 import System.FilePath ((</>))
 import System.Posix.Files
 import System.Exit (ExitCode(..), exitWith)
-import Dhall (detailed, inputFile, list)
 import DzenDhall.Config (Configuration(..), configurationType)
-import Data.Maybe (fromMaybe)
+import Data.Maybe
+import Dhall hiding (maybe)
 
 data Runtime = Runtime
   { rtConfigDir :: String
@@ -17,6 +17,25 @@ data Runtime = Runtime
   , rtDzenBinary :: String
   }
   deriving (Eq, Show)
+
+-- Read runtime from configuration file, if possible.
+readRuntime :: Arguments -> IO Runtime
+readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
+  let rtDzenBinary = fromMaybe "dzen2" mbDzenBinary
+
+  rtConfigDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
+  exists <- doesDirectoryExist rtConfigDir
+
+  unless exists $ do
+    putStrLn "Configuration directory does not exist, you should create it first by running `dzen-dhall init`."
+    exitWith (ExitFailure 2)
+
+  let configFile = rtConfigDir </> "config.dhall"
+
+  rtConfigurations :: [Configuration] <-
+    detailed $ inputFile (list configurationType) configFile
+
+  pure $ Runtime {..}
 
 -- | Create config directory and set file permissions.
 initCommand :: Arguments -> IO ()
@@ -50,25 +69,6 @@ initCommand Arguments{mbConfigDir} = do
 
   putStrLn $ "Success! You can now view your configuration at " <> configFile
   putStrLn $ "Run dzen-dhall again to see it in action."
-
--- Read runtime from configuration file, if possible.
-readRuntime :: Arguments -> IO Runtime
-readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
-  let rtDzenBinary = fromMaybe "dzen2" mbDzenBinary
-
-  rtConfigDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
-  exists <- doesDirectoryExist rtConfigDir
-
-  unless exists $ do
-    putStrLn "Configuration directory does not exist, you should create it first by running `dzen-dhall init`."
-    exitWith (ExitFailure 2)
-
-  let configFile = rtConfigDir </> "config.dhall"
-
-  rtConfigurations :: [Configuration] <-
-    detailed $ inputFile (list configurationType) configFile
-
-  pure $ Runtime {..}
 
 type Hook = FilePath -> IO ()
 

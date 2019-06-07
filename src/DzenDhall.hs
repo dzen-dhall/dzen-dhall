@@ -5,6 +5,7 @@ import System.Exit (exitWith, ExitCode(..))
 
 import DzenDhall.Arguments (Arguments(..), Command(..), argumentsParser)
 import DzenDhall.Runtime (initCommand, readRuntime)
+import DzenDhall.App as App
 import DzenDhall.Run (useConfigurations)
 import qualified Control.Concurrent.Async as Async
 
@@ -14,8 +15,9 @@ main = do
   case mbCommand arguments of
     Nothing -> do
       runtime <- readRuntime arguments
-      asyncs <- useConfigurations runtime
-      mapM_ Async.wait asyncs
+      runApp runtime $ do
+        asyncs <- useConfigurations
+        liftIO $ mapM_ Async.wait asyncs
 
     Just Init -> do
       initCommand arguments

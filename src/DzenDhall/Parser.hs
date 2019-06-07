@@ -12,6 +12,23 @@ type Parser a = Parsec Tokens () a
 type Tokens = [DzenDhall.Config.Token]
 type Preview t a = forall m u . Monad m => ParsecT t u m a
 
+bar :: Parser (Bar SourceSettings)
+bar = topLevel <* eof
+  where
+    topLevel = fmap Bars $ many $
+          Raw    <$> raw
+      <|> Txt    <$> txt
+      <|> Source <$> source
+      <|> wrapped
+    wrapped = do
+      tag      <- opening
+      children <- topLevel
+      closing
+      pure $ case tag of
+               OMarquee speed -> Marquee speed children
+               OColor   color -> Color color children
+
+
 opening :: Preview Tokens OpeningTag
 opening = withPreview $ \case
   TokOpen tag -> Just tag
@@ -21,9 +38,6 @@ closing :: Preview Tokens ()
 closing = withPreview $ \case
   TokClose -> Just ()
   _        -> Nothing
-
-withPreview :: Stream s m t => Show t => (t -> Maybe a) -> ParsecT s u m a
-withPreview = tokenPrim show (\pos _ _ -> pos)
 
 raw :: Preview Tokens Text
 raw = withPreview $ \case
@@ -40,18 +54,5 @@ source = withPreview $ \case
   TokSource settings -> Just settings
   _                  -> Nothing
 
-bar :: Parser (Bar SourceSettings)
-bar = topLevel <* eof
-  where
-    topLevel = fmap Bars $ many $
-          Raw    <$> raw
-      <|> Txt    <$> txt
-      <|> Source <$> source
-      <|> wrapped
-    wrapped = do
-      tag      <- opening
-      children <- topLevel
-      closing
-      pure $ case tag of
-               OMarquee speed -> Marquee speed children
-               OColor   color -> Color color children
+withPreview :: Stream s m t => Show t => (t -> Maybe a) -> ParsecT s u m a
+withPreview = tokenPrim show (\pos _ _ -> pos)
