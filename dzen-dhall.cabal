@@ -14,26 +14,31 @@ maintainer:          klntsky@gmail.com
 -- category:
 extra-source-files:  CHANGELOG.md, README.md
 data-files:          dhall/config.dhall
-                     dhall/lib/List/concat.dhall
-                     dhall/lib/List/intersperse.dhall
-                     dhall/lib/List/null.dhall
                      dhall/lib/index.dhall
-                     dhall/src/utils.dhall
-                     dhall/src/types.dhall
+                     dhall/lib/List/concat.dhall
+                     dhall/lib/List/generate.dhall
+                     dhall/lib/List/intersperse.dhall
+                     dhall/lib/List/map.dhall
+                     dhall/lib/List/null.dhall
                      dhall/src/Bar.dhall
                      dhall/src/BarSettings.dhall
                      dhall/src/BarSpec.dhall
                      dhall/src/ClosingTag.dhall
                      dhall/src/Color.dhall
                      dhall/src/Configuration.dhall
-                     dhall/src/EscapeMode.dhall
-                     dhall/src/MarqueeSettings.dhall
-                     dhall/src/OpeningTag.dhall
-                     dhall/src/SourceSettings.dhall
-                     dhall/src/Token.dhall
                      dhall/src/defaultBarSettings.dhall
                      dhall/src/definitions.dhall
+                     dhall/src/EscapeMode.dhall
+                     dhall/src/Marquee.dhall
+                     dhall/src/mkConfigs.dhall
                      dhall/src/mkSpec.dhall
+                     dhall/src/OpeningTag.dhall
+                     dhall/src/Slider.dhall
+                     dhall/src/Source.dhall
+                     dhall/src/Token.dhall
+                     dhall/src/types.dhall
+                     dhall/src/utils.dhall
+                     dhall/src/VerticalDirection.dhall
 
 library
   exposed-modules:     DzenDhall

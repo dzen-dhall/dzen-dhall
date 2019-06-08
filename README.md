@@ -24,6 +24,50 @@ On the backend, Haskell is used to read the configuration and do all the heavy l
 
 See [the default config file](dhall/config.dhall).
 
+## Getting started
+
+### Building
+
+#### Using [Nix](https://nixos.org/nix/)
+
+```
+nix-build --attr dzen-dhall
+```
+
+To use pinned version of nixpkgs, pass `--arg usePinned true`.
+
+#### Using [stack](https://docs.haskellstack.org/en/stable/README/)
+
+```
+stack build
+```
+
+### Installing
+
+#### Using [Nix](https://nixos.org/nix/)
+
+```
+nix-env --file default.nix --install dzen-dhall
+```
+
+To use pinned version of nixpkgs, pass `--arg usePinned true`.
+
+#### Using [stack](https://docs.haskellstack.org/en/stable/README/)
+
+```
+stack install
+```
+
+### Running
+
+To create default configuration, run
+
+```
+dzen-dhall init
+```
+
+dzen-dhall will put some files to `~/.config/dzen-dhall/`
+
 ## Troubleshooting
 
 ### Marquee jittering
@@ -39,9 +83,11 @@ Jittering may appear if `fontWidth` parameter value is too large or too small. I
 
 Another possible source of this problem is non-monospace font being used.
 
-### Shell scripts and string interpolation in Dhall
+### Writing shell scripts in Dhall
 
 String interpolation in Dhall syntactically conflicts with bash notation for array expansion and indexing. E.g. `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` (in a double-quoted string) or as `'' ''${arr[ ix ]} ''` in a multiline string (that is, `''` serves as both an escape sequence and a quote symbol). See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
+
+Also, dhall-format does not behave well
 
 ## Implementation details
 

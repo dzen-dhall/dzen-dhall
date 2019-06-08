@@ -1,26 +1,24 @@
+let lib = ./lib/index.dhall
+
 let types = ./src/types.dhall
 
 let utils = ./src/utils.dhall
 
-let lib = ./lib/index.dhall
-
 let Configuration = types.Configuration
-
-let Bar = types.Bar
-
-let BarSpec = types.BarSpec
 
 let BarSettings = types.BarSettings
 
-let SourceSettings = types.SourceSettings
+let Bar = types.Bar
 
-let MarqueeSettings = types.MarqueeSettings
+let Source = types.Source
 
-let mkSpec : Bar → BarSpec = utils.mkSpec
+let Marquee = types.Marquee
+
+let Slider = types.Slider
+
+let mkConfigs = utils.mkConfigs
 
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
-
-let List/intersperse : ∀(e : Type) → e → List e → List e = lib.List/intersperse
 
 let defaultBar
 	: Bar
@@ -28,10 +26,13 @@ let defaultBar
 	  → λ(join : List Bar → Bar)
 	  → λ(text : Text → Bar)
 	  → λ(fg : Text → List Bar → Bar)
-	  → λ(source : SourceSettings → Bar)
-	  → λ(marquee : MarqueeSettings → Bar → Bar)
+	  → λ(source : Source → Bar)
+	  → λ(marquee : Marquee → Bar → Bar)
+	  → λ(slider : Slider → List Bar → Bar)
 	  → let separateBy =
-			  λ(sep : Bar) → λ(l : List Bar) → join (List/intersperse Bar sep l)
+				λ(sep : Bar)
+			  → λ(list : List Bar)
+			  → join (lib.List/intersperse Bar sep list)
 
 		let separate = separateBy (text " | ")
 
@@ -82,9 +83,7 @@ let defaultBar
 			, clocks
 			]
 
-in  [ { bar =
-		  mkSpec defaultBar : BarSpec
-	  , settings =
-		  defaultBarSettings : BarSettings
-	  }
-	] : List Configuration
+in    mkConfigs
+	  [ { bar = defaultBar : Bar, settings = defaultBarSettings : BarSettings }
+	  ]
+	: List Configuration

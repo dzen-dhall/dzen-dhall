@@ -7,12 +7,12 @@ import Test.Tasty (TestTree, TestName, testGroup)
 import Test.Tasty.HUnit
 import Text.Parsec
 
-mkTest :: TestName -> [Token] -> Either ParseError (Bar SourceSettings) -> TestTree
+mkTest :: TestName -> [Token] -> Either ParseError (Bar Source) -> TestTree
 mkTest name tokenList expected =
   Test.Tasty.HUnit.testCase name $
-    runParser DzenDhall.Parser.bar () name tokenList @?= expected
+    DzenDhall.Parser.runBarParser tokenList @?= expected
 
-marqueeSettings = MarqueeSettings 0 0
+marquee = Marquee 0 0
 
 getTests :: IO TestTree
 getTests = pure $
@@ -20,19 +20,19 @@ getTests = pure $
 
   [ mkTest
     "parsing #1"
-    [ TokOpen (OMarquee marqueeSettings)
+    [ TokOpen (OMarquee marquee)
     , TokRaw "txt"
     , TokClose
     ]
-    (Right $ Bars [ Marquee marqueeSettings $ Bars [ Raw "txt" ] ])
+    (Right $ Bars [ BarMarquee marquee $ Bars [ BarRaw "txt" ] ])
 
   , mkTest
     "parsing #2"
     [ TokOpen (OColor "red")
     , TokRaw "raw"
     , TokTxt "txt"
-    , TokOpen (OMarquee marqueeSettings)
-    , TokSource (SourceSettings { updateInterval = Nothing
+    , TokOpen (OMarquee marquee)
+    , TokSource (Source { updateInterval = Nothing
                                 , command = []
                                 , stdin = Nothing
                                 , escapeMode = EscapeMode True True
@@ -42,15 +42,15 @@ getTests = pure $
     ]
 
     $ Right $
-    Bars [ Color "red" $
-           Bars [ Raw "raw"
-                , Txt "txt"
-                , Marquee marqueeSettings $ Bars
-                  [ Source (SourceSettings { updateInterval = Nothing
-                                           , command = []
-                                           , stdin = Nothing
-                                           , escapeMode = EscapeMode True True
-                                           })
+    Bars [ BarColor "red" $
+           Bars [ BarRaw "raw"
+                , BarText "txt"
+                , BarMarquee marquee $ Bars
+                  [ BarSource (Source { updateInterval = Nothing
+                                              , command = []
+                                              , stdin = Nothing
+                                              , escapeMode = EscapeMode True True
+                                              })
                   ]
                 ]
          ]

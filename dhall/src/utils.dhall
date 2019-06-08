@@ -1,1 +1,8 @@
-{ mkSpec = ./mkSpec.dhall, defaultBarSettings = ./defaultBarSettings.dhall }
+{- Collect all functions -}
+{ mkSpec =
+	./mkSpec.dhall
+, mkConfigs =
+	./mkConfigs.dhall
+, defaultBarSettings =
+	./defaultBarSettings.dhall
+}

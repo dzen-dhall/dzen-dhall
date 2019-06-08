@@ -1,3 +1,5 @@
-let MarqueeSettings = ./MarqueeSettings.dhall
+let Marquee = ./Marquee.dhall
 
-in  < Marquee : MarqueeSettings | Color : Text >
+let Slider = ./Slider.dhall
+
+in  < Marquee : Marquee | Slider : Slider | Color : Text >

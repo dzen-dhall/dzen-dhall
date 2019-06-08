@@ -5,10 +5,10 @@ cabal2nix:
 
 build:
 	unlink ./result 2>/dev/null || true # To make hash the same
-	nix-build --attr dzen-dhall nix/release.nix
+	nix-build --attr dzen-dhall default.nix
 
 run: build
 	./result/bin/dzen-dhall
 
 find-data:
-	find ./dhall -type f | sed 's#./##'
+	find ./dhall -type f | sed 's#./##' | sort

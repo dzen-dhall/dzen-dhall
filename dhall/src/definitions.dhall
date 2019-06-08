@@ -10,8 +10,8 @@
 	./BarSettings.dhall
 , defaultBarSettings =
 	./defaultBarSettings.dhall
-, SourceSettings =
-	./SourceSettings.dhall
-, MarqueeSettings =
-	./MarqueeSettings.dhall
+, Source =
+	./Source.dhall
+, Marquee =
+	./Marquee.dhall
 }

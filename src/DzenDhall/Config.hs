@@ -6,28 +6,69 @@ import Data.Text (Text)
 import Lens.Micro.TH
 import DzenDhall.Extra
 
-data MarqueeSettings
-  = MarqueeSettings
+data Marquee
+  = Marquee
   { _mqFramesPerChar :: Int
-  , _mqWidth :: Int
+  , _mqWidth         :: Int
   }
   deriving (Show, Eq, Generic)
 
-makeLenses ''MarqueeSettings
+makeLenses ''Marquee
 
-marqueeSettingsType :: Type MarqueeSettings
-marqueeSettingsType = record $
-  MarqueeSettings <$> field "framesPerCharacter" (positive    . fromIntegral <$> natural)
-                  <*> field "width"              (nonNegative . fromIntegral <$> natural)
+marqueeType :: Type Marquee
+marqueeType = record $
+  Marquee <$> field "framesPerCharacter" (positive    . fromIntegral <$> natural)
+              <*> field "width"              (nonNegative . fromIntegral <$> natural)
+
+data VDirection
+  = VUp | VDown
+  deriving (Show, Eq, Generic)
+
+directionType :: Type VDirection
+directionType = union
+  $  (VUp   <$ constructor "Up"   unit)
+  <> (VDown <$ constructor "Down" unit)
+
+data Fade
+  = Fade
+  { _fadeDirection  :: VDirection
+  , _fadeFrameCount :: Int
+  }
+  deriving (Show, Eq, Generic)
+
+makeLenses ''Fade
+
+fadeType :: Type Fade
+fadeType = record $
+  Fade <$> field "direction"  directionType
+       <*> field "frameCount" (fromIntegral <$> natural)
+
+data Slider
+  = Slider
+  { _fadeIn      :: Fade
+  , _fadeOut     :: Fade
+  , _sliderDelay :: Int
+  }
+  deriving (Show, Eq, Generic)
+
+makeLenses ''Slider
+
+sliderType :: Type Slider
+sliderType = record $
+  Slider <$> field "fadeIn"  fadeType
+         <*> field "fadeOut" fadeType
+         <*> field "delay"   (fromIntegral <$> natural)
 
 data OpeningTag
-  = OMarquee MarqueeSettings
-  | OColor Text
+  = OMarquee Marquee
+  | OSlider  Slider
+  | OColor   Text
   deriving (Show, Eq, Generic)
 
 openingTagType :: Type OpeningTag
 openingTagType = union
-  $  (OMarquee <$> constructor "Marquee" marqueeSettingsType)
+  $  (OMarquee <$> constructor "Marquee" marqueeType)
+  <> (OSlider  <$> constructor "Slider"  sliderType)
   <> (OColor   <$> constructor "Color"   strictText)
 
 data BarSettings
@@ -57,18 +98,20 @@ barSettingsType = record $
 data Token
   = TokOpen OpeningTag
   | TokRaw Text
-  | TokSource SourceSettings
+  | TokSource Source
   | TokTxt Text
+  | TokSeparator
   | TokClose
   deriving (Show, Eq, Generic)
 
 tokenType :: Type Token
 tokenType = union
-  $  (TokOpen   <$> constructor "Open"   openingTagType)
-  <> (TokRaw    <$> constructor "Raw"    strictText)
-  <> (TokSource <$> constructor "Source" sourceSettingsType)
-  <> (TokTxt    <$> constructor "Txt"    strictText)
-  <> (TokClose  <$  constructor "Close"  unit)
+  $  (TokOpen      <$> constructor "Open"      openingTagType)
+  <> (TokRaw       <$> constructor "Raw"       strictText)
+  <> (TokSource    <$> constructor "Source"    sourceSettingsType)
+  <> (TokTxt       <$> constructor "Txt"       strictText)
+  <> (TokSeparator <$  constructor "Separator" unit)
+  <> (TokClose     <$  constructor "Close"     unit)
 
 data EscapeMode = EscapeMode
   { joinLines :: Bool
@@ -81,8 +124,8 @@ escapeModeType = record $
   EscapeMode <$> field "joinLines" bool
              <*> field "escapeMarkup" bool
 
-data SourceSettings
-  = SourceSettings
+data Source
+  = Source
   { updateInterval :: Maybe Int
   -- ^ In microseconds
   , command :: [String]
@@ -90,9 +133,9 @@ data SourceSettings
   , escapeMode :: EscapeMode
   } deriving (Show, Eq, Generic)
 
-sourceSettingsType :: Type SourceSettings
+sourceSettingsType :: Type Source
 sourceSettingsType = record $
-  SourceSettings <$> field "updateInterval" (Dhall.maybe $ (* 1000) . fromIntegral <$> natural)
+  Source <$> field "updateInterval" (Dhall.maybe $ (* 1000) . fromIntegral <$> natural)
                  <*> field "command"        (list string)
                  <*> field "stdin"          (Dhall.maybe strictText)
                  <*> field "escapeMode"     escapeModeType

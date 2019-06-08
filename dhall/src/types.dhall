@@ -1,3 +1,4 @@
+{- Collect all types -}
 { Configuration =
 	./Configuration.dhall
 , Bar =
@@ -6,8 +7,10 @@
 	./BarSpec.dhall
 , BarSettings =
 	./BarSettings.dhall
-, SourceSettings =
-	./SourceSettings.dhall
-, MarqueeSettings =
-	./MarqueeSettings.dhall
+, Source =
+	./Source.dhall
+, Marquee =
+	./Marquee.dhall
+, Slider =
+	./Slider.dhall
 }

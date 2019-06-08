@@ -15,8 +15,8 @@ getTests dhallDir =
   testGroup "Config data marshalling" <$>
   Prelude.sequence [ testOpeningTag           dhallDir
                    , testToken                dhallDir
-                   , testSourceSettings       dhallDir
-                   , testMarqueeSettings      dhallDir
+                   , testSource       dhallDir
+                   , testMarquee      dhallDir
                    , testBarSettings          dhallDir
                    , testConfiguration        dhallDir
                    , testDefaultConfiguration dhallDir
@@ -28,7 +28,7 @@ testOpeningTag dhallDir = do
            (list openingTagType) [litFile|test/dhall/OpeningTag.dhall|]
   pure $ Test.Tasty.HUnit.testCase "test/dhall/OpeningTag.dhall marshalling" $
     input @?=
-    [ OMarquee (MarqueeSettings 2 3), OColor "red" ]
+    [ OMarquee (Marquee 2 3), OColor "red" ]
 
 testToken :: FilePath -> IO TestTree
 testToken dhallDir = do
@@ -37,9 +37,9 @@ testToken dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/Token.dhall marshalling" $
     input @?=
 
-    [ TokOpen (OMarquee (MarqueeSettings 2 3))
+    [ TokOpen (OMarquee (Marquee 2 3))
     , TokRaw "raw"
-    , TokSource (SourceSettings { updateInterval = Just 1000
+    , TokSource (Source { updateInterval = Just 1000
                                 , command = [ "bash" ]
                                 , stdin = Just "echo 1"
                                 , escapeMode = EscapeMode True True
@@ -47,27 +47,27 @@ testToken dhallDir = do
     , TokTxt "txt"
     , TokClose ]
 
-testSourceSettings :: FilePath -> IO TestTree
-testSourceSettings dhallDir = do
+testSource :: FilePath -> IO TestTree
+testSource dhallDir = do
   input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
-           sourceSettingsType [litFile|test/dhall/SourceSettings.dhall|]
-  pure $ Test.Tasty.HUnit.testCase "test/dhall/SourceSettings.dhall marshalling" $
+           sourceSettingsType [litFile|test/dhall/Source.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "test/dhall/Source.dhall marshalling" $
     input @?=
 
-    SourceSettings { updateInterval = Just 1000
+    Source { updateInterval = Just 1000
                    , command = [ "bash" ]
                    , stdin = Just "echo hi"
                    , escapeMode = EscapeMode True True
                    }
 
-testMarqueeSettings :: FilePath -> IO TestTree
-testMarqueeSettings dhallDir = do
+testMarquee :: FilePath -> IO TestTree
+testMarquee dhallDir = do
   input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
-           marqueeSettingsType [litFile|test/dhall/MarqueeSettings.dhall|]
-  pure $ Test.Tasty.HUnit.testCase "test/dhall/MarqueeSettings.dhall marshalling" $
+           marqueeType [litFile|test/dhall/Marquee.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "test/dhall/Marquee.dhall marshalling" $
     input @?=
 
-    MarqueeSettings { _mqFramesPerChar = 2
+    Marquee { _mqFramesPerChar = 2
                     , _mqWidth = 3
                     }
 

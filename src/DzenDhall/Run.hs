@@ -20,35 +20,118 @@ import           Lens.Micro
 import           Lens.Micro.Extras
 import           System.Exit (ExitCode(..), exitWith)
 import           System.Process
-import qualified Text.Parsec
+
+
+-- | Parses 'BarSpec's. For each 'Configuration' spawns its own dzen binary.
+useConfigurations :: App [Async ()]
+useConfigurations = do
+  runtime <- App.getRuntime
+  forM (view rtConfigurations runtime) (App.mapApp async . go)
+  where
+    go :: Configuration -> App ()
+    go cfg = do
+      let barSpec = cfg ^. cfgBarSpec
+      let eiBar   = DzenDhall.Parser.runBarParser barSpec
+
+      case eiBar of
+        Left err -> liftIO $ do
+          putStrLn $ "Internal error when parsing BarSpec, debug info: " <> show barSpec
+          putStrLn $ "Error: " <> show err
+          putStrLn $ "Please report as bug."
+          exitWith $ ExitFailure 3
+
+        Right (bar :: Bar Source) -> do
+          startDzenBinary cfg bar
+
+
+-- | Starts dzen binary according to 'BarSettings'.
+startDzenBinary
+  :: Configuration
+  -> Bar Source
+  -> App ()
+startDzenBinary cfg bar = do
+
+  runtime <- App.getRuntime
+
+  let dzenBinary  = runtime ^. rtDzenBinary
+      barSettings = cfg ^. cfgBarSettings
+      fontWidth   = fromMaybe 10 $ barSettings ^. bsFontWidth
+
+      extraFlags  = barSettings ^. bsExtraFlags
+      fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
+      flags       = fontFlags <> extraFlags
+
+  bar' :: Bar SourceHandle <- initialize bar
+
+  (mb_stdin, mb_stdout, _, _) <- liftIO $ do
+    createProcess $ (proc dzenBinary flags) { std_out = CreatePipe
+                                            , std_in  = CreatePipe
+                                            }
+
+  case (mb_stdin, mb_stdout) of
+
+    (Just stdin, Just stdout) -> do
+      liftIO $ do
+        hSetBuffering stdin  LineBuffering
+        hSetBuffering stdout LineBuffering
+
+      forever $ do
+        output <- renderAST <$> collectSources fontWidth bar'
+        liftIO $ do
+          Data.Text.IO.hPutStrLn stdin output
+          threadDelay (cfg ^. cfgBarSettings ^. bsUpdateInterval)
+        modifyRuntime $ rtFrameCounter +~ 1
+
+    _ -> liftIO $ do
+      putStrLn $ "Couldn't open IO handles for dzen binary " <> show dzenBinary
+
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
-initialize :: Bar SourceSettings -> App (Bar SourceHandle)
-initialize (Source settings@(SourceSettings{..})) = liftIO $ do
+initialize :: Bar Source -> App (Bar SourceHandle)
+initialize (BarSource settings@(Source{..})) = liftIO $ do
+
   outputRef <- newIORef ""
   cacheRef <- newIORef Nothing
+
   void $ async (mkThread settings outputRef cacheRef)
-  pure $ Source $
+
+  pure $ BarSource $
     SourceHandle
     outputRef
     cacheRef
     escapeMode
 
+initialize (BarMarquee i p) =
+  BarMarquee i <$> initialize p
+initialize (BarSlider slider children) =
+  BarSlider slider <$> mapM initialize children
+initialize (BarColor color p) =
+  BarColor color <$> initialize p
+initialize (Bars ps) =
+  Bars <$> mapM initialize ps
+initialize (BarRaw text) =
+  pure $ BarRaw text
+initialize (BarText text) =
+  pure $ BarText text
 
-initialize (Txt text) = pure $ Txt text
-initialize (Marquee i p) = Marquee i <$> initialize p
-initialize (Color color p) = Color color <$> initialize p
-initialize (Bars ps) = Bars <$> mapM initialize ps
-initialize (Raw text) = pure $ Raw text
 
 -- | Run source process either once or forever, depending on source settings.
-mkThread :: SourceSettings -> IORef Text -> Cache -> IO ()
-mkThread SourceSettings { command = [] } outputRef cacheRef = do
+mkThread
+  :: Source
+  -> IORef Text
+  -> Cache
+  -> IO ()
+mkThread Source { command = [] } outputRef cacheRef = do
   let message = "dzen-dhall error: no command specified"
   writeIORef cacheRef $ Just message
   writeIORef outputRef message
-mkThread SourceSettings { updateInterval, command = (binary : args), stdin } outputRef cacheRef = do
+mkThread
+  Source { updateInterval
+                 , command = (binary : args)
+                 , stdin }
+  outputRef
+  cacheRef = do
 
   let sourceProcess =
         (proc binary args) { std_out = CreatePipe
@@ -93,12 +176,13 @@ runSourceProcess cp outputRef cacheRef mbInput = do
     _ -> do
       putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
 
--- | Produces an AST from 'Bar'.
+
+-- | Reads outputs of 'SourceHandle's and puts it into the AST.
 collectSources
   :: Int
   -> Bar SourceHandle
   -> App AST
-collectSources _ (Source handle) = liftIO $ do
+collectSources _ (BarSource handle) = liftIO $ do
   let outputRef  = handle ^. shOutputRef
       cacheRef   = handle ^. shCacheRef
       escapeMode = handle ^. shEscapeMode
@@ -113,25 +197,33 @@ collectSources _ (Source handle) = liftIO $ do
       writeIORef cacheRef (Just escaped)
       pure $ ASTText escaped
 
-collectSources fontWidth (Marquee settings p) = do
+collectSources fontWidth (BarMarquee marquee p) = do
 
   ast          <- collectSources fontWidth p
   frameCounter <- view rtFrameCounter <$> App.getRuntime
-  pure $ Marquee.run fontWidth settings ast frameCounter
+  pure $ Marquee.run fontWidth marquee ast frameCounter
 
-collectSources fontWidth (Color color p)
-  = Prop (FG color) <$> collectSources fontWidth p -- TODO
+collectSources fontWidth (BarSlider slider ss) = do
+  asts <- mapM (collectSources fontWidth) ss
+  pure mempty
+collectSources fontWidth (BarColor color p)
+  = Prop (FG color) <$> collectSources fontWidth p
 collectSources fontWidth (Bars ps)
   = mconcat <$> mapM (collectSources fontWidth) ps
-collectSources _         (Txt text)
+collectSources _         (BarText text)
   = pure $ ASTText text
-collectSources _         (Raw text)
+collectSources _         (BarRaw text)
   = pure $ ASTText text
 
-escape :: EscapeMode -> Text -> Text
+
+escape
+  :: EscapeMode
+  -> Text
+  -> Text
 escape EscapeMode{joinLines, escapeMarkup} =
   (if escapeMarkup then Data.Text.replace "^" "^^" else id) .
   (Data.Text.replace "\n" $ if joinLines then " " else "")
+
 
 renderAST :: AST -> Text
 renderAST EmptyAST = ""
@@ -175,58 +267,3 @@ renderAST (Container shape width) =
         C r    -> "^c("  <> showPack r <> ")"
         CO r   -> "^co(" <> showPack r <> ")"
         Padding -> ""
-
-useConfigurations :: App [Async ()]
-useConfigurations = do
-  runtime <- App.getRuntime
-  forM (view rtConfigurations runtime) (App.mapApp async . go)
-  where
-    go :: Configuration -> App ()
-    go cfg = do
-      let bar       = cfg ^. cfgBarSpec
-      let eiBarSpec = Text.Parsec.runParser DzenDhall.Parser.bar () "BarSpec #1" bar
-
-      case eiBarSpec of
-        Left err -> liftIO $ do
-          putStrLn $ "Internal error #1, debug info: " <> show bar
-          putStrLn $ "Error: " <> show err
-          exitWith (ExitFailure 3)
-
-        Right (barSS :: Bar SourceSettings) -> do
-          startDzenBinary cfg barSS
-
-startDzenBinary :: Configuration -> Bar SourceSettings -> App ()
-startDzenBinary cfg barSS = do
-
-  runtime <- App.getRuntime
-  let dzenBinary  = runtime ^. rtDzenBinary
-      barSettings = cfg ^. cfgBarSettings
-      fontWidth   = fromMaybe 10 $ barSettings ^. bsFontWidth
-
-      extraFlags  = barSettings ^. bsExtraFlags
-      fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
-      flags       = fontFlags <> extraFlags
-
-  barSH :: Bar SourceHandle <- initialize barSS
-
-  (mb_stdin, mb_stdout, mb_stderr, _) <- liftIO $ do
-    createProcess $ (proc dzenBinary flags) { std_out = CreatePipe
-                                            , std_in  = CreatePipe
-                                            }
-
-  case (mb_stdin, mb_stdout, mb_stderr) of
-
-    (Just stdin, Just stdout, _) -> do
-      liftIO $ do
-        hSetBuffering stdin  LineBuffering
-        hSetBuffering stdout LineBuffering
-
-      forever $ do
-        output <- renderAST <$> collectSources fontWidth barSH
-        liftIO $ do
-          Data.Text.IO.hPutStrLn stdin output
-          threadDelay (cfg ^. cfgBarSettings ^. bsUpdateInterval)
-        modifyRuntime $ rtFrameCounter +~ 1
-
-    _ -> liftIO $ do
-      putStrLn $ "Couldn't open IO handles for dzen binary " <> show dzenBinary

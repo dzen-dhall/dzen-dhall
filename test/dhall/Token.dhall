@@ -2,13 +2,13 @@ let Token = ./src/Token.dhall
 
 let OpeningTag = ./src/OpeningTag.dhall
 
-let SourceSettings = ./src/SourceSettings.dhall
+let Source = ./src/Source.dhall
 
-let MarqueeSettings = ./src/MarqueeSettings.dhall
+let Marquee = ./src/Marquee.dhall
 
 in  [ Token.Open
 	  ( OpeningTag.Marquee
-		({ framesPerCharacter = 2, width = 3 } : MarqueeSettings)
+		({ framesPerCharacter = 2, width = 3 } : Marquee)
 	  )
 	, Token.Raw "raw"
 	, Token.Source
@@ -21,7 +21,7 @@ in  [ Token.Open
 		  , escapeMode =
 			  { joinLines = True, escapeMarkup = True }
 		  }
-		: SourceSettings
+		: Source
 	  )
 	, Token.Txt "txt"
 	, Token.Close

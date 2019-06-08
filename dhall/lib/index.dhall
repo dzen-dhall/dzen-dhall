@@ -4,4 +4,6 @@
 	./List/intersperse.dhall
 , List/null =
 	./List/null.dhall
+, List/generate =
+	./List/generate.dhall
 }

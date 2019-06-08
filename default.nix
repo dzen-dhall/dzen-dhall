@@ -1,3 +1,6 @@
-{
-  dzen-dhall = (import ./nix/release.nix).dzen-dhall;
-}
+{ usePinned ? false }:
+let
+  release = import ./nix/release.nix { inherit usePinned; };
+in
+  { inherit (release) dzen-dhall;
+  }

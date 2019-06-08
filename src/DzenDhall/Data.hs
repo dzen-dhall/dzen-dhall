@@ -4,7 +4,7 @@ module DzenDhall.Data where
 import           Data.IORef
 import qualified Data.Text
 import           Data.Text (Text)
-import           DzenDhall.Config (EscapeMode(..), MarqueeSettings)
+import           DzenDhall.Config
 import           GHC.Generics
 import           Lens.Micro.TH
 
@@ -22,11 +22,12 @@ data SourceHandle
 makeLenses ''SourceHandle
 
 data Bar ref
-  = Raw Text
-  | Source ref
-  | Txt Text
-  | Marquee MarqueeSettings (Bar ref)
-  | Color Text (Bar ref)
+  = BarRaw Text
+  | BarSource ref
+  | BarText Text
+  | BarMarquee Marquee (Bar ref)
+  | BarSlider Slider [Bar ref]
+  | BarColor Text (Bar ref)
   | Bars [Bar ref]
   deriving (Show, Eq, Generic)
 

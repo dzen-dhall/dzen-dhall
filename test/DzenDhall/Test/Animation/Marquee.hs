@@ -6,7 +6,7 @@ import           DzenDhall.Data
 import           Test.Tasty (TestTree, TestName, testGroup)
 import           Test.Tasty.HUnit
 
-mkTest :: TestName -> MarqueeSettings -> AST -> [AST] -> TestTree
+mkTest :: TestName -> Marquee -> AST -> [AST] -> TestTree
 mkTest name settings ast expected =
   Test.Tasty.HUnit.testCase name $
     let frames = length expected
@@ -19,7 +19,7 @@ getTests = pure $
   [ let
       ast = ASTText "12345"
 
-      settings = MarqueeSettings 1 3
+      settings = Marquee 1 3
 
       expected = [ ASTText "123"
                  , ASTText "234"

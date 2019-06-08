@@ -3,8 +3,9 @@
 | Raw :
 	Text
 | Source :
-	./SourceSettings.dhall
+	./Source.dhall
 | Txt :
 	Text
+| Separator
 | Close
 >

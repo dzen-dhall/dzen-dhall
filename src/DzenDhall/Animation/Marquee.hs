@@ -5,7 +5,7 @@ import           DzenDhall.Data
 import qualified DzenDhall.Extra as Extra
 import           Lens.Micro.Extras
 
-run :: Int -> MarqueeSettings -> AST -> Int -> AST
+run :: Int -> Marquee -> AST -> Int -> AST
 run fontWidth settings ast frameCounter =
   let fpc          = view mqFramesPerChar settings
       desiredWidth = view mqWidth settings
@@ -26,8 +26,12 @@ run fontWidth settings ast frameCounter =
            if | fpc == 1  -> trimmed
               | otherwise -> addShift frameCounter fontWidth fpc trimmed
 
+-- | Add sub-character shift to AST and compensate it
 addShift :: Int -> Int -> Int -> AST -> AST
 addShift frameCounter fontWidth fpc ast =
-  let shift = frameCounter `mod` fpc
-      pxShift = fontWidth `div` 2 - ((fontWidth * shift) `div` fpc) in
-    Prop (P (XY (pxShift, 0))) ast
+  let shift       = frameCounter `mod` fpc
+      pxShift     = fontWidth `div` 2 - ((fontWidth * shift) `div` fpc)
+      shiftedAST  = Prop (P (XY (  pxShift, 0))) ast
+      compensator = Prop (P (XY (- pxShift, 0))) mempty
+  in
+    shiftedAST <> compensator
