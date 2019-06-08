@@ -2,10 +2,10 @@
 	./Configuration.dhall
 , Bar =
 	./Bar.dhall
-, BarSpec =
-	./BarSpec.dhall
-, mkSpec =
-	./mkSpec.dhall
+, Plugin =
+	./Plugin.dhall
+, mkPlugin =
+	./mkPlugin.dhall
 , BarSettings =
 	./BarSettings.dhall
 , defaultBarSettings =

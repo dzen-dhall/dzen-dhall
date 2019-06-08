@@ -1,6 +1,6 @@
 {- Collect all functions -}
-{ mkSpec =
-	./mkSpec.dhall
+{ mkPlugin =
+	./mkPlugin.dhall
 , mkConfigs =
 	./mkConfigs.dhall
 , defaultBarSettings =

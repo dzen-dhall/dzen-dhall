@@ -3,8 +3,8 @@
 	./Configuration.dhall
 , Bar =
 	./Bar.dhall
-, BarSpec =
-	./BarSpec.dhall
+, Plugin =
+	./Plugin.dhall
 , BarSettings =
 	./BarSettings.dhall
 , Source =

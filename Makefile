@@ -1,4 +1,4 @@
-.PHONY: cabal2nix build run find-data
+.PHONY: cabal2nix build run update-data-files
 
 cabal2nix:
 	cd nix && cabal2nix ../ > dzen-dhall.nix
@@ -10,5 +10,8 @@ build:
 run: build
 	./result/bin/dzen-dhall
 
-find-data:
-	find ./dhall -type f | sed 's#./##' | sort
+test: update-data-files
+	stack test
+
+update-data-files:
+	./misc/update-data-files.sh

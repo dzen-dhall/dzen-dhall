@@ -1,7 +1,7 @@
-{- `Bar` to `BarSpec` conversion. `BarSpec` = `List Token`. -}
+{- `Bar` to `Plugin` conversion. `Plugin` = `List Token`. -}
 let Bar = ./Bar.dhall
 
-let BarSpec = ./BarSpec.dhall
+let Plugin = ./Plugin.dhall
 
 let Token = ./Token.dhall
 
@@ -19,29 +19,29 @@ let List/intersperse = ./../lib/List/intersperse.dhall
 
 let enclose =
 		λ(openingTag : OpeningTag)
-	  → λ(child : BarSpec)
+	  → λ(child : Plugin)
 	  → [ Token.Open openingTag ] # child # [ Token.Close ]
 
-let mkSpec
-	: Bar → BarSpec
+let mkPlugin
+	: Bar → Plugin
 	=   λ(constructor : Bar)
 	  → constructor
 		(List Token)
-		(λ(tokens : List BarSpec) → concat Token tokens)
+		(λ(tokens : List Plugin) → concat Token tokens)
 		(λ(text : Text) → [ Token.Txt text ])
 		(   λ(color : Text)
-		  → λ(children : List BarSpec)
+		  → λ(children : List Plugin)
 		  →   [ Token.Raw ("^fg(" ++ color ++ ")") ]
 			# concat Token children
 			# [ Token.Raw "^fg()" ]
 		)
 		(λ(source : Source) → [ Token.Source source ])
 		(   λ(marquee : Marquee)
-		  → λ(child : BarSpec)
+		  → λ(child : Plugin)
 		  → enclose (OpeningTag.Marquee marquee) child
 		)
 		(   λ(slider : Slider)
-		  → λ(children : List BarSpec)
+		  → λ(children : List Plugin)
 		  → enclose
 			(OpeningTag.Slider slider)
 			( concat
@@ -49,5 +49,6 @@ let mkSpec
 			  (List/intersperse (List Token) [ Token.Separator ] children)
 			)
 		)
+		(λ(p : Plugin) → p)
 
-in  mkSpec
+in  mkPlugin

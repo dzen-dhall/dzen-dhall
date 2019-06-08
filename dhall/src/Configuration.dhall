@@ -1,1 +1,1 @@
-{ bar : ./BarSpec.dhall, settings : ./BarSettings.dhall }
+{ bar : ./Plugin.dhall, settings : ./BarSettings.dhall }
