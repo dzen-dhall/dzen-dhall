@@ -4,4 +4,12 @@ packages:
 nix:
   packages:
   - zlib
+
+  # `nix.pure: false` simplifies development, because with it there is no need to
+  # put all packages containing binaries that are referenced by default
+  # `dzen-dhall` config to `nix.packages` of `stack.yaml`
+  # With `nix.pure: true` `dzen-dhall` will not see them in PATH when called
+  # using `stack exec dzen-dhall`.
+  pure: false
+
 compiler: ghc-8.6.4

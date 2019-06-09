@@ -20,6 +20,7 @@ import           Lens.Micro
 import           Lens.Micro.Extras
 import           System.Exit (ExitCode(..), exitWith)
 import           System.Process
+import qualified System.IO
 
 
 -- | Parses 'BarSpec's. For each 'Configuration' spawns its own dzen binary.
@@ -72,6 +73,8 @@ startDzenBinary cfg bar = do
 
     (Just stdin, Just stdout) -> do
       liftIO $ do
+        hSetEncoding  stdin  System.IO.utf8
+        hSetEncoding  stdout System.IO.utf8
         hSetBuffering stdin  LineBuffering
         hSetBuffering stdout LineBuffering
 
@@ -128,14 +131,15 @@ mkThread Source { command = [] } outputRef cacheRef = do
   writeIORef outputRef message
 mkThread
   Source { updateInterval
-                 , command = (binary : args)
-                 , stdin }
+         , command = (binary : args)
+         , stdin }
   outputRef
   cacheRef = do
 
   let sourceProcess =
         (proc binary args) { std_out = CreatePipe
                            , std_in  = CreatePipe
+                           , std_err = CreatePipe
                            }
 
   case updateInterval of
@@ -159,6 +163,8 @@ runSourceProcess cp outputRef cacheRef mbInput = do
 
   case (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl) of
     (Just stdin, Just stdout, _) -> do
+      hSetEncoding  stdin  System.IO.utf8
+      hSetEncoding  stdout System.IO.utf8
       hSetBuffering stdin  LineBuffering
       hSetBuffering stdout LineBuffering
 

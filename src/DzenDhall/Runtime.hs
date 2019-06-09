@@ -65,6 +65,7 @@ initCommand Arguments{mbConfigDir} = do
   dataDir <- getDataDir
 
   createDirectoryIfMissing True configDir
+  createDirectoryIfMissing True pluginsDir
 
   let mode400 = ownerReadMode
       mode600 = mode400 `unionFileModes` ownerWriteMode
