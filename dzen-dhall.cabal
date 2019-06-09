@@ -20,20 +20,25 @@ data-files:          dhall/config.dhall
                      dhall/lib/List/intersperse.dhall
                      dhall/lib/List/map.dhall
                      dhall/lib/List/null.dhall
+                     dhall/src/AbsolutePosition.dhall
                      dhall/src/Bar.dhall
                      dhall/src/BarSettings.dhall
+                     dhall/src/Button.dhall
                      dhall/src/ClosingTag.dhall
                      dhall/src/Color.dhall
                      dhall/src/Configuration.dhall
                      dhall/src/defaultBarSettings.dhall
+                     dhall/src/defaultSlider.dhall
                      dhall/src/definitions.dhall
                      dhall/src/EscapeMode.dhall
+                     dhall/src/Image.dhall
                      dhall/src/Marquee.dhall
                      dhall/src/mkConfigs.dhall
                      dhall/src/mkPlugin.dhall
                      dhall/src/OpeningTag.dhall
                      dhall/src/Plugin.dhall
                      dhall/src/PluginMeta.dhall
+                     dhall/src/Position.dhall
                      dhall/src/Slider.dhall
                      dhall/src/Source.dhall
                      dhall/src/Token.dhall
@@ -43,6 +48,7 @@ data-files:          dhall/config.dhall
 library
   exposed-modules:     DzenDhall
                        DzenDhall.Animation.Marquee
+                       DzenDhall.Animation.Slider
                        DzenDhall.App
                        DzenDhall.Arguments
                        DzenDhall.Config

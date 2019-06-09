@@ -19,7 +19,7 @@ data Separatable = SepSlider Slider
 -- | Used to tag bar elements that require a single child.
 data Solid = SolidMarquee Marquee | SolidColor Color
 
-bar :: Parser (Bar Source)
+bar :: Parser BarSpec
 bar = topLevel <* eof
   where
     topLevel = fmap Bars $ many $
@@ -85,5 +85,5 @@ source = withPreview $ \case
 withPreview :: Stream s m t => Show t => (t -> Maybe a) -> ParsecT s u m a
 withPreview = tokenPrim show (\pos _ _ -> pos)
 
-runBarParser :: Tokens -> Either ParseError (Bar Source)
+runBarParser :: Tokens -> Either ParseError BarSpec
 runBarParser = Text.Parsec.runParser bar () "Bar"

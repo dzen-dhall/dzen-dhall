@@ -1,1 +1,1 @@
-< red | green | blue | hex : Text >
+< hex : Text | name : Text >

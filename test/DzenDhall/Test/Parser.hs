@@ -7,7 +7,7 @@ import Test.Tasty (TestTree, TestName, testGroup)
 import Test.Tasty.HUnit
 import Text.Parsec
 
-mkTest :: TestName -> [Token] -> Either ParseError (Bar Source) -> TestTree
+mkTest :: TestName -> [Token] -> Either ParseError BarSpec -> TestTree
 mkTest name tokenList expected =
   Test.Tasty.HUnit.testCase name $
     DzenDhall.Parser.runBarParser tokenList @?= expected
@@ -55,7 +55,7 @@ getTests = pure $
                 ]
          ]
 
-  , let fadeUp = Fade VUp 1
+  , let fadeUp = Fade VUp 1 10
         slider = (Slider fadeUp fadeUp 1)
     in
       mkTest
@@ -77,7 +77,7 @@ getTests = pure $
         ]
       ]
 
-  , let fadeUp = Fade VUp 1
+  , let fadeUp = Fade VUp 1 10
         slider = (Slider fadeUp fadeUp 1)
     in
       mkTest

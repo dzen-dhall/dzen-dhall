@@ -5,6 +5,7 @@ import           Data.IORef
 import qualified Data.Text
 import           Data.Text (Text)
 import           DzenDhall.Config
+import           DzenDhall.Config
 import           GHC.Generics
 import           Lens.Micro.TH
 
@@ -21,15 +22,19 @@ data SourceHandle
 
 makeLenses ''SourceHandle
 
-data Bar ref
+data Bar_ ref
   = BarRaw Text
   | BarSource ref
   | BarText Text
-  | BarMarquee Marquee (Bar ref)
-  | BarSlider Slider [Bar ref]
-  | BarColor Text (Bar ref)
-  | Bars [Bar ref]
+  | BarMarquee Marquee (Bar_ ref)
+  | BarSlider Slider [Bar_ ref]
+  | BarColor Text (Bar_ ref)
+  | Bars [Bar_ ref]
   deriving (Show, Eq, Generic)
+
+type BarSpec = Bar_ Source
+
+type Bar = Bar_ SourceHandle
 
 data Property
   = BG Color

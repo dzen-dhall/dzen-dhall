@@ -56,7 +56,10 @@ readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
 initCommand :: Arguments -> IO ()
 initCommand Arguments{mbConfigDir} = do
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
+
   let pluginsDir = configDir </> "plugins"
+      srcDir     = configDir </> "src"
+      libDir     = configDir </> "lib"
 
   exists <- doesDirectoryExist configDir
 
@@ -70,6 +73,7 @@ initCommand Arguments{mbConfigDir} = do
   createDirectoryIfMissing True pluginsDir
 
   let mode400 = ownerReadMode
+      mode500 = mode400 `unionFileModes` ownerExecuteMode
       mode600 = mode400 `unionFileModes` ownerWriteMode
       mode700 = mode600 `unionFileModes` ownerExecuteMode
 
@@ -86,6 +90,8 @@ initCommand Arguments{mbConfigDir} = do
   setFileMode configDir  mode700
   setFileMode pluginsDir mode700
   setFileMode configFile mode600
+  setFileMode srcDir     mode500
+  setFileMode libDir     mode500
 
   putStrLn $ "Success! You can now view your configuration at " <> configFile
   putStrLn $ "Run dzen-dhall again to see it in action."

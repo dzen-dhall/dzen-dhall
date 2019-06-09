@@ -13,4 +13,6 @@
 	./Marquee.dhall
 , Slider =
 	./Slider.dhall
+, VerticalDirection =
+	./VerticalDirection.dhall
 }

@@ -31,8 +31,9 @@ directionType = union
 
 data Fade
   = Fade
-  { _fadeDirection  :: VDirection
-  , _fadeFrameCount :: Int
+  { _fadeDirection   :: VDirection
+  , _fadeFrameCount  :: Int
+  , _fadePixelHeight :: Int
   }
   deriving (Show, Eq, Generic)
 
@@ -42,12 +43,14 @@ fadeType :: Type Fade
 fadeType = record $
   Fade <$> field "direction"  directionType
        <*> field "frameCount" (fromIntegral <$> natural)
+       <*> field "height"     (fromIntegral <$> natural)
 
 data Slider
   = Slider
   { _fadeIn      :: Fade
   , _fadeOut     :: Fade
   , _sliderDelay :: Int
+
   }
   deriving (Show, Eq, Generic)
 
@@ -140,10 +143,8 @@ sourceSettingsType = record $
          <*> field "stdin"          (Dhall.maybe strictText)
          <*> field "escapeMode"     escapeModeType
 
-type BarSpec = [Token]
-
 data Configuration = Configuration
-  { _cfgBarSpec     :: BarSpec
+  { _cfgBarTokens   :: [Token]
   , _cfgBarSettings :: BarSettings
   }
   deriving (Show, Eq, Generic)

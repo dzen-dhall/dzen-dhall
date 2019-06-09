@@ -9,6 +9,7 @@ import qualified Data.Text
 import           Data.Text (Text)
 import qualified Data.Text.IO
 import qualified DzenDhall.Animation.Marquee as Marquee
+import qualified DzenDhall.Animation.Slider as Slider
 import           DzenDhall.App as App
 import           DzenDhall.Config
 import           DzenDhall.Data
@@ -19,8 +20,8 @@ import           GHC.IO.Handle
 import           Lens.Micro
 import           Lens.Micro.Extras
 import           System.Exit (ExitCode(..), exitWith)
-import           System.Process
 import qualified System.IO
+import           System.Process
 
 
 -- | Parses 'BarSpec's. For each 'Configuration' spawns its own dzen binary.
@@ -31,24 +32,24 @@ useConfigurations = do
   where
     go :: Configuration -> App ()
     go cfg = do
-      let barSpec = cfg ^. cfgBarSpec
-      let eiBar   = DzenDhall.Parser.runBarParser barSpec
+      let barTokens = cfg ^. cfgBarTokens
+      let eiBar     = DzenDhall.Parser.runBarParser barTokens
 
       case eiBar of
         Left err -> liftIO $ do
-          putStrLn $ "Internal error when parsing BarSpec, debug info: " <> show barSpec
+          putStrLn $ "Internal error when parsing BarSpec, debug info: " <> show barTokens
           putStrLn $ "Error: " <> show err
           putStrLn $ "Please report as bug."
           exitWith $ ExitFailure 3
 
-        Right (bar :: Bar Source) -> do
+        Right (bar :: BarSpec) -> do
           startDzenBinary cfg bar
 
 
 -- | Starts dzen binary according to 'BarSettings'.
 startDzenBinary
   :: Configuration
-  -> Bar Source
+  -> BarSpec
   -> App ()
 startDzenBinary cfg bar = do
 
@@ -62,7 +63,7 @@ startDzenBinary cfg bar = do
       fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
       flags       = fontFlags <> extraFlags
 
-  bar' :: Bar SourceHandle <- initialize bar
+  bar' :: Bar <- initialize barSettings bar
 
   (mb_stdin, mb_stdout, _, _) <- liftIO $ do
     createProcess $ (proc dzenBinary flags) { std_out = CreatePipe
@@ -91,8 +92,8 @@ startDzenBinary cfg bar = do
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
-initialize :: Bar Source -> App (Bar SourceHandle)
-initialize (BarSource settings@(Source{..})) = liftIO $ do
+initialize :: BarSettings -> BarSpec -> App Bar
+initialize _bs (BarSource settings@(Source{..})) = liftIO $ do
 
   outputRef <- newIORef ""
   cacheRef <- newIORef Nothing
@@ -105,17 +106,23 @@ initialize (BarSource settings@(Source{..})) = liftIO $ do
     cacheRef
     escapeMode
 
-initialize (BarMarquee i p) =
-  BarMarquee i <$> initialize p
-initialize (BarSlider slider children) =
-  BarSlider slider <$> mapM initialize children
-initialize (BarColor color p) =
-  BarColor color <$> initialize p
-initialize (Bars ps) =
-  Bars <$> mapM initialize ps
-initialize (BarRaw text) =
+initialize bs (BarMarquee i p) =
+  BarMarquee i <$> initialize bs p
+initialize bs (BarSlider slider children) = do
+  -- Convert delay of a slider from microseconds to frames.
+
+  let updateInterval = bs ^. bsUpdateInterval
+      slider' = slider & sliderDelay %~ (\x -> x * 1000 `div` positive updateInterval)
+
+  BarSlider slider' <$>
+    mapM (initialize bs) children
+initialize bs (BarColor color p) =
+  BarColor color <$> initialize bs p
+initialize bs (Bars ps) =
+  Bars <$> mapM (initialize bs) ps
+initialize _bs (BarRaw text) =
   pure $ BarRaw text
-initialize (BarText text) =
+initialize _bs (BarText text) =
   pure $ BarText text
 
 
@@ -159,7 +166,7 @@ mkThread
 -- | Creates a process, subscribes to its stdout handle and updates the output ref.
 runSourceProcess :: CreateProcess -> IORef Text -> Cache -> Maybe Text -> IO ()
 runSourceProcess cp outputRef cacheRef mbInput = do
-  (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, _) <- createProcess cp
+  (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, ph) <- createProcess cp
 
   case (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl) of
     (Just stdin, Just stdout, _) -> do
@@ -179,6 +186,8 @@ runSourceProcess cp outputRef cacheRef mbInput = do
       writeIORef cacheRef Nothing
       writeIORef outputRef output
 
+      void $ waitForProcess ph
+
     _ -> do
       putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
 
@@ -186,7 +195,7 @@ runSourceProcess cp outputRef cacheRef mbInput = do
 -- | Reads outputs of 'SourceHandle's and puts it into the AST.
 collectSources
   :: Int
-  -> Bar SourceHandle
+  -> Bar
   -> App AST
 collectSources _ (BarSource handle) = liftIO $ do
   let outputRef  = handle ^. shOutputRef
@@ -210,8 +219,11 @@ collectSources fontWidth (BarMarquee marquee p) = do
   pure $ Marquee.run fontWidth marquee ast frameCounter
 
 collectSources fontWidth (BarSlider slider ss) = do
-  asts <- mapM (collectSources fontWidth) ss
-  pure mempty
+
+  frameCounter <- view rtFrameCounter <$> App.getRuntime
+  asts         <- mapM (collectSources fontWidth) ss
+  pure $ Slider.run slider frameCounter asts
+
 collectSources fontWidth (BarColor color p)
   = Prop (FG color) <$> collectSources fontWidth p
 collectSources fontWidth (Bars ps)
@@ -247,19 +259,24 @@ renderAST (Prop property ast) =
         "^ib(1)" <> inner <> "^ib(0)"
       CA (event, handler) ->
         "^ca(" <> event <> "," <> handler <> ")" <> inner <> "^ca()"
-      P position -> positionSpec <> inner
+      P position ->
+        open <> inner <> close
         where
-          positionSpec =
+          -- Compensate position shift if possible
+          (open, close) =
             case position of
-              XY (x, y)  -> "^p(" <> showPack x <> ";" <> showPack y <> ")"
-              ResetY     -> "^p()"
-              P_LOCK_X   -> "^p(_LOCK_X)"
-              P_UNLOCK_X -> "^p(_UNLOCK_X)"
-              P_LEFT     -> "^p(_LEFT)"
-              P_RIGHT    -> "^p(_RIGHT)"
-              P_TOP      -> "^p(_TOP)"
-              P_CENTER   -> "^p(_CENTER)"
-              P_BOTTOM   -> "^p(_BOTTOM)"
+              XY (x, y)  ->
+                ( "^p(" <> showPack x    <> ";" <> showPack y    <> ")"
+                , "^p(" <> showPack (-x) <> ";" <> showPack (-y) <> ")"
+                )
+              ResetY     -> ("^p()", "")
+              P_LOCK_X   -> ("^p(_LOCK_X)", "")
+              P_UNLOCK_X -> ("^p(_UNLOCK_X)", "")
+              P_LEFT     -> ("^p(_LOCK_X)^p(_LEFT)", "^p(_UNLOCK_X)")
+              P_RIGHT    -> ("^p(_LOCK_X)^p(_RIGHT)", "^p(_UNLOCK_X)")
+              P_TOP      -> ("^p(_TOP)", "^p()")
+              P_CENTER   -> ("^p(_CENTER)", "^p()")
+              P_BOTTOM   -> ("^p(_BOTTOM)", "^p()")
 
 renderAST (Container shape width) =
   "^p(_LOCK_X)" <> shapeSpec <> "^p(_UNLOCK_X)^ib(1)" <> padding <> "^ib(0)"

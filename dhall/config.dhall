@@ -16,6 +16,8 @@ let Marquee = types.Marquee
 
 let Slider = types.Slider
 
+let VerticalDirection = types.VerticalDirection
+
 let Plugin = types.Plugin
 
 let mkConfigs = utils.mkConfigs

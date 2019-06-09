@@ -93,7 +93,7 @@ testConfiguration dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/Configuration.dhall marshalling" $
     input @?=
 
-    [ Configuration { _cfgBarSpec = [ TokClose ]
+    [ Configuration { _cfgBarTokens = [ TokClose ]
                     , _cfgBarSettings = BarSettings { _bsMonitor = 1
                                                     , _bsExtraFlags = [ "-l", "10" ]
                                                     , _bsUpdateInterval = 250000
