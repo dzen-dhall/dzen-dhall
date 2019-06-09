@@ -1,4 +1,5 @@
-let PluginMeta =
+let PluginMeta = ./src/PluginMeta.dhall
+let pluginMeta =
 	  { name =
 		  "1"
 	  , author =
@@ -11,10 +12,10 @@ let PluginMeta =
 		  Some "5"
 	  , description =
 		  "6"
-	  , importing =
-		  "7"
 	  , usage =
-		  "8"
+		  "7"
+	  , apiVersion =
+		  8
 	  }
 
-in  PluginMeta
+in  pluginMeta : PluginMeta

@@ -3,6 +3,8 @@ module DzenDhall.Plug where
 import           Control.Applicative
 import           Control.Exception hiding (try)
 import           Control.Monad
+import           Control.Monad.Trans.Class (lift)
+import           Control.Monad.Trans.Except
 import           Data.HashSet (member)
 import           Data.Maybe
 import           Data.Text (Text)
@@ -75,22 +77,22 @@ plugCommand argument = do
         putStrLn "Please review the code:\n\n"
         putStrLn bodyText
 
-        meta :: PluginMeta <- readPluginMeta dhallDir bodyText
+        eiMeta <- readPluginMeta dhallDir bodyText
 
-        unless (validateMeta meta) $ do
-          putStrLn $ "Invalid metadata: " <> T.pack (show meta)
-          exitWith $ ExitFailure 2
+        case eiMeta of
 
-        writePluginFile dhallDir (meta ^. pmName) bodyText
+          Left err -> do
+            putStrLn $ printMetaValidationError err
+            exitWith $ ExitFailure 2
 
-        let usage = "New plugin \"" <> meta ^. pmName <> "\" can now be imported as follows:\n"
-                 <> "\n"
-                 <> meta ^. pmImporting
-                 <> "\n\n"
-                 <> "Example usage:\n\n"
-                 <> meta ^. pmUsage
+          Right meta -> do
+            writePluginFile dhallDir (meta ^. pmName) bodyText
 
-        putStrLn usage
+            let usage = "New plugin \"" <> meta ^. pmName
+                        <> "\" can now be used as follows:\n\n"
+                        <> meta ^. pmUsage
+
+            putStrLn usage
 
 
 httpHandler :: HttpException -> IO a
@@ -158,10 +160,28 @@ tryDhallParse =
   MP.parseMaybe (Dhall.unParser Dhall.expr)
 
 
+data MetaValidationError
+  = InvalidAPIVersion { _mveExpected :: Int
+                      , _mveGot      :: Int
+                      }
+  | NoParse
+  | InvalidPluginName Text
+
+printMetaValidationError :: MetaValidationError -> Text
+printMetaValidationError (InvalidAPIVersion expected got)
+  =  "This plugin is written with the use of incompatible API version: expected v"
+  <> T.pack (show expected)
+  <> ", got v"
+  <> T.pack (show got)
+printMetaValidationError NoParse
+  =  "No parse"
+printMetaValidationError (InvalidPluginName name)
+  =  "Plugin name should be a valid dhall identifier: " <> name
+
 -- | Try to load plugin meta by inserting a plugin into the current environment
 -- (using 'inputWithSettings').
-readPluginMeta :: String -> Text -> IO PluginMeta
-readPluginMeta dhallDir bodyText = do
+readPluginMeta :: String -> Text -> IO (Either MetaValidationError PluginMeta)
+readPluginMeta dhallDir bodyText = runExceptT $ do
 
   -- A dirty hack - we just access the `meta` field, discarding `main`
   -- so that there is no need to deal with its type.
@@ -170,16 +190,20 @@ readPluginMeta dhallDir bodyText = do
         defaultInputSettings &
         rootDirectory .~ (dhallDir </> "plugins")
 
-  detailed $ inputWithSettings inputSettings pluginMetaType metaBody
+  -- TODO: convert exception to `NoParse`
+  meta <- lift $ detailed $ inputWithSettings inputSettings pluginMetaType metaBody
 
+  let name          = meta ^. pmName
+      gotApiVersion = meta ^. pmApiVersion
+      parseResult   = MP.parseMaybe (Dhall.unParser simpleLabel) name
 
-validateMeta :: PluginMeta -> Bool
-validateMeta meta =
-  let name        = meta ^. pmName
-      parseResult = MP.parseMaybe (Dhall.unParser simpleLabel) name
-  in
-    isJust parseResult
+  unless (isJust parseResult) $ do
+    throwE (InvalidPluginName name)
 
+  unless (meta ^. pmApiVersion == apiVersion) $ do
+    throwE (InvalidAPIVersion apiVersion gotApiVersion)
+
+  pure meta
 
 -- | Parser for valid variable names. Borrowed from `Dhall.Parser.Token`,
 -- slightly modified.

@@ -11,10 +11,10 @@ let PluginMeta =
 		  Optional Text
 	  , description :
 		  Text
-	  , importing :
-		  Text
 	  , usage :
 		  Text
+	  , apiVersion :
+		  Natural
 	  }
 
 in  PluginMeta

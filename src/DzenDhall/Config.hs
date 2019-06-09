@@ -162,8 +162,8 @@ data PluginMeta = PluginMeta
   , _pmHomePage    :: Maybe Text
   , _pmUpstreamURL :: Maybe Text
   , _pmDescription :: Text
-  , _pmImporting   :: Text
   , _pmUsage       :: Text
+  , _pmApiVersion  :: Int
   }
   deriving (Show, Eq)
 
@@ -177,5 +177,5 @@ pluginMetaType = record $
              <*> field "homepage"    (Dhall.maybe strictText)
              <*> field "upstreamURL" (Dhall.maybe strictText)
              <*> field "description" strictText
-             <*> field "importing"   strictText
              <*> field "usage"       strictText
+             <*> field "apiVersion"  (fromIntegral <$> natural)

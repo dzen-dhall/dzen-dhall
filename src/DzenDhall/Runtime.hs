@@ -13,6 +13,9 @@ import System.Exit (ExitCode(..), exitWith)
 import System.FilePath ((</>))
 import System.Posix.Files
 
+apiVersion :: Int
+apiVersion = 1
+
 data Runtime = Runtime
   { _rtConfigDir :: String
   , _rtConfigurations :: [Configuration]
@@ -29,7 +32,6 @@ readRuntime :: Arguments -> IO Runtime
 readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
   let dzenBinary = fromMaybe "dzen2" mbDzenBinary
   let frameCounter = 0
-  let apiVersion = 1
 
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
   exists <- doesDirectoryExist configDir
