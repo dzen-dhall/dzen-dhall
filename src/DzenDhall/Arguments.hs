@@ -13,6 +13,7 @@ data Arguments
 
 data Command
   = Init
+  | Plug String
   deriving (Show, Eq)
 
 argParser :: Parser Arguments
@@ -32,8 +33,19 @@ argParser = Arguments
       )
 
   <*> optional
-      ( hsubparser
-      ( command "init" (info (pure Init) ( progDesc "Write default configuration files to configuration directory." )))
+      (
+        hsubparser
+        ( command "init" (
+            info
+              ( pure Init )
+              ( progDesc "Write default configuration files to configuration directory." )
+            )
+       <> command "plug" (
+            info
+              (Plug <$> argument str (metavar "PLUGIN PATH"))
+              ( progDesc "Download plugin to plugins directory")
+            )
+        )
       )
 
 argumentsParser :: ParserInfo Arguments

@@ -24,6 +24,7 @@ let
 
           # Direct dependencies
           dhall = haskellPackagesNew.callPackage ./hackage/dhall.nix { };
+          http-conduit = haskellPackagesNew.callPackage ./hackage/http-conduit.nix { };
 
           # Indirect dependencies
           repline = haskellPackagesNew.callPackage ./hackage/repline.nix { };

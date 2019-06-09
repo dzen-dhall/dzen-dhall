@@ -18,7 +18,7 @@ makeLenses ''Marquee
 marqueeType :: Type Marquee
 marqueeType = record $
   Marquee <$> field "framesPerCharacter" (positive    . fromIntegral <$> natural)
-              <*> field "width"              (nonNegative . fromIntegral <$> natural)
+          <*> field "width"              (nonNegative . fromIntegral <$> natural)
 
 data VDirection
   = VUp | VDown
@@ -75,13 +75,13 @@ data BarSettings
   = BarSettings
   { _bsMonitor :: Int
   -- ^ Xinerama monitor number
-  , _bsExtraFlags :: [String]
+  , _bsExtraFlags     :: [String]
   -- ^ Extra flags to pass to dzen binary
   , _bsUpdateInterval :: Int
   -- ^ In microseconds
-  , _bsFont :: Maybe String
+  , _bsFont           :: Maybe String
   -- ^ Font in XLFD format
-  , _bsFontWidth :: Maybe Int
+  , _bsFontWidth      :: Maybe Int
   }
   deriving (Show, Eq, Generic)
 
@@ -114,36 +114,36 @@ tokenType = union
   <> (TokClose     <$  constructor "Close"     unit)
 
 data EscapeMode = EscapeMode
-  { joinLines :: Bool
+  { joinLines    :: Bool
   , escapeMarkup :: Bool
   }
   deriving (Show, Eq, Generic)
 
 escapeModeType :: Type EscapeMode
 escapeModeType = record $
-  EscapeMode <$> field "joinLines" bool
+  EscapeMode <$> field "joinLines"    bool
              <*> field "escapeMarkup" bool
 
 data Source
   = Source
   { updateInterval :: Maybe Int
   -- ^ In microseconds
-  , command :: [String]
-  , stdin :: Maybe Text
-  , escapeMode :: EscapeMode
+  , command        :: [String]
+  , stdin          :: Maybe Text
+  , escapeMode     :: EscapeMode
   } deriving (Show, Eq, Generic)
 
 sourceSettingsType :: Type Source
 sourceSettingsType = record $
   Source <$> field "updateInterval" (Dhall.maybe $ (* 1000) . fromIntegral <$> natural)
-                 <*> field "command"        (list string)
-                 <*> field "stdin"          (Dhall.maybe strictText)
-                 <*> field "escapeMode"     escapeModeType
+         <*> field "command"        (list string)
+         <*> field "stdin"          (Dhall.maybe strictText)
+         <*> field "escapeMode"     escapeModeType
 
 type BarSpec = [Token]
 
 data Configuration = Configuration
-  { _cfgBarSpec :: BarSpec
+  { _cfgBarSpec     :: BarSpec
   , _cfgBarSettings :: BarSettings
   }
   deriving (Show, Eq, Generic)
@@ -152,5 +152,30 @@ makeLenses ''Configuration
 
 configurationType :: Type Configuration
 configurationType = record $
-  Configuration <$> field "bar" (list tokenType)
+  Configuration <$> field "bar"      (list tokenType)
                 <*> field "settings" barSettingsType
+
+data PluginMeta = PluginMeta
+  { _pmName        :: Text
+  , _pmAuthor      :: Text
+  , _pmEmail       :: Maybe Text
+  , _pmHomePage    :: Maybe Text
+  , _pmUpstreamURL :: Maybe Text
+  , _pmDescription :: Text
+  , _pmImporting   :: Text
+  , _pmUsage       :: Text
+  }
+  deriving (Show, Eq)
+
+makeLenses ''PluginMeta
+
+pluginMetaType :: Type PluginMeta
+pluginMetaType = record $
+  PluginMeta <$> field "name"        strictText
+             <*> field "author"      strictText
+             <*> field "email"       (Dhall.maybe strictText)
+             <*> field "homepage"    (Dhall.maybe strictText)
+             <*> field "upstreamURL" (Dhall.maybe strictText)
+             <*> field "description" strictText
+             <*> field "importing"   strictText
+             <*> field "usage"       strictText

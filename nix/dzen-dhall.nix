@@ -1,7 +1,8 @@
-{ mkDerivation, async, base, dhall, directory, filepath, hspec
-, HUnit, microlens, microlens-th, optparse-applicative, parsec
-, process, stdenv, tasty, tasty-hspec, tasty-hunit
-, template-haskell, text, time, transformers, unix
+{ mkDerivation, async, base, bytestring, dhall, directory, filepath
+, hspec, http-conduit, HUnit, megaparsec, microlens, microlens-th
+, network-uri, optparse-applicative, parsec, parsers, process
+, stdenv, tasty, tasty-hspec, tasty-hunit, template-haskell, text
+, time, transformers, unix, unordered-containers, utf8-string
 }:
 mkDerivation {
   pname = "dzen-dhall";
@@ -11,13 +12,16 @@ mkDerivation {
   isExecutable = true;
   enableSeparateDataOutput = true;
   libraryHaskellDepends = [
-    async base dhall directory filepath microlens microlens-th
-    optparse-applicative parsec process text time transformers unix
+    async base bytestring dhall directory filepath http-conduit
+    megaparsec microlens microlens-th network-uri optparse-applicative
+    parsec parsers process text time transformers unix
+    unordered-containers utf8-string
   ];
   executableHaskellDepends = [ base ];
   testHaskellDepends = [
-    base dhall filepath hspec HUnit microlens optparse-applicative
-    parsec tasty tasty-hspec tasty-hunit template-haskell text
+    base dhall filepath hspec HUnit microlens network-uri
+    optparse-applicative parsec tasty tasty-hspec tasty-hunit
+    template-haskell text
   ];
   homepage = "https://github.com/klntsky/dzen-dhall";
   description = "Configure dzen2 bars in Dhall language";

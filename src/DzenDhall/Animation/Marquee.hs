@@ -7,10 +7,10 @@ import           Lens.Micro.Extras
 
 run :: Int -> Marquee -> AST -> Int -> AST
 run fontWidth settings ast frameCounter =
-  let fpc          = view mqFramesPerChar settings
-      desiredWidth = view mqWidth settings
-      realWidth    = astWidth ast
-      difference   = realWidth - desiredWidth in
+  let framesPerChar = view mqFramesPerChar settings
+      desiredWidth  = view mqWidth settings
+      realWidth     = astWidth ast
+      difference    = realWidth - desiredWidth in
 
   if | difference == 0 -> ast
      | difference <  0 ->
@@ -20,18 +20,36 @@ run fontWidth settings ast frameCounter =
      | otherwise       ->
          -- Select a part of AST
          let shifted = snd $
-               DzenDhall.Data.split ((frameCounter `div` fpc) `mod` (difference + 1)) ast
+               DzenDhall.Data.split ((frameCounter `div` framesPerChar) `mod` (difference + 1)) ast
              trimmed = fst $
                DzenDhall.Data.split desiredWidth shifted in
-           if | fpc == 1  -> trimmed
-              | otherwise -> addShift frameCounter fontWidth fpc trimmed
+           if | framesPerChar == 1 -> trimmed
+              | otherwise ->
+                let pxShift = calculatePxShift frameCounter fontWidth framesPerChar in
+                  addPxShift pxShift trimmed
+
+-- | Calculate shift in pixels.
+calculatePxShift
+  :: Int
+  -- ^ Number of current frame
+  -> Int
+  -- ^ Character width
+  -> Int
+  -- ^ How many frames per character?
+  -> Int
+  -- ^ Shift in pixels
+calculatePxShift frameCounter fontWidth framesPerChar =
+  let shift = frameCounter `mod` framesPerChar in
+    fontWidth `div` 2 - ((fontWidth * shift) `div` framesPerChar)
 
 -- | Add sub-character shift to AST and compensate it
-addShift :: Int -> Int -> Int -> AST -> AST
-addShift frameCounter fontWidth fpc ast =
-  let shift       = frameCounter `mod` fpc
-      pxShift     = fontWidth `div` 2 - ((fontWidth * shift) `div` fpc)
-      shiftedAST  = Prop (P (XY (  pxShift, 0))) ast
+addPxShift
+  :: Int
+  -- ^ Shift in pixels
+  -> AST
+  -> AST
+addPxShift pxShift ast =
+  let shifted     = Prop (P (XY (  pxShift, 0))) ast
       compensator = Prop (P (XY (- pxShift, 0))) mempty
   in
-    shiftedAST <> compensator
+    shifted <> compensator

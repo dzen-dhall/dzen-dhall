@@ -6,7 +6,6 @@ import Data.Maybe
 import Dhall hiding (maybe)
 import DzenDhall.Arguments
 import DzenDhall.Config
-import Lens.Micro
 import Lens.Micro.TH
 import Paths_dzen_dhall
 import System.Directory
@@ -19,6 +18,7 @@ data Runtime = Runtime
   , _rtConfigurations :: [Configuration]
   , _rtDzenBinary :: String
   , _rtFrameCounter :: Int
+  , _rtAPIVersion :: Int
   }
   deriving (Eq, Show)
 
@@ -29,6 +29,7 @@ readRuntime :: Arguments -> IO Runtime
 readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
   let dzenBinary = fromMaybe "dzen2" mbDzenBinary
   let frameCounter = 0
+  let apiVersion = 1
 
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
   exists <- doesDirectoryExist configDir
@@ -47,11 +48,14 @@ readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
     configurations
     dzenBinary
     frameCounter
+    apiVersion
 
 -- | Create config directory and set file permissions.
 initCommand :: Arguments -> IO ()
 initCommand Arguments{mbConfigDir} = do
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
+  let pluginsDir = configDir </> "plugins"
+
   exists <- doesDirectoryExist configDir
 
   when exists $ do
@@ -59,6 +63,7 @@ initCommand Arguments{mbConfigDir} = do
     exitWith (ExitFailure 1)
 
   dataDir <- getDataDir
+
   createDirectoryIfMissing True configDir
 
   let mode400 = ownerReadMode
@@ -76,6 +81,7 @@ initCommand Arguments{mbConfigDir} = do
   let configFile = configDir </> "config.dhall"
 
   setFileMode configDir  mode700
+  setFileMode pluginsDir mode700
   setFileMode configFile mode600
 
   putStrLn $ "Success! You can now view your configuration at " <> configFile
@@ -95,7 +101,7 @@ copyDir fileCreationHook dirCreationHook = go
         isDir <- doesDirectoryExist srcPath
         if isDir
           then do
-          createDirectory dstPath
+          createDirectoryIfMissing True dstPath
           dirCreationHook dstPath
           go srcPath dstPath
           else do

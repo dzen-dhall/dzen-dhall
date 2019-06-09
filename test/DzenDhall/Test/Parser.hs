@@ -54,4 +54,61 @@ getTests = pure $
                   ]
                 ]
          ]
+
+  , let fadeUp = Fade VUp 1
+        slider = (Slider fadeUp fadeUp 1)
+    in
+      mkTest
+      "parsing #3 - slider without separators"
+      [ TokOpen (OSlider slider)
+      , TokOpen (OSlider slider)
+      , TokTxt "text"
+      , TokClose
+      , TokClose
+      ]
+      $ Right $
+      Bars
+      [ BarSlider slider
+        [ Bars
+          [ BarSlider slider
+            [ Bars [ BarText "text" ]
+            ]
+          ]
+        ]
+      ]
+
+  , let fadeUp = Fade VUp 1
+        slider = (Slider fadeUp fadeUp 1)
+    in
+      mkTest
+      "parsing #4 - slider with separators"
+      [ TokOpen (OSlider slider)
+      , TokOpen (OSlider slider)
+      , TokTxt "a"
+      , TokSeparator
+      , TokTxt "b"
+      , TokClose
+      , TokSeparator
+      , TokTxt "c"
+      , TokClose
+      ]
+      $ Right $
+      Bars
+      [ BarSlider slider
+        [ Bars
+          [ BarSlider slider
+            [ Bars
+              [ BarText "a"
+              ]
+            , Bars
+              [ BarText "b"
+              ]
+            ]
+          ]
+        , Bars
+          [ BarText "c"
+          ]
+        ]
+      ]
+
   ]

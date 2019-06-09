@@ -15,10 +15,11 @@ getTests dhallDir =
   testGroup "Config data marshalling" <$>
   Prelude.sequence [ testOpeningTag           dhallDir
                    , testToken                dhallDir
-                   , testSource       dhallDir
-                   , testMarquee      dhallDir
+                   , testSource               dhallDir
+                   , testMarquee              dhallDir
                    , testBarSettings          dhallDir
                    , testConfiguration        dhallDir
+                   , testPluginMeta           dhallDir
                    , testDefaultConfiguration dhallDir
                    ]
 
@@ -101,6 +102,13 @@ testConfiguration dhallDir = do
                                                     }
                     }
     ]
+
+testPluginMeta :: FilePath -> IO TestTree
+testPluginMeta dhallDir = do
+  input <- detailed $ inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+           pluginMetaType [litFile|test/dhall/PluginMeta.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "test/dhall/PluginMeta.dhall marshalling" $
+    input @?= PluginMeta "1" "2" (Just "3") (Just "4") (Just "5") "6" "7" "8"
 
 testDefaultConfiguration :: FilePath -> IO TestTree
 testDefaultConfiguration dhallDir = do
