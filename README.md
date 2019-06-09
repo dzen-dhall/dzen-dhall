@@ -69,9 +69,9 @@ in  separate
 	[ join [ text "Mem: ", memoryUsage, text "%" ]
            -- ^ `text` is used to convert a text value to a `Bar`
 	, join [ text "Swap: ", swapUsage, text "%" ]
-    -- ^ `join` concatenates multiple `Bars`
+    -- ^ `join` concatenates multiple `Bar`s
 	, clocks
-	]
+	] : Bar
 ```
 
 ## Getting started

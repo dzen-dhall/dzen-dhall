@@ -34,7 +34,6 @@ run slider frame asts =
 
       -- Select visible AST
       ast             = asts !! astIx
-        -- ^ TODO: use vector
 
       -- Find in which frame we are, starting from the beginning of the
       -- animation cycle.

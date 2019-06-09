@@ -1,142 +1,141 @@
-cabal-version:       2.4
+cabal-version: 2.2
 
-name:                dzen-dhall
-version:             0.0.0.1
-synopsis:            Configure dzen2 bars in Dhall language.
--- description:
-homepage:            https://github.com/klntsky/dzen-dhall
--- bug-reports:
-license:             BSD-3-Clause
-license-file:        LICENSE
-author:              klntsky
-maintainer:          klntsky@gmail.com
--- copyright:
--- category:
-extra-source-files:  CHANGELOG.md, README.md
-data-files:          dhall/config.dhall
-                     dhall/lib/index.dhall
-                     dhall/lib/List/concat.dhall
-                     dhall/lib/List/generate.dhall
-                     dhall/lib/List/intersperse.dhall
-                     dhall/lib/List/map.dhall
-                     dhall/lib/List/null.dhall
-                     dhall/src/AbsolutePosition.dhall
-                     dhall/src/Bar.dhall
-                     dhall/src/BarSettings.dhall
-                     dhall/src/Button.dhall
-                     dhall/src/ClosingTag.dhall
-                     dhall/src/Color.dhall
-                     dhall/src/Configuration.dhall
-                     dhall/src/defaultBarSettings.dhall
-                     dhall/src/defaultSlider.dhall
-                     dhall/src/definitions.dhall
-                     dhall/src/EscapeMode.dhall
-                     dhall/src/Image.dhall
-                     dhall/src/Marquee.dhall
-                     dhall/src/mkConfigs.dhall
-                     dhall/src/mkPlugin.dhall
-                     dhall/src/OpeningTag.dhall
-                     dhall/src/Plugin.dhall
-                     dhall/src/PluginMeta.dhall
-                     dhall/src/Position.dhall
-                     dhall/src/Slider.dhall
-                     dhall/src/Source.dhall
-                     dhall/src/Token.dhall
-                     dhall/src/types.dhall
-                     dhall/src/utils.dhall
-                     dhall/src/VerticalDirection.dhall
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 23ef3fca821fdea02f90b5101e16b626637ecd5807182821e6c789fc50759b0a
+
+name:           dzen-dhall
+version:        0.0.0.1
+synopsis:       Configure dzen2 bars in Dhall language.
+author:         Klntsky
+maintainer:     Klntsky <klntsky@gmail.com>
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    CHANGELOG.md
+    README.md
+data-files:
+    dhall/config.dhall
+    dhall/lib/index.dhall
+    dhall/lib/List/concat.dhall
+    dhall/lib/List/generate.dhall
+    dhall/lib/List/intersperse.dhall
+    dhall/lib/List/map.dhall
+    dhall/lib/List/null.dhall
+    dhall/src/AbsolutePosition.dhall
+    dhall/src/Bar.dhall
+    dhall/src/BarSettings.dhall
+    dhall/src/Button.dhall
+    dhall/src/ClosingTag.dhall
+    dhall/src/Color.dhall
+    dhall/src/Configuration.dhall
+    dhall/src/defaultBarSettings.dhall
+    dhall/src/defaultSlider.dhall
+    dhall/src/definitions.dhall
+    dhall/src/EscapeMode.dhall
+    dhall/src/Image.dhall
+    dhall/src/Marquee.dhall
+    dhall/src/mkConfigs.dhall
+    dhall/src/mkPlugin.dhall
+    dhall/src/OpeningTag.dhall
+    dhall/src/Plugin.dhall
+    dhall/src/PluginMeta.dhall
+    dhall/src/Position.dhall
+    dhall/src/Slider.dhall
+    dhall/src/Source.dhall
+    dhall/src/Token.dhall
+    dhall/src/types.dhall
+    dhall/src/utils.dhall
+    dhall/src/VerticalDirection.dhall
+
 library
-  exposed-modules:     DzenDhall
-                       DzenDhall.Animation.Marquee
-                       DzenDhall.Animation.Slider
-                       DzenDhall.App
-                       DzenDhall.Arguments
-                       DzenDhall.Config
-                       DzenDhall.Data
-                       DzenDhall.Extra
-                       DzenDhall.Parser
-                       DzenDhall.Plug
-                       DzenDhall.Run
-                       DzenDhall.Runtime
-                       Paths_dzen_dhall
-  other-modules:
-  other-extensions:
-  default-extensions:  DeriveFunctor
-                       DeriveGeneric
-                       FlexibleContexts
-                       GeneralizedNewtypeDeriving
-                       LambdaCase
-                       MultiWayIf
-                       NamedFieldPuns
-                       OverloadedStrings
-                       RankNTypes
-                       RecordWildCards
-                       ScopedTypeVariables
-                       TupleSections
-
-  build-depends:       base ^>=4.12.0.0,
-                       async,
-                       bytestring,
-                       dhall,
-                       directory,
-                       filepath,
-                       http-conduit,
-                       megaparsec,
-                       microlens,
-                       microlens-th,
-                       network-uri,
-                       optparse-applicative,
-                       parsec,
-                       parsers,
-                       process,
-                       text,
-                       time,
-                       transformers,
-                       unix,
-                       unordered-containers,
-                       utf8-string
-  hs-source-dirs:      src
-  ghc-options:         -Wall
-  default-language:    Haskell2010
+  exposed-modules:
+      DzenDhall
+      DzenDhall.Animation.Marquee
+      DzenDhall.Animation.Slider
+      DzenDhall.App
+      DzenDhall.Arguments
+      DzenDhall.Config
+      DzenDhall.Data
+      DzenDhall.Extra
+      DzenDhall.Parser
+      DzenDhall.Plug
+      DzenDhall.Run
+      DzenDhall.Runtime
+      Paths_dzen_dhall
+  hs-source-dirs:
+      src
+  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables TupleSections
+  ghc-options: -Wall
+  build-depends:
+      async
+    , base >=4.12.0.0 && <4.13
+    , bytestring
+    , dhall
+    , directory
+    , filepath
+    , http-conduit
+    , megaparsec
+    , microlens
+    , microlens-th
+    , network-uri
+    , optparse-applicative
+    , parsec
+    , parsers
+    , process
+    , text
+    , time
+    , transformers
+    , unix
+    , unordered-containers
+    , utf8-string
+  default-language: Haskell2010
 
 executable dzen-dhall
-
-  main-is:             Main.hs
+  main-is: Main.hs
   other-modules:
-  other-extensions:
-  build-depends:       base, dzen-dhall
-  hs-source-dirs:      app
-  default-language:    Haskell2010
-  ghc-options:         -threaded
+      Paths_dzen_dhall
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -threaded
+  build-depends:
+      base
+    , dzen-dhall
+  default-language: Haskell2010
 
 test-suite tasty
-  type:                exitcode-stdio-1.0
-  other-modules:       Paths_dzen_dhall
-                       FileQuoter
-                       DzenDhall.Test.AST
-                       DzenDhall.Test.Animation.Marquee
-                       DzenDhall.Test.Arguments
-                       DzenDhall.Test.Config
-                       DzenDhall.Test.Parser
-                       DzenDhall.Test.Plug
-  default-extensions:  OverloadedStrings, QuasiQuotes, LambdaCase
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  main-is:             Main.hs
-  build-depends:       dzen-dhall,
-                       base,
-                       HUnit,
-                       dhall,
-                       filepath,
-                       hspec,
-                       microlens,
-                       network-uri,
-                       optparse-applicative,
-                       parsec,
-                       tasty,
-                       tasty-hspec,
-                       tasty-hunit,
-                       template-haskell,
-                       text
-
-  hs-source-dirs:      test
-  default-language:    Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      DzenDhall.Test.Animation.Marquee
+      DzenDhall.Test.Arguments
+      DzenDhall.Test.AST
+      DzenDhall.Test.Config
+      DzenDhall.Test.Parser
+      DzenDhall.Test.Plug
+      FileQuoter
+      Paths_dzen_dhall
+  hs-source-dirs:
+      test
+  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables TupleSections
+  ghc-options: -Wall
+  build-depends:
+      HUnit
+    , base
+    , dhall
+    , dzen-dhall
+    , filepath
+    , hspec
+    , microlens
+    , network-uri
+    , optparse-applicative
+    , parsec
+    , tasty
+    , tasty-hspec
+    , tasty-hunit
+    , template-haskell
+    , text
+  default-language: Haskell2010

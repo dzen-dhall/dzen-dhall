@@ -1,0 +1,102 @@
+name:       dzen-dhall
+version:    '0.0.0.1'
+synopsis:   Configure dzen2 bars in Dhall language.
+maintainer: Klntsky <klntsky@gmail.com>
+license:    BSD-3-Clause
+license-file: LICENSE
+author: Klntsky
+extra-source-files:
+- CHANGELOG.md
+- README.md
+
+data-files:
+- dhall/**/*.dhall
+
+library:
+  source-dirs: src
+  ghc-options: -Wall
+
+  dependencies:
+  - base ^>=4.12.0.0
+  - async
+  - bytestring
+  - dhall
+  - directory
+  - filepath
+  - http-conduit
+  - megaparsec
+  - microlens
+  - microlens-th
+  - network-uri
+  - optparse-applicative
+  - parsec
+  - parsers
+  - process
+  - text
+  - time
+  - transformers
+  - unix
+  - unordered-containers
+  - utf8-string
+
+  exposed-modules:
+  - DzenDhall
+  - DzenDhall.Animation.Marquee
+  - DzenDhall.Animation.Slider
+  - DzenDhall.App
+  - DzenDhall.Arguments
+  - DzenDhall.Config
+  - DzenDhall.Data
+  - DzenDhall.Extra
+  - DzenDhall.Parser
+  - DzenDhall.Plug
+  - DzenDhall.Run
+  - DzenDhall.Runtime
+  - Paths_dzen_dhall
+
+  default-extensions: &extensions
+  - DeriveFunctor
+  - DeriveGeneric
+  - FlexibleContexts
+  - GeneralizedNewtypeDeriving
+  - LambdaCase
+  - MultiWayIf
+  - NamedFieldPuns
+  - OverloadedStrings
+  - RankNTypes
+  - RecordWildCards
+  - ScopedTypeVariables
+  - TupleSections
+
+executables:
+  dzen-dhall:
+    main: Main.hs
+    source-dirs: app
+    ghc-options: -Wall -threaded
+    dependencies:
+    - base
+    - dzen-dhall
+
+tests:
+  tasty:
+    default-extensions: *extensions
+    main: Main.hs
+    source-dirs:
+    - test
+    ghc-options: -Wall
+    dependencies:
+    - HUnit
+    - base
+    - dhall
+    - dzen-dhall
+    - filepath
+    - hspec
+    - microlens
+    - network-uri
+    - optparse-applicative
+    - parsec
+    - tasty
+    - tasty-hspec
+    - tasty-hunit
+    - template-haskell
+    - text
