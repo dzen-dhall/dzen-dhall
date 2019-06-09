@@ -12,6 +12,13 @@ import Lens.Micro
 -- 3. Fading out
 run :: Slider -> Int -> [AST] -> AST
 run _      _     []   = mempty
+-- Short-circuit if `fadeFrameCount`s are all set to zero.
+run slider frame asts
+  | slider ^. fadeIn  . fadeFrameCount == 0 &&
+    slider ^. fadeOut . fadeFrameCount == 0 =
+      let astIx       = (frame `div` positive (slider ^. sliderDelay)) `mod` length asts
+          ast         = asts !! astIx
+      in ast
 run slider frame asts =
   -- Calculate total frame counts for each 3 stages:
   let inFrameCount    = positive $ slider ^. fadeIn  . fadeFrameCount
