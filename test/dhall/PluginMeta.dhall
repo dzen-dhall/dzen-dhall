@@ -1,4 +1,5 @@
 let PluginMeta = ./src/PluginMeta.dhall
+
 let pluginMeta =
 	  { name =
 		  "1"
@@ -14,6 +15,8 @@ let pluginMeta =
 		  "6"
 	  , usage =
 		  "7"
+	  , requiredBinaries =
+		  [ "bash" ]
 	  , apiVersion =
 		  8
 	  }

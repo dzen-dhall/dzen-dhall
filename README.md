@@ -30,9 +30,49 @@ To fill in the *abstraction gap*, new DSL should be introduced. This language sh
 
 [Dhall](https://dhall-lang.org/) is a statically-typed [total](https://en.wikipedia.org/wiki/Total_functional_programming) programming language mostly used for dealing with complex user-defined configurations. This repository contains data type and function definitions in Dhall that form a DSL for defining almost arbitrary Dzen UIs, called "bars", and a Haskell program capable of reading bar definitions and producing input for `dzen2` binary based on them.
 
-## Example
+The essence of the DSL can be illustrated by the following excerpt from [the default config file](dhall/config.dhall) (with additional comments):
 
-See [the default config file](dhall/config.dhall).
+```dhall
+let memoryUsage
+-- ^ `let` keyword introduces new binding
+	: Bar
+	-- ^ Colon means "has type". `memoryUsage` is a `Bar`
+	= bash
+	  -- ^ Call to a function named `bash` with two arguments:
+	  5000
+	  -- ^ Update interval in milliseconds
+	  ''
+	  TMP=`free -b | grep 'Mem'`;
+	  TMP=( $TMP );
+	  TotalMem="''${TMP[ 1 ]}"
+	  UsedMem="''${TMP[ 2 ]}"
+	  echo "$((UsedMem * 100 / TotalMem))"
+	  ''
+	  -- ^ And a multiline string with script contents
+
+let swapUsage
+	: Bar
+	= bash
+	  5000
+	  ''
+	  TMP=`free -b | grep 'Swap'`;
+	  TMP=( $TMP );
+	  TotalSwap="''${TMP[ 1 ]}"
+	  UsedSwap="''${TMP[ 2 ]}"
+	  echo "$((UsedSwap * 100 / TotalSwap))"
+	  ''
+
+let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
+
+in  separate
+    -- ^ a function that inserts a |-separator between nearby elements of a list
+	[ join [ text "Mem: ", memoryUsage, text "%" ]
+           -- ^ `text` is used to convert a text value to a `Bar`
+	, join [ text "Swap: ", swapUsage, text "%" ]
+    -- ^ `join` concatenates multiple `Bars`
+	, clocks
+	]
+```
 
 ## Getting started
 
@@ -79,6 +119,10 @@ dzen-dhall init
 dzen-dhall will put some files to `~/.config/dzen-dhall/`
 
 Files in `src/` and `lib/` subdirectories are set read-only by default - the user should not edit them, because they contain the implementation. They are still exposed to make it easier to debug the configuration.
+
+### Installing plugins
+
+`dzen-dhall` comes with a plugin system capable of pulling pieces of Dhall code with metadata either from a [curated set of plugins](https://github.com/dzen-dhall/plugins) or from third-party sources.
 
 ## Troubleshooting
 

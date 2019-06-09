@@ -13,6 +13,8 @@ let PluginMeta =
 		  Text
 	  , usage :
 		  Text
+	  , requiredBinaries :
+		  List Text
 	  , apiVersion :
 		  Natural
 	  }

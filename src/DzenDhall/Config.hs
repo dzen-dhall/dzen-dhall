@@ -156,14 +156,15 @@ configurationType = record $
                 <*> field "settings" barSettingsType
 
 data PluginMeta = PluginMeta
-  { _pmName        :: Text
-  , _pmAuthor      :: Text
-  , _pmEmail       :: Maybe Text
-  , _pmHomePage    :: Maybe Text
-  , _pmUpstreamURL :: Maybe Text
-  , _pmDescription :: Text
-  , _pmUsage       :: Text
-  , _pmApiVersion  :: Int
+  { _pmName             :: Text
+  , _pmAuthor           :: Text
+  , _pmEmail            :: Maybe Text
+  , _pmHomePage         :: Maybe Text
+  , _pmUpstreamURL      :: Maybe Text
+  , _pmDescription      :: Text
+  , _pmUsage            :: Text
+  , _pmRequiredBinaries :: [Text]
+  , _pmApiVersion       :: Int
   }
   deriving (Show, Eq)
 
@@ -171,11 +172,12 @@ makeLenses ''PluginMeta
 
 pluginMetaType :: Type PluginMeta
 pluginMetaType = record $
-  PluginMeta <$> field "name"        strictText
-             <*> field "author"      strictText
-             <*> field "email"       (Dhall.maybe strictText)
-             <*> field "homepage"    (Dhall.maybe strictText)
-             <*> field "upstreamURL" (Dhall.maybe strictText)
-             <*> field "description" strictText
-             <*> field "usage"       strictText
-             <*> field "apiVersion"  (fromIntegral <$> natural)
+  PluginMeta <$> field "name"             strictText
+             <*> field "author"           strictText
+             <*> field "email"            (Dhall.maybe strictText)
+             <*> field "homepage"         (Dhall.maybe strictText)
+             <*> field "upstreamURL"      (Dhall.maybe strictText)
+             <*> field "description"      strictText
+             <*> field "usage"            strictText
+             <*> field "requiredBinaries" (list strictText)
+             <*> field "apiVersion"       (fromIntegral <$> natural)
