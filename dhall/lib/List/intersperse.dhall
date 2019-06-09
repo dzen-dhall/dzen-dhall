@@ -7,36 +7,22 @@ intersperse Natural 0 [ 1, 2, 3, 4 ] = [ 1, 0, 2, 0, 3, 0, 4 ]
 let List/intersperse
 	: ∀(e : Type) → e → List e → List e
 	=   λ(e : Type)
-	  → λ(z : e)
-	  → λ(l : List e)
-	  → let null = ./null.dhall
+	  → λ(separator : e)
+	  → λ(list : List e)
+	  → let cons =
+				λ(element : e)
+			  → λ(continue : List e → List e)
+			  → λ(step : List e)
+			  → continue
+				(       if ./null.dhall e step
 
-		let cons =
-				λ(e : Type)
-			  → λ(z : e)
-			  → λ(x : e)
-			  → λ(f : { b : Bool, acc : List e } → { b : Bool, acc : List e })
-			  → λ(t : { b : Bool, acc : List e })
-			  →       if null e t.acc
+				  then  [ element ]
 
-				then  f { b = True, acc = [ x ] }
+				  else  step # [ separator, element ]
+				)
 
-				else  if t.b
+		let nil = λ(x : List e) → x
 
-				then  f (t ⫽ { acc = t.acc # [ z, x ] })
-
-				else  f (t ⫽ { b = True })
-
-		let nil = λ(e : Type) → λ(x : { b : Bool, acc : List e }) → x
-
-		let res =
-			  List/fold
-			  e
-			  l
-			  ({ b : Bool, acc : List e } → { b : Bool, acc : List e })
-			  (cons e z)
-			  (nil e)
-
-		in  (res { b = False, acc = [] : List e }).acc
+		in  List/fold e list (List e → List e) cons nil ([] : List e)
 
 in  List/intersperse
