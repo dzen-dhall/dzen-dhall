@@ -7,6 +7,7 @@ import DzenDhall.Data
 import Text.Parsec.Combinator
 import Text.Parsec.Prim
 import Text.Parsec
+import qualified Data.Vector as V
 
 type Parser a = Parsec Tokens () a
 
@@ -35,7 +36,7 @@ bar = topLevel <* eof
       closing
       pure $
         case tag of
-          SepSlider slider -> BarSlider slider children
+          SepSlider slider -> BarSlider slider (V.fromList children)
 
     wrapped = do
       tag      <- solid

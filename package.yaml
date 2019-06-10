@@ -38,6 +38,7 @@ library:
   - unix
   - unordered-containers
   - utf8-string
+  - vector
 
   exposed-modules:
   - DzenDhall
@@ -100,3 +101,4 @@ tests:
     - tasty-hunit
     - template-haskell
     - text
+    - vector

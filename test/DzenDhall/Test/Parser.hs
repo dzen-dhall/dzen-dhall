@@ -6,6 +6,7 @@ import DzenDhall.Parser
 import Test.Tasty (TestTree, TestName, testGroup)
 import Test.Tasty.HUnit
 import Text.Parsec
+import Data.Vector
 
 mkTest :: TestName -> [Token] -> Either ParseError BarSpec -> TestTree
 mkTest name tokenList expected =
@@ -68,9 +69,9 @@ getTests = pure $
       ]
       $ Right $
       Bars
-      [ BarSlider slider
+      [ BarSlider slider $ Data.Vector.fromList
         [ Bars
-          [ BarSlider slider
+          [ BarSlider slider $ Data.Vector.fromList
             [ Bars [ BarText "text" ]
             ]
           ]
@@ -94,9 +95,9 @@ getTests = pure $
       ]
       $ Right $
       Bars
-      [ BarSlider slider
+      [ BarSlider slider $ Data.Vector.fromList
         [ Bars
-          [ BarSlider slider
+          [ BarSlider slider $ Data.Vector.fromList
             [ Bars
               [ BarText "a"
               ]

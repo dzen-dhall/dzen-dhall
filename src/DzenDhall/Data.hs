@@ -8,6 +8,7 @@ import           DzenDhall.Config
 import           DzenDhall.Config
 import           GHC.Generics
 import           Lens.Micro.TH
+import           Data.Vector
 
 type Color = Text
 
@@ -27,7 +28,7 @@ data Bar_ ref
   | BarSource ref
   | BarText Text
   | BarMarquee Marquee (Bar_ ref)
-  | BarSlider Slider [Bar_ ref]
+  | BarSlider Slider (Vector (Bar_ ref))
   | BarColor Text (Bar_ ref)
   | Bars [Bar_ ref]
   deriving (Show, Eq, Generic)

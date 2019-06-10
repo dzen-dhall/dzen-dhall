@@ -1,5 +1,6 @@
 module DzenDhall.Animation.Slider where
 
+import Data.Vector (Vector, (!), null, length)
 import DzenDhall.Config
 import DzenDhall.Data
 import DzenDhall.Extra
@@ -10,15 +11,22 @@ import Lens.Micro
 -- 1. Fading in
 -- 2. Delay
 -- 3. Fading out
-run :: Slider -> Int -> [AST] -> AST
-run _      _     []   = mempty
+run
+  :: Slider
+  -> Int
+  -- ^ Frame number
+  -> Vector AST
+  -- ^ Vector of possible ASTs (only one of them will be selected)
+  -> AST
+run _      _     asts
+  | Data.Vector.null asts = mempty
 -- Short-circuit if `fadeFrameCount`s are all set to zero.
 run slider frame asts
   | slider ^. fadeIn  . fadeFrameCount == 0 &&
     slider ^. fadeOut . fadeFrameCount == 0 =
-      let astIx       = (frame `div` positive (slider ^. sliderDelay)) `mod` length asts
-          ast         = asts !! astIx
-      in ast
+      let astIx       = (frame `div` positive (slider ^. sliderDelay))
+                        `mod` Data.Vector.length asts
+      in asts ! astIx
 run slider frame asts =
   -- Calculate total frame counts for each 3 stages:
   let inFrameCount    = positive $ slider ^. fadeIn  . fadeFrameCount
@@ -30,10 +38,10 @@ run slider frame asts =
         inFrameCount + delayFrameCount + outFrameCount
 
       -- Find currenlty selected AST index
-      astIx           = (frame `div` totalFrames) `mod` length asts
+      astIx           = (frame `div` totalFrames) `mod` Data.Vector.length asts
 
       -- Select visible AST
-      ast             = asts !! astIx
+      ast             = asts ! astIx
 
       -- Find in which frame we are, starting from the beginning of the
       -- animation cycle.
