@@ -17,6 +17,7 @@ getTests dhallDir =
                    , testToken                dhallDir
                    , testSource               dhallDir
                    , testMarquee              dhallDir
+                   , testMouseButton          dhallDir
                    , testBarSettings          dhallDir
                    , testConfiguration        dhallDir
                    , testPluginMeta           dhallDir
@@ -41,10 +42,10 @@ testToken dhallDir = do
     [ TokOpen (OMarquee (Marquee 2 3))
     , TokRaw "raw"
     , TokSource (Source { updateInterval = Just 1000
-                                , command = [ "bash" ]
-                                , stdin = Just "echo 1"
-                                , escapeMode = EscapeMode True True
-                                })
+                        , command = [ "bash" ]
+                        , stdin = Just "echo 1"
+                        , escapeMode = EscapeMode True True
+                        })
     , TokTxt "txt"
     , TokClose ]
 
@@ -56,10 +57,10 @@ testSource dhallDir = do
     input @?=
 
     Source { updateInterval = Just 1000
-                   , command = [ "bash" ]
-                   , stdin = Just "echo hi"
-                   , escapeMode = EscapeMode True True
-                   }
+           , command = [ "bash" ]
+           , stdin = Just "echo hi"
+           , escapeMode = EscapeMode True True
+           }
 
 testMarquee :: FilePath -> IO TestTree
 testMarquee dhallDir = do
@@ -69,8 +70,24 @@ testMarquee dhallDir = do
     input @?=
 
     Marquee { _mqFramesPerChar = 2
-                    , _mqWidth = 3
-                    }
+            , _mqWidth = 3
+            }
+
+testMouseButton :: FilePath -> IO TestTree
+testMouseButton dhallDir = do
+  input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+           (list mouseButtonType) [litFile|test/dhall/MouseButton.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "test/dhall/MouseButton.dhall marshalling" $
+    input @?=
+    [ MouseLeft
+    , MouseMiddle
+    , MouseRight
+    , MouseScrollUp
+    , MouseScrollDown
+    , MouseScrollLeft
+    , MouseScrollRight
+    ]
+
 
 testBarSettings :: FilePath -> IO TestTree
 testBarSettings dhallDir = do
@@ -112,6 +129,7 @@ testPluginMeta dhallDir = do
 
 testDefaultConfiguration :: FilePath -> IO TestTree
 testDefaultConfiguration dhallDir = do
-  input <- detailed $ inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+  -- This test just asserts succesful input reading
+  _input <- detailed $ inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
            (list configurationType) [litFile|dhall/config.dhall|]
   pure $ Test.Tasty.HUnit.testCase "dhall/config.dhall marshalling" $ pure ()

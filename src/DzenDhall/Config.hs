@@ -29,6 +29,26 @@ directionType = union
   $  (VUp   <$ constructor "Up"   unit)
   <> (VDown <$ constructor "Down" unit)
 
+data MouseButton
+  = MouseLeft
+  | MouseMiddle
+  | MouseRight
+  | MouseScrollUp
+  | MouseScrollDown
+  | MouseScrollLeft
+  | MouseScrollRight
+  deriving (Show, Eq, Generic)
+
+mouseButtonType :: Type MouseButton
+mouseButtonType = union
+  $  (MouseLeft        <$ constructor "Left"        unit)
+  <> (MouseMiddle      <$ constructor "Middle"      unit)
+  <> (MouseRight       <$ constructor "Right"       unit)
+  <> (MouseScrollUp    <$ constructor "ScrollUp"    unit)
+  <> (MouseScrollDown  <$ constructor "ScrollDown"  unit)
+  <> (MouseScrollLeft  <$ constructor "ScrollLeft"  unit)
+  <> (MouseScrollRight <$ constructor "ScrollRight" unit)
+
 data Fade
   = Fade
   { _fadeDirection   :: VDirection
