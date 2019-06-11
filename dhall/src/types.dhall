@@ -15,4 +15,8 @@
 	./Slider.dhall
 , VerticalDirection =
 	./VerticalDirection.dhall
+, StateTransitionTable =
+	./StateTransitionTable.dhall
+, StateMap =
+	./StateMap.dhall
 }

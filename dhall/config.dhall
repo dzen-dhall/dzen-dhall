@@ -20,6 +20,10 @@ let VerticalDirection = types.VerticalDirection
 
 let Plugin = types.Plugin
 
+let StateTransitionTable = types.StateTransitionTable
+
+let StateMap = types.StateMap
+
 let mkConfigs = utils.mkConfigs
 
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
@@ -34,6 +38,7 @@ let defaultBar
 	  → λ(marquee : Marquee → Bar → Bar)
 	  → λ(slider : Slider → List Bar → Bar)
 	  → λ(plugin : Plugin → Bar)
+	  → λ(automaton : StateTransitionTable → StateMap Bar → Bar)
 	  → let separateBy =
 				λ(sep : Bar)
 			  → λ(list : List Bar)

@@ -2,4 +2,16 @@ let Marquee = ./Marquee.dhall
 
 let Slider = ./Slider.dhall
 
-in  < Marquee : Marquee | Slider : Slider | Color : Text >
+let StateTransitionTable = ./StateTransitionTable.dhall
+
+in  < Marquee :
+		Marquee
+	| Slider :
+		Slider
+	| Color :
+		Text
+	| Automaton :
+		StateTransitionTable
+	| StateMapKey :
+		Text
+	>

@@ -12,6 +12,10 @@ let Slider = ./Slider.dhall
 
 let Plugin = ./Plugin.dhall
 
+let StateTransitionTable = ./StateTransitionTable.dhall
+
+let StateMap = ./StateMap.dhall
+
 in    ∀(Bar : Type)
 	→ ∀(join : List Bar → Bar)
 	→ ∀(text : Text → Bar)
@@ -20,4 +24,5 @@ in    ∀(Bar : Type)
 	→ ∀(marquee : Marquee → Bar → Bar)
 	→ ∀(slider : Slider → List Bar → Bar)
 	→ ∀(plugin : Plugin → Bar)
+	→ ∀(automaton : StateTransitionTable → StateMap Bar → Bar)
 	→ Bar

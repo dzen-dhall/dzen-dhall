@@ -1,10 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Config where
 
-import Dhall
-import Data.Text (Text)
-import Lens.Micro.TH
-import DzenDhall.Extra
+import           Data.Coerce
+import qualified Data.HashMap.Strict as H
+import           Data.Hashable
+import           Data.Text (Text)
+import           Dhall
+import           Lens.Micro.TH
+
+import           DzenDhall.Extra
+
 
 data Marquee
   = Marquee
@@ -38,6 +43,8 @@ data MouseButton
   | MouseScrollLeft
   | MouseScrollRight
   deriving (Show, Eq, Generic)
+
+instance Hashable MouseButton
 
 mouseButtonType :: Type MouseButton
 mouseButtonType = union
@@ -82,17 +89,32 @@ sliderType = record $
          <*> field "fadeOut" fadeType
          <*> field "delay"   (fromIntegral <$> natural)
 
+newtype StateTransitionTable = StateTransitionTable (H.HashMap (MouseButton, Text) Text)
+  deriving (Show, Eq, Generic)
+
+stateTransitionTableType :: Type StateTransitionTable
+stateTransitionTableType = coerce <$> H.fromList <$>
+  list (record $
+        ((\e f t -> ((e, f), t))
+          <$> field "event" mouseButtonType
+          <*> field "from"  strictText
+          <*> field "to"    strictText))
+
 data OpeningTag
   = OMarquee Marquee
   | OSlider  Slider
   | OColor   Text
+  | OAutomaton StateTransitionTable
+  | OStateMapKey Text
   deriving (Show, Eq, Generic)
 
 openingTagType :: Type OpeningTag
 openingTagType = union
-  $  (OMarquee <$> constructor "Marquee" marqueeType)
-  <> (OSlider  <$> constructor "Slider"  sliderType)
-  <> (OColor   <$> constructor "Color"   strictText)
+  $  (OMarquee     <$> constructor "Marquee"     marqueeType)
+  <> (OSlider      <$> constructor "Slider"      sliderType)
+  <> (OColor       <$> constructor "Color"       strictText)
+  <> (OAutomaton   <$> constructor "Automaton"   stateTransitionTableType)
+  <> (OStateMapKey <$> constructor "StateMapKey" strictText)
 
 data BarSettings
   = BarSettings
@@ -135,6 +157,12 @@ tokenType = union
   <> (TokTxt       <$> constructor "Txt"       strictText)
   <> (TokSeparator <$  constructor "Separator" unit)
   <> (TokClose     <$  constructor "Close"     unit)
+
+stateMapType :: Type (H.HashMap Text [Token])
+stateMapType = H.fromList <$>
+  list (record $
+         (,) <$> field "state" strictText
+             <*> field "bar"   (list tokenType))
 
 data EscapeMode = EscapeMode
   { joinLines    :: Bool

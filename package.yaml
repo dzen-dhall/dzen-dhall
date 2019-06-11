@@ -23,6 +23,7 @@ library:
   - dhall
   - directory
   - filepath
+  - hashable
   - http-conduit
   - megaparsec
   - microlens
@@ -101,4 +102,5 @@ tests:
     - tasty-hunit
     - template-haskell
     - text
+    - unordered-containers
     - vector

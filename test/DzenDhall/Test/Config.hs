@@ -2,13 +2,16 @@
 {-# OPTIONS -Wno-name-shadowing #-}
 module DzenDhall.Test.Config where
 
-import Dhall
-import DzenDhall.Config
-import FileQuoter
-import Lens.Micro
-import System.IO (FilePath)
-import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit
+import qualified Data.HashMap.Strict as H
+import           Dhall
+import           FileQuoter
+import           Lens.Micro
+import           System.IO (FilePath)
+import           Test.Tasty (TestTree, testGroup)
+import           Test.Tasty.HUnit
+
+import           DzenDhall.Config
+
 
 getTests :: FilePath -> IO TestTree
 getTests dhallDir =
@@ -20,6 +23,7 @@ getTests dhallDir =
                    , testMouseButton          dhallDir
                    , testBarSettings          dhallDir
                    , testConfiguration        dhallDir
+                   , testStateTransitionTable dhallDir
                    , testPluginMeta           dhallDir
                    , testDefaultConfiguration dhallDir
                    ]
@@ -119,6 +123,19 @@ testConfiguration dhallDir = do
                                                     }
                     }
     ]
+
+testStateTransitionTable :: FilePath -> IO TestTree
+testStateTransitionTable dhallDir = do
+  input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+           stateTransitionTableType [litFile|test/dhall/StateTransitionTable.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "test/dhall/StateTransitionTable.dhall marshalling" $
+    input @?=
+
+    StateTransitionTable ( H.fromList [ ((MouseLeft, "initial"), "1")
+                                      , ((MouseLeft, "1"), "2")
+                                      , ((MouseLeft, "2"), "initial")
+                                      ]
+                         )
 
 testPluginMeta :: FilePath -> IO TestTree
 testPluginMeta dhallDir = do
