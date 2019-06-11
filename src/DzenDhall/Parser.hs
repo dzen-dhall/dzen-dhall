@@ -7,6 +7,7 @@ import DzenDhall.Data
 import Text.Parsec.Combinator
 import Text.Parsec.Prim
 import Text.Parsec
+import qualified Data.HashMap.Strict as H
 import qualified Data.Vector as V
 
 type Parser a = Parsec Tokens () a
@@ -18,7 +19,9 @@ type Tokens = [DzenDhall.Config.Token]
 data Separatable = SepSlider Slider
 
 -- | Used to tag bar elements that require a single child.
-data Solid = SolidMarquee Marquee | SolidColor Color
+data Solid
+  = SolidMarquee Marquee
+  | SolidColor Color
 
 bar :: Parser BarSpec
 bar = topLevel <* eof
@@ -27,8 +30,9 @@ bar = topLevel <* eof
           BarRaw    <$> raw
       <|> BarText   <$> text
       <|> BarSource <$> source
-      <|> separated
       <|> wrapped
+      <|> separated
+      <|> automaton
 
     separated = do
       tag <- separatable
@@ -46,6 +50,26 @@ bar = topLevel <* eof
         case tag of
           SolidMarquee settings -> BarMarquee settings children
           SolidColor   color    -> BarColor   color    children
+
+    automaton = do
+      stt <- stateTransitionTable
+      kvs <- many $ do
+        smk <- stateMapKey
+        bar <- topLevel
+        closing
+        pure (smk, bar)
+      closing
+      pure $ BarAutomaton stt $ H.fromList kvs
+
+stateTransitionTable :: Parser StateTransitionTable
+stateTransitionTable = withPreview $ \case
+  TokOpen (OAutomaton stt) -> Just stt
+  _                        -> Nothing
+
+stateMapKey :: Parser Text
+stateMapKey = withPreview $ \case
+  TokOpen (OStateMapKey key) -> Just key
+  _                          -> Nothing
 
 separatable :: Parser Separatable
 separatable = withPreview $ \case

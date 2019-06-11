@@ -1,18 +1,21 @@
 module DzenDhall.Test.Parser where
 
-import DzenDhall.Config
-import DzenDhall.Data
-import DzenDhall.Parser
-import Test.Tasty (TestTree, TestName, testGroup)
-import Test.Tasty.HUnit
-import Text.Parsec
-import Data.Vector
+import qualified Data.HashMap.Strict as H
+import           Data.Vector
+import           Test.Tasty (TestTree, TestName, testGroup)
+import           Test.Tasty.HUnit
+import           Text.Parsec
+
+import           DzenDhall.Config
+import           DzenDhall.Data
+import           DzenDhall.Parser
 
 mkTest :: TestName -> [Token] -> Either ParseError BarSpec -> TestTree
 mkTest name tokenList expected =
   Test.Tasty.HUnit.testCase name $
     DzenDhall.Parser.runBarParser tokenList @?= expected
 
+marquee :: Marquee
 marquee = Marquee 0 0
 
 getTests :: IO TestTree
@@ -112,4 +115,41 @@ getTests = pure $
         ]
       ]
 
+  , let stt = StateTransitionTable mempty in
+      mkTest "parsing #5 - automaton"
+      [ TokOpen (OAutomaton stt)
+      , TokOpen (OStateMapKey "a")
+      , TokTxt "A"
+      , TokTxt "A"
+      , TokClose
+      , TokOpen (OStateMapKey "b")
+      , TokTxt "B"
+      , TokTxt "B"
+      , TokClose
+      , TokOpen (OStateMapKey "c")
+      , TokTxt "C"
+      , TokTxt "C"
+      , TokClose
+      , TokClose
+      ]
+      $ Right $ Bars
+      [ BarAutomaton stt $
+        H.fromList
+        [ ( "a"
+          , Bars [ BarText "A"
+                 , BarText "A"
+                 ]
+          )
+        , ( "b"
+          , Bars [ BarText "B"
+                 , BarText "B"
+                 ]
+          )
+        , ( "c"
+          , Bars [ BarText "C"
+                 , BarText "C"
+                 ]
+          )
+        ]
+      ]
   ]

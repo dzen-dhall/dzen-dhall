@@ -116,6 +116,8 @@ initialize bs (BarSlider slider children) = do
 
   BarSlider slider' <$>
     mapM (initialize bs) children
+initialize bs (BarAutomaton stt states) = do
+  BarAutomaton stt <$> mapM (initialize bs) states
 initialize bs (BarColor color p) =
   BarColor color <$> initialize bs p
 initialize bs (Bars ps) =
@@ -223,6 +225,9 @@ collectSources fontWidth (BarSlider slider ss) = do
   frameCounter <- view rtFrameCounter <$> App.getRuntime
   asts         <- mapM (collectSources fontWidth) ss
   pure $ Slider.run slider frameCounter asts
+
+collectSources fontWidth (BarSlider slider ss) = do
+  pure mempty
 
 collectSources fontWidth (BarColor color p)
   = Prop (FG color) <$> collectSources fontWidth p

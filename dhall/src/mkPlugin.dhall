@@ -55,10 +55,10 @@ let mkPlugin
 			)
 		)
 		(λ(p : Plugin) → p)
-		(   λ(tt : StateTransitionTable)
+		(   λ(stt : StateTransitionTable)
 		  → λ(sm : StateMap Plugin)
 		  → enclose
-			(OpeningTag.Automaton tt)
+			(OpeningTag.Automaton stt)
 			( List/concatMap
 			  { state : Text, bar : Plugin }
 			  Token

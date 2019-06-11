@@ -5,10 +5,10 @@ import           Data.IORef
 import qualified Data.Text
 import           Data.Text (Text)
 import           DzenDhall.Config
-import           DzenDhall.Config
 import           GHC.Generics
 import           Lens.Micro.TH
 import           Data.Vector
+import qualified Data.HashMap.Strict as H
 
 type Color = Text
 
@@ -29,6 +29,7 @@ data Bar_ ref
   | BarText Text
   | BarMarquee Marquee (Bar_ ref)
   | BarSlider Slider (Vector (Bar_ ref))
+  | BarAutomaton StateTransitionTable (H.HashMap Text (Bar_ ref))
   | BarColor Text (Bar_ ref)
   | Bars [Bar_ ref]
   deriving (Show, Eq, Generic)
