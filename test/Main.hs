@@ -5,6 +5,7 @@ import qualified DzenDhall.Test.AST
 import qualified DzenDhall.Test.Animation.Marquee
 import qualified DzenDhall.Test.Arguments
 import qualified DzenDhall.Test.Config
+import qualified DzenDhall.Test.Event
 import qualified DzenDhall.Test.Parser
 import qualified DzenDhall.Test.Plug
 import qualified GHC.IO.Encoding
@@ -26,6 +27,7 @@ main = do
               , DzenDhall.Test.Arguments.getTests
               , DzenDhall.Test.Animation.Marquee.getTests
               , DzenDhall.Test.Plug.getTests
+              , DzenDhall.Test.Event.getTests
               ]
 
   Test.Tasty.defaultMain allTests

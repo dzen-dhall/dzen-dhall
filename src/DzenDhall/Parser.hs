@@ -25,41 +25,45 @@ data Solid
 
 bar :: Parser BarSpec
 bar = topLevel <* eof
-  where
-    topLevel = fmap Bars $ many $
-          BarRaw    <$> raw
-      <|> BarText   <$> text
-      <|> BarSource <$> source
-      <|> wrapped
-      <|> separated
-      <|> automaton
 
-    separated = do
-      tag <- separatable
-      children <- topLevel `sepBy` separator
-      closing
-      pure $
-        case tag of
-          SepSlider slider -> BarSlider slider (V.fromList children)
+topLevel :: Parser BarSpec
+topLevel = fmap Bars $ many $
+      BarRaw    <$> raw
+  <|> BarText   <$> text
+  <|> BarSource <$> source
+  <|> wrapped
+  <|> separated
+  <|> automaton
 
-    wrapped = do
-      tag      <- solid
-      children <- topLevel
-      closing
-      pure $
-        case tag of
-          SolidMarquee settings -> BarMarquee settings children
-          SolidColor   color    -> BarColor   color    children
+separated :: Parser BarSpec
+separated = do
+  tag <- separatable
+  children <- topLevel `sepBy` separator
+  closing
+  pure $
+    case tag of
+      SepSlider slider -> BarSlider slider (V.fromList children)
 
-    automaton = do
-      stt <- stateTransitionTable
-      kvs <- many $ do
-        smk <- stateMapKey
-        bar <- topLevel
-        closing
-        pure (smk, bar)
-      closing
-      pure $ BarAutomaton stt $ H.fromList kvs
+wrapped :: Parser BarSpec
+wrapped = do
+  tag      <- solid
+  children <- topLevel
+  closing
+  pure $
+    case tag of
+      SolidMarquee settings -> BarMarquee settings children
+      SolidColor   color    -> BarColor   color    children
+
+automaton :: Parser BarSpec
+automaton = do
+  stt <- stateTransitionTable
+  kvs <- many $ do
+    smk <- stateMapKey
+    bar <- topLevel
+    closing
+    pure (smk, bar)
+  closing
+  pure $ BarAutomaton stt $ H.fromList kvs
 
 stateTransitionTable :: Parser StateTransitionTable
 stateTransitionTable = withPreview $ \case

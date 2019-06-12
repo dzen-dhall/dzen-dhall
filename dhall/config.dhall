@@ -20,6 +20,8 @@ let VerticalDirection = types.VerticalDirection
 
 let Plugin = types.Plugin
 
+let MouseButton = types.MouseButton
+
 let StateTransitionTable = types.StateTransitionTable
 
 let StateMap = types.StateMap

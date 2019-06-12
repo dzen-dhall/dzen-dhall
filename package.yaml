@@ -32,7 +32,9 @@ library:
   - optparse-applicative
   - parsec
   - parsers
+  - pipes
   - process
+  - random
   - text
   - time
   - transformers
@@ -50,6 +52,7 @@ library:
   - DzenDhall.Config
   - DzenDhall.Data
   - DzenDhall.Extra
+  - DzenDhall.Event
   - DzenDhall.Parser
   - DzenDhall.Plug
   - DzenDhall.Run
@@ -68,6 +71,7 @@ library:
   - RankNTypes
   - RecordWildCards
   - ScopedTypeVariables
+  - StandaloneDeriving
   - TupleSections
 
 executables:

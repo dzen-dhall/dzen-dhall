@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-name-shadowing #-}
 module DzenDhall.Test.AST
   ( getTests
   )
@@ -5,12 +6,12 @@ where
 
 import DzenDhall.Data
 
-import Data.Monoid
 import Data.Text hiding (split)
 import Test.Hspec
 import Test.Tasty.Hspec
 import Test.Tasty
 
+txt :: Text -> AST
 txt = ASTText
 
 getTests :: IO TestTree

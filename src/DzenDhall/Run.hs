@@ -3,25 +3,31 @@ module DzenDhall.Run where
 import           Control.Concurrent
 import           Control.Concurrent.Async
 import           Control.Monad
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
+import           Control.Monad.Trans.State
+import qualified Data.HashMap.Strict as H
 import           Data.IORef
 import           Data.Maybe
 import qualified Data.Text
 import           Data.Text (Text)
 import qualified Data.Text.IO
-import qualified DzenDhall.Animation.Marquee as Marquee
-import qualified DzenDhall.Animation.Slider as Slider
-import           DzenDhall.App as App
-import           DzenDhall.Config
-import           DzenDhall.Data
-import           DzenDhall.Extra
-import qualified DzenDhall.Parser
-import           DzenDhall.Runtime
 import           GHC.IO.Handle
 import           Lens.Micro
 import           Lens.Micro.Extras
 import           System.Exit (ExitCode(..), exitWith)
 import qualified System.IO
 import           System.Process
+
+import qualified DzenDhall.Animation.Marquee as Marquee
+import qualified DzenDhall.Animation.Slider as Slider
+import           DzenDhall.App as App
+import           DzenDhall.Config
+import           DzenDhall.Data
+import           DzenDhall.Extra
+import           DzenDhall.Event
+import qualified DzenDhall.Parser
+import           DzenDhall.Runtime
 
 
 -- | Parses 'BarSpec's. For each 'Configuration' spawns its own dzen binary.
@@ -51,7 +57,7 @@ startDzenBinary
   :: Configuration
   -> BarSpec
   -> App ()
-startDzenBinary cfg bar = do
+startDzenBinary cfg barSpec = do
 
   runtime <- App.getRuntime
 
@@ -63,7 +69,9 @@ startDzenBinary cfg bar = do
       fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
       flags       = fontFlags <> extraFlags
 
-  bar' :: Bar <- initialize barSettings bar
+  (bar :: Bar, handles :: AutomataHandles) <- runInitialization barSettings barSpec
+
+  void $ liftIO $ async $ launchEventListener (runtime ^. rtNamedPipe) handles
 
   (mb_stdin, mb_stdout, _, _) <- liftIO $ do
     createProcess $ (proc dzenBinary flags) { std_out = CreatePipe
@@ -80,7 +88,7 @@ startDzenBinary cfg bar = do
         hSetBuffering stdout LineBuffering
 
       forever $ do
-        output <- renderAST <$> collectSources fontWidth bar'
+        output <- renderAST <$> collectSources fontWidth bar
         liftIO $ do
           Data.Text.IO.hPutStrLn stdin output
           threadDelay (cfg ^. cfgBarSettings ^. bsUpdateInterval)
@@ -89,16 +97,23 @@ startDzenBinary cfg bar = do
     _ -> liftIO $ do
       putStrLn $ "Couldn't open IO handles for dzen binary " <> show dzenBinary
 
+type Initialization = ReaderT BarSettings (StateT AutomataHandles App)
+
+runInitialization :: BarSettings -> BarSpec -> App (Bar, AutomataHandles)
+runInitialization bs barSpec = runStateT (runReaderT (initialize barSpec) bs) mempty
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
-initialize :: BarSettings -> BarSpec -> App Bar
-initialize _bs (BarSource settings@(Source{..})) = liftIO $ do
+initialize
+  :: BarSpec
+  -> Initialization Bar
+initialize (BarSource source@(Source{escapeMode}))
+  = lift . lift . liftIO $ do
 
   outputRef <- newIORef ""
   cacheRef <- newIORef Nothing
 
-  void $ async (mkThread settings outputRef cacheRef)
+  void $ async (mkThread source outputRef cacheRef)
 
   pure $ BarSource $
     SourceHandle
@@ -106,25 +121,47 @@ initialize _bs (BarSource settings@(Source{..})) = liftIO $ do
     cacheRef
     escapeMode
 
-initialize bs (BarMarquee i p) =
-  BarMarquee i <$> initialize bs p
-initialize bs (BarSlider slider children) = do
-  -- Convert delay of a slider from microseconds to frames.
+initialize (BarMarquee i p) =
+  BarMarquee i <$> initialize p
+initialize (BarSlider slider children) = do
+  bs <- ask
 
+  -- Convert delay of a slider from microseconds to frames.
   let updateInterval = bs ^. bsUpdateInterval
       slider' = slider & sliderDelay %~ (\x -> x * 1000 `div` positive updateInterval)
 
-  BarSlider slider' <$>
-    mapM (initialize bs) children
-initialize bs (BarAutomaton stt states) = do
-  BarAutomaton stt <$> mapM (initialize bs) states
-initialize bs (BarColor color p) =
-  BarColor color <$> initialize bs p
-initialize bs (Bars ps) =
-  Bars <$> mapM (initialize bs) ps
-initialize _bs (BarRaw text) =
+  BarSlider slider' <$> mapM initialize children
+
+initialize (BarAutomaton stt stateMap) = do
+
+  -- Create unique ID for automaton (used to route events)
+  identifier :: Int <- lift . lift $ getCounter
+
+  let initialState = ""
+
+  -- Create a reference to the current state
+  stateRef :: IORef Text <- lift . lift . liftIO $ newIORef initialState
+
+  -- Initialize all children
+  stateMap' :: H.HashMap Text Bar <- mapM initialize stateMap
+
+  -- Create a reference to the current Bar (so that collectSources will not need to
+  -- look up the correct Bar in stateMap').
+  ref :: IORef Bar <- lift . lift . liftIO $
+    newIORef $ fromMaybe mempty (H.lookup initialState stateMap')
+
+  -- Insert StateTransition table and IORefs into the HashMap
+  lift $ modify (H.insert identifier (stt, stateMap', stateRef, ref))
+
+  pure $ BarAutomaton identifier ref
+
+initialize (BarColor color p) =
+  BarColor color <$> initialize p
+initialize (Bars ps) =
+  Bars <$> mapM initialize ps
+initialize (BarRaw text) =
   pure $ BarRaw text
-initialize _bs (BarText text) =
+initialize (BarText text) =
   pure $ BarText text
 
 
@@ -193,7 +230,6 @@ runSourceProcess cp outputRef cacheRef mbInput = do
     _ -> do
       putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
 
-
 -- | Reads outputs of 'SourceHandle's and puts it into the AST.
 collectSources
   :: Int
@@ -226,8 +262,27 @@ collectSources fontWidth (BarSlider slider ss) = do
   asts         <- mapM (collectSources fontWidth) ss
   pure $ Slider.run slider frameCounter asts
 
-collectSources fontWidth (BarSlider slider ss) = do
-  pure mempty
+collectSources fontWidth (BarAutomaton identifier ref) = do
+
+  bar          <- liftIO (readIORef ref)
+  namedPipe    <- view rtNamedPipe <$> App.getRuntime
+  ast          <- collectSources fontWidth bar
+
+  -- Wrap AST into 7 clickable areas, one for each mouse button
+  pure $ foldr (attachClickHandler namedPipe) ast [1..7]
+    where
+      attachClickHandler :: String -> Int -> AST -> AST
+      attachClickHandler namedPipe eventCode =
+        let command =
+              ( "echo id:"
+             <> showPack identifier
+             <> ",event:"
+             <> showPack eventCode
+             <> " >> "
+             -- TODO: escape it
+             <> Data.Text.pack namedPipe
+              )
+        in Prop (CA (showPack eventCode, command))
 
 collectSources fontWidth (BarColor color p)
   = Prop (FG color) <$> collectSources fontWidth p

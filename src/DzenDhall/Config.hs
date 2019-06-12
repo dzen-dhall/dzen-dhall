@@ -89,7 +89,7 @@ sliderType = record $
          <*> field "fadeOut" fadeType
          <*> field "delay"   (fromIntegral <$> natural)
 
-newtype StateTransitionTable = StateTransitionTable (H.HashMap (MouseButton, Text) Text)
+newtype StateTransitionTable = StateTransitionTable { unSTT :: H.HashMap (MouseButton, Text) Text }
   deriving (Show, Eq, Generic)
 
 stateTransitionTableType :: Type StateTransitionTable

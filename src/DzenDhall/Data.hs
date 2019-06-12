@@ -1,14 +1,16 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module DzenDhall.Data where
 
+import qualified Data.HashMap.Strict as H
 import           Data.IORef
 import qualified Data.Text
 import           Data.Text (Text)
+import           Data.Vector
 import           DzenDhall.Config
 import           GHC.Generics
 import           Lens.Micro.TH
-import           Data.Vector
-import qualified Data.HashMap.Strict as H
 
 type Color = Text
 
@@ -23,20 +25,30 @@ data SourceHandle
 
 makeLenses ''SourceHandle
 
-data Bar_ ref
+data Bar_ atm stt ref
   = BarRaw Text
   | BarSource ref
   | BarText Text
-  | BarMarquee Marquee (Bar_ ref)
-  | BarSlider Slider (Vector (Bar_ ref))
-  | BarAutomaton StateTransitionTable (H.HashMap Text (Bar_ ref))
-  | BarColor Text (Bar_ ref)
-  | Bars [Bar_ ref]
-  deriving (Show, Eq, Generic)
+  | BarMarquee Marquee (Bar_ atm stt ref)
+  | BarSlider Slider (Vector (Bar_ atm stt ref))
+  | BarAutomaton stt (atm (Bar_ atm stt ref))
+  | BarColor Text (Bar_ atm stt ref)
+  | Bars [Bar_ atm stt ref]
+  deriving (Generic)
 
-type BarSpec = Bar_ Source
+instance Semigroup (Bar_ atm stt ref) where
+  a <> b = Bars [a, b]
 
-type Bar = Bar_ SourceHandle
+instance Monoid (Bar_ arm stt ref) where
+  mempty = Bars []
+
+-- | 'BarSpec' is a not-yet-initialized 'Bar'
+type BarSpec = Bar_ (H.HashMap Text) StateTransitionTable Source
+
+deriving instance Show BarSpec
+deriving instance Eq BarSpec
+
+type Bar = Bar_ IORef Int SourceHandle
 
 data Property
   = BG Color

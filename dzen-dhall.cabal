@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a71a421f914e8257071942fc099a65d0726564b94194f226014982e067cdcaef
+-- hash: 6dfe9aea7faedf1ea8affa69e6378b1a8bbeec7d42310bbbe2714d4d23aa4157
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -64,6 +64,7 @@ library
       DzenDhall.Config
       DzenDhall.Data
       DzenDhall.Extra
+      DzenDhall.Event
       DzenDhall.Parser
       DzenDhall.Plug
       DzenDhall.Run
@@ -71,7 +72,7 @@ library
       Paths_dzen_dhall
   hs-source-dirs:
       src
-  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables TupleSections
+  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections
   ghc-options: -Wall
   build-depends:
       async
@@ -89,7 +90,9 @@ library
     , optparse-applicative
     , parsec
     , parsers
+    , pipes
     , process
+    , random
     , text
     , time
     , transformers
@@ -119,13 +122,14 @@ test-suite tasty
       DzenDhall.Test.Arguments
       DzenDhall.Test.AST
       DzenDhall.Test.Config
+      DzenDhall.Test.Event
       DzenDhall.Test.Parser
       DzenDhall.Test.Plug
       FileQuoter
       Paths_dzen_dhall
   hs-source-dirs:
       test
-  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables TupleSections
+  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections
   ghc-options: -Wall
   build-depends:
       HUnit

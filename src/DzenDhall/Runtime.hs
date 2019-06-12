@@ -12,6 +12,8 @@ import System.Directory
 import System.Exit (ExitCode(..), exitWith)
 import System.FilePath ((</>))
 import System.Posix.Files
+import Control.Exception
+import System.Random
 
 apiVersion :: Int
 apiVersion = 1
@@ -21,6 +23,9 @@ data Runtime = Runtime
   , _rtConfigurations :: [Configuration]
   , _rtDzenBinary :: String
   , _rtFrameCounter :: Int
+  , _rtCounter :: Int
+  , _rtNamedPipe :: String
+  -- ^ Named pipe to use as a communication channel for listening to mouse events
   , _rtAPIVersion :: Int
   }
   deriving (Eq, Show)
@@ -32,6 +37,13 @@ readRuntime :: Arguments -> IO Runtime
 readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
   let dzenBinary = fromMaybe "dzen2" mbDzenBinary
   let frameCounter = 0
+
+  tmpDir <- getTemporaryDirectory `catch`
+            \(_e :: IOException) ->
+               getCurrentDirectory
+  randomSuffix <- take 10 . randomRs ('a','z') <$> newStdGen
+  let namedPipe = tmpDir </> "dzen-dhall-rt-" <> randomSuffix
+  createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
 
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
   exists <- doesDirectoryExist configDir
@@ -50,6 +62,8 @@ readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
     configurations
     dzenBinary
     frameCounter
+    0
+    namedPipe
     apiVersion
 
 -- | Create config directory and set file permissions.
@@ -73,7 +87,6 @@ initCommand Arguments{mbConfigDir} = do
   createDirectoryIfMissing True pluginsDir
 
   let mode400 = ownerReadMode
-      mode500 = mode400 `unionFileModes` ownerExecuteMode
       mode600 = mode400 `unionFileModes` ownerWriteMode
       mode700 = mode600 `unionFileModes` ownerExecuteMode
 
@@ -90,8 +103,8 @@ initCommand Arguments{mbConfigDir} = do
   setFileMode configDir  mode700
   setFileMode pluginsDir mode700
   setFileMode configFile mode600
-  setFileMode srcDir     mode500
-  setFileMode libDir     mode500
+  setFileMode srcDir     mode700
+  setFileMode libDir     mode700
 
   putStrLn $ "Success! You can now view your configuration at " <> configFile
   putStrLn $ "Run dzen-dhall again to see it in action."
