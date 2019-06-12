@@ -1,7 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Config where
 
-import           Data.Coerce
 import qualified Data.HashMap.Strict as H
 import           Data.Hashable
 import           Data.Text (Text)
@@ -89,16 +88,27 @@ sliderType = record $
          <*> field "fadeOut" fadeType
          <*> field "delay"   (fromIntegral <$> natural)
 
-newtype StateTransitionTable = StateTransitionTable { unSTT :: H.HashMap (MouseButton, Text) Text }
+newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, MouseButton, Text) Text }
   deriving (Show, Eq, Generic)
 
 stateTransitionTableType :: Type StateTransitionTable
-stateTransitionTableType = coerce <$> H.fromList <$>
-  list (record $
-        ((\e f t -> ((e, f), t))
-          <$> field "event" mouseButtonType
-          <*> field "from"  strictText
-          <*> field "to"    strictText))
+stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
+  ( record
+    ( pack4 <$> field "slots"  (list strictText)
+            <*> field "events" (list mouseButtonType)
+            <*> field "from"   (list strictText)
+            <*> field "to"     strictText
+    )
+  )
+  where
+    pack4 slots events froms to = (slots, events, froms, to)
+
+    collect (slots, events, froms, to) =
+
+      [ ((slot, event, from), to)
+      | slot <- slots
+      , event <- events
+      , from <- froms ]
 
 data OpeningTag
   = OMarquee Marquee
@@ -106,6 +116,7 @@ data OpeningTag
   | OColor   Text
   | OAutomaton StateTransitionTable
   | OStateMapKey Text
+  | OListener Text
   deriving (Show, Eq, Generic)
 
 openingTagType :: Type OpeningTag
@@ -115,6 +126,7 @@ openingTagType = union
   <> (OColor       <$> constructor "Color"       strictText)
   <> (OAutomaton   <$> constructor "Automaton"   stateTransitionTableType)
   <> (OStateMapKey <$> constructor "StateMapKey" strictText)
+  <> (OListener    <$> constructor "Listener"    strictText)
 
 data BarSettings
   = BarSettings

@@ -131,11 +131,20 @@ testStateTransitionTable dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/StateTransitionTable.dhall marshalling" $
     input @?=
 
-    StateTransitionTable ( H.fromList [ ((MouseLeft, "initial"), "1")
-                                      , ((MouseLeft, "1"), "2")
-                                      , ((MouseLeft, "2"), "initial")
-                                      ]
-                         )
+    STT ( H.fromList [ (("a", MouseLeft,  ""), "1")
+                     , (("a", MouseRight, ""), "1")
+                     , (("b", MouseLeft,  ""), "1")
+                     , (("b", MouseRight, ""), "1")
+                     , (("a", MouseLeft,  "1"), "2")
+                     , (("a", MouseRight, "1"), "2")
+                     , (("b", MouseLeft,  "1"), "2")
+                     , (("b", MouseRight, "1"), "2")
+                     , (("a", MouseLeft,  "2"), "")
+                     , (("a", MouseRight, "2"), "")
+                     , (("b", MouseLeft,  "2"), "")
+                     , (("b", MouseRight, "2"), "")
+                     ]
+        )
 
 testPluginMeta :: FilePath -> IO TestTree
 testPluginMeta dhallDir = do

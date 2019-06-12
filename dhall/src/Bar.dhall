@@ -16,6 +16,8 @@ let StateTransitionTable = ./StateTransitionTable.dhall
 
 let StateMap = ./StateMap.dhall
 
+let Slot = ./Slot.dhall
+
 in    ∀(Bar : Type)
 	→ ∀(join : List Bar → Bar)
 	→ ∀(text : Text → Bar)
@@ -25,4 +27,5 @@ in    ∀(Bar : Type)
 	→ ∀(slider : Slider → List Bar → Bar)
 	→ ∀(plugin : Plugin → Bar)
 	→ ∀(automaton : StateTransitionTable → StateMap Bar → Bar)
+	→ ∀(listener : Slot → Bar → Bar)
 	→ Bar

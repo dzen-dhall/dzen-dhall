@@ -17,9 +17,12 @@ let StateTransitionTable = ./StateTransitionTable.dhall
 
 let StateMap = ./StateMap.dhall
 
+let Slot = ./Slot.dhall
+
 let concat = ./../lib/List/concat.dhall
 
 let List/intersperse = ./../lib/List/intersperse.dhall
+
 let List/concatMap = ./../lib/List/concatMap.dhall
 
 let enclose =
@@ -62,11 +65,12 @@ let mkPlugin
 			( List/concatMap
 			  { state : Text, bar : Plugin }
 			  Token
-			  (   λ(row : { state : Text, bar : (List Token) })
+			  (   λ(row : { state : Text, bar : List Token })
 				→ enclose (OpeningTag.StateMapKey row.state) row.bar
 			  )
 			  sm
 			)
 		)
+		(λ(slot : Slot) → enclose (OpeningTag.Listener slot))
 
 in  mkPlugin

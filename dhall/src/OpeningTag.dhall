@@ -14,4 +14,6 @@ in  < Marquee :
 		StateTransitionTable
 	| StateMapKey :
 		Text
+	| Listener :
+		Text
 	>

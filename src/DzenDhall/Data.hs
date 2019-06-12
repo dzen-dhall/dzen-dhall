@@ -25,21 +25,23 @@ data SourceHandle
 
 makeLenses ''SourceHandle
 
-data Bar_ atm stt ref
+data Bar_ atmRef stt sourceRef
   = BarRaw Text
-  | BarSource ref
+  | BarSource sourceRef
   | BarText Text
-  | BarMarquee Marquee (Bar_ atm stt ref)
-  | BarSlider Slider (Vector (Bar_ atm stt ref))
-  | BarAutomaton stt (atm (Bar_ atm stt ref))
-  | BarColor Text (Bar_ atm stt ref)
-  | Bars [Bar_ atm stt ref]
+  | BarMarquee Marquee (Bar_ atmRef stt sourceRef)
+  | BarSlider Slider (Vector (Bar_ atmRef stt sourceRef))
+  | BarAutomaton stt (atmRef (Bar_ atmRef stt sourceRef))
+  | BarListener Text (Bar_ atmRef stt sourceRef)
+  | BarScope (Bar_ atmRef stt sourceRef)
+  | BarColor Text (Bar_ atmRef stt sourceRef)
+  | Bars [Bar_ atmRef stt sourceRef]
   deriving (Generic)
 
-instance Semigroup (Bar_ atm stt ref) where
+instance Semigroup (Bar_ atmRef stt sourceRef) where
   a <> b = Bars [a, b]
 
-instance Monoid (Bar_ arm stt ref) where
+instance Monoid (Bar_ arm stt sourceRef) where
   mempty = Bars []
 
 -- | 'BarSpec' is a not-yet-initialized 'Bar'
@@ -48,7 +50,7 @@ type BarSpec = Bar_ (H.HashMap Text) StateTransitionTable Source
 deriving instance Show BarSpec
 deriving instance Eq BarSpec
 
-type Bar = Bar_ IORef Int SourceHandle
+type Bar = Bar_ IORef () SourceHandle
 
 data Property
   = BG Color

@@ -16,18 +16,24 @@ getTests = pure $
   testGroup "Event parser"
 
   [ mkTest "parsing #1"
-    "id:1,event:1" $
-    Just $ RoutedEvent MouseLeft 1
+    "event:1,slot:name@scope" $
+    Just $ RoutedEvent MouseLeft "name@scope"
   , mkTest "parsing #2"
-    "id:10,event:2" $
-    Just $ RoutedEvent MouseMiddle 10
+    "event:2,slot:name@another-scope" $
+    Just $ RoutedEvent MouseMiddle "name@another-scope"
   , mkTest "parsing #3"
-    "id:1,event:" $
+    "event:,slot:name@scope" $
     Nothing
   , mkTest "parsing #4"
-    "id:,event:1" $
+    "event:1" $
     Nothing
   , mkTest "parsing #5"
-    "id:,event:" $
+    "event:1,slot:some" $
+    Nothing
+  , mkTest "parsing #6"
+    "event:1,slot:some@" $
+    Nothing
+  , mkTest "parsing #7"
+    "event:1,slot:some-name@scope" $
     Nothing
   ]

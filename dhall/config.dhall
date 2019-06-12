@@ -26,6 +26,8 @@ let StateTransitionTable = types.StateTransitionTable
 
 let StateMap = types.StateMap
 
+let Slot = types.Slot
+
 let mkConfigs = utils.mkConfigs
 
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
@@ -41,6 +43,7 @@ let defaultBar
 	  → λ(slider : Slider → List Bar → Bar)
 	  → λ(plugin : Plugin → Bar)
 	  → λ(automaton : StateTransitionTable → StateMap Bar → Bar)
+	  → λ(listener : Slot → Bar → Bar)
 	  → let separateBy =
 				λ(sep : Bar)
 			  → λ(list : List Bar)

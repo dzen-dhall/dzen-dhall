@@ -1,5 +1,9 @@
 let MouseButton = ./MouseButton.dhall
 
-let StateTransitionTable : Type = List { event : MouseButton, from : Text, to : Text }
+let Slot = ./Slot.dhall
+
+let StateTransitionTable
+	: Type
+	= List { slots : List Slot, events : List MouseButton, from : List Text, to : Text }
 
 in  StateTransitionTable

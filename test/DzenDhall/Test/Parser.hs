@@ -115,7 +115,7 @@ getTests = pure $
         ]
       ]
 
-  , let stt = StateTransitionTable mempty in
+  , let stt = STT mempty in
       mkTest "parsing #5 - automaton"
       [ TokOpen (OAutomaton stt)
       , TokOpen (OStateMapKey "a")

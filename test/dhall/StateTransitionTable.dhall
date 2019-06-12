@@ -2,8 +2,20 @@ let StateTransitionTable = ./src/StateTransitionTable.dhall
 
 let MouseButton = ./src/MouseButton.dhall
 
-in    [ { event = MouseButton.Left, from = "initial", to = "1" }
-	  , { event = MouseButton.Left, from = "1", to = "2" }
-	  , { event = MouseButton.Left, from = "2", to = "initial" }
-	  ]
+let Slot = ./src/Slot.dhall
+
+let mkLeftClick =
+		λ(from : Text)
+	  → λ(to : Text)
+	  → { slots =
+			[ "a", "b" ] : List Slot
+		, events =
+			[ MouseButton.Left, MouseButton.Right ]
+		, from =
+			[ from ]
+		, to =
+			to
+		}
+
+in    [ mkLeftClick "" "1", mkLeftClick "1" "2", mkLeftClick "2" "" ]
 	: StateTransitionTable

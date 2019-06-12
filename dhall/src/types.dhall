@@ -21,4 +21,6 @@
 	./StateTransitionTable.dhall
 , StateMap =
 	./StateMap.dhall
+, Slot =
+	./Slot.dhall
 }

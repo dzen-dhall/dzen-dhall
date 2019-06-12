@@ -1,13 +1,15 @@
+{-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Run where
 
+import           Control.Arrow
 import           Control.Concurrent
 import           Control.Concurrent.Async
 import           Control.Monad
 import           Control.Monad.Trans.Class
-import           Control.Monad.Trans.Reader
 import           Control.Monad.Trans.State
 import qualified Data.HashMap.Strict as H
 import           Data.IORef
+import           Data.List (nub)
 import           Data.Maybe
 import qualified Data.Text
 import           Data.Text (Text)
@@ -15,6 +17,7 @@ import qualified Data.Text.IO
 import           GHC.IO.Handle
 import           Lens.Micro
 import           Lens.Micro.Extras
+import           Lens.Micro.TH
 import           System.Exit (ExitCode(..), exitWith)
 import qualified System.IO
 import           System.Process
@@ -29,6 +32,16 @@ import           DzenDhall.Event
 import qualified DzenDhall.Parser
 import           DzenDhall.Runtime
 
+
+data StartupState
+  = StartupState
+  { _automataHandles :: AutomataHandles
+  , _scopeLevel :: Int
+  , _scopeName :: Text
+  , _suBarSettings :: BarSettings
+  }
+
+makeLenses ''StartupState
 
 -- | Parses 'BarSpec's. For each 'Configuration' spawns its own dzen binary.
 useConfigurations :: App [Async ()]
@@ -97,10 +110,13 @@ startDzenBinary cfg barSpec = do
     _ -> liftIO $ do
       putStrLn $ "Couldn't open IO handles for dzen binary " <> show dzenBinary
 
-type Initialization = ReaderT BarSettings (StateT AutomataHandles App)
+type Initialization = StateT StartupState App
 
 runInitialization :: BarSettings -> BarSpec -> App (Bar, AutomataHandles)
-runInitialization bs barSpec = runStateT (runReaderT (initialize barSpec) bs) mempty
+runInitialization bs barSpec =
+  second (^. automataHandles) <$> runStateT (initialize barSpec) initialState
+  where
+    initialState = StartupState mempty 0 "scope" bs
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
@@ -108,10 +124,10 @@ initialize
   :: BarSpec
   -> Initialization Bar
 initialize (BarSource source@(Source{escapeMode}))
-  = lift . lift . liftIO $ do
+  = lift . liftIO $ do
 
   outputRef <- newIORef ""
-  cacheRef <- newIORef Nothing
+  cacheRef  <- newIORef Nothing
 
   void $ async (mkThread source outputRef cacheRef)
 
@@ -124,7 +140,7 @@ initialize (BarSource source@(Source{escapeMode}))
 initialize (BarMarquee i p) =
   BarMarquee i <$> initialize p
 initialize (BarSlider slider children) = do
-  bs <- ask
+  bs <- (^. suBarSettings) <$> get
 
   -- Convert delay of a slider from microseconds to frames.
   let updateInterval = bs ^. bsUpdateInterval
@@ -134,26 +150,56 @@ initialize (BarSlider slider children) = do
 
 initialize (BarAutomaton stt stateMap) = do
 
-  -- Create unique ID for automaton (used to route events)
-  identifier :: Int <- lift . lift $ getCounter
-
+  -- This binding determines what state to enter first
   let initialState = ""
 
+  scope <- (^. scopeName) <$> get
+
+  let addScope = (<> ("@" <> scope))
+
+  -- Add current scope to all addresses in state transition table
+  let stt' = STT
+           . H.fromList
+           . map (first (_1 %~ addScope))
+           . H.toList
+           . unSTT
+           $ stt
+
   -- Create a reference to the current state
-  stateRef :: IORef Text <- lift . lift . liftIO $ newIORef initialState
+  stateRef :: IORef Text <- lift . liftIO $ newIORef initialState
 
   -- Initialize all children
   stateMap' :: H.HashMap Text Bar <- mapM initialize stateMap
 
   -- Create a reference to the current Bar (so that collectSources will not need to
   -- look up the correct Bar in stateMap').
-  ref :: IORef Bar <- lift . lift . liftIO $
+  barRef :: IORef Bar <- lift . liftIO $
     newIORef $ fromMaybe mempty (H.lookup initialState stateMap')
 
-  -- Insert StateTransition table and IORefs into the HashMap
-  lift $ modify (H.insert identifier (stt, stateMap', stateRef, ref))
+  let subscription = [ AutomatonSubscription stt' stateMap' stateRef barRef ]
 
-  pure $ BarAutomaton identifier ref
+  -- Absolute slot addresses (incl. scope)
+  let slots :: [Text] = nub $ (^. _1) <$> H.keys (unSTT stt')
+
+  -- Add subscription for each slot
+  modify $ automataHandles %~
+    (\handleMap -> foldr (\slot -> H.insertWith (++) slot subscription) handleMap slots)
+
+  -- No need to keep state transition table - hence ()
+  pure $ BarAutomaton () barRef
+
+initialize (BarListener slot child) = do
+
+  scope <- (^. scopeName) <$> get
+  BarListener (slot <> "@" <> scope) <$> initialize child
+
+initialize (BarScope child) = do
+  counter <- lift getCounter
+  oldScopeName <- (^. scopeName) <$> get
+  modify $ scopeName <>~ ("-" <> showPack counter)
+  child' <- initialize child
+  modify $ scopeName .~ oldScopeName
+  pure child'
 
 initialize (BarColor color p) =
   BarColor color <$> initialize p
@@ -262,11 +308,15 @@ collectSources fontWidth (BarSlider slider ss) = do
   asts         <- mapM (collectSources fontWidth) ss
   pure $ Slider.run slider frameCounter asts
 
-collectSources fontWidth (BarAutomaton identifier ref) = do
+collectSources fontWidth (BarAutomaton () ref) = do
 
   bar          <- liftIO (readIORef ref)
+  collectSources fontWidth bar
+
+collectSources fontWidth (BarListener slot child) = do
+
   namedPipe    <- view rtNamedPipe <$> App.getRuntime
-  ast          <- collectSources fontWidth bar
+  ast          <- collectSources fontWidth child
 
   -- Wrap AST into 7 clickable areas, one for each mouse button
   pure $ foldr (attachClickHandler namedPipe) ast [1..7]
@@ -274,15 +324,18 @@ collectSources fontWidth (BarAutomaton identifier ref) = do
       attachClickHandler :: String -> Int -> AST -> AST
       attachClickHandler namedPipe eventCode =
         let command =
-              ( "echo id:"
-             <> showPack identifier
-             <> ",event:"
+              ( "echo event:"
              <> showPack eventCode
+             <> ",slot:"
+             <> showPack slot
              <> " >> "
              -- TODO: escape it
              <> Data.Text.pack namedPipe
               )
         in Prop (CA (showPack eventCode, command))
+
+collectSources fontWidth (BarScope child) = do
+  collectSources fontWidth child
 
 collectSources fontWidth (BarColor color p)
   = Prop (FG color) <$> collectSources fontWidth p

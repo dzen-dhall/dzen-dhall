@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6dfe9aea7faedf1ea8affa69e6378b1a8bbeec7d42310bbbe2714d4d23aa4157
+-- hash: cd86be2cfc073577aa21139c9ff7dbe1dac15e80f7970e636aeee692afa0ae09
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -46,6 +46,7 @@ data-files:
     dhall/src/PluginMeta.dhall
     dhall/src/Position.dhall
     dhall/src/Slider.dhall
+    dhall/src/Slot.dhall
     dhall/src/Source.dhall
     dhall/src/StateMap.dhall
     dhall/src/StateTransitionTable.dhall

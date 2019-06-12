@@ -22,6 +22,7 @@ data Separatable = SepSlider Slider
 data Solid
   = SolidMarquee Marquee
   | SolidColor Color
+  | SolidListener Text
 
 bar :: Parser BarSpec
 bar = topLevel <* eof
@@ -51,8 +52,9 @@ wrapped = do
   closing
   pure $
     case tag of
-      SolidMarquee settings -> BarMarquee settings children
-      SolidColor   color    -> BarColor   color    children
+      SolidMarquee  settings -> BarMarquee  settings children
+      SolidColor    color    -> BarColor    color    children
+      SolidListener slot     -> BarListener slot     children
 
 automaton :: Parser BarSpec
 automaton = do
@@ -89,6 +91,7 @@ solid :: Parser Solid
 solid = withPreview $ \case
   TokOpen (OMarquee marquee) -> Just $ SolidMarquee marquee
   TokOpen (OColor   color)   -> Just $ SolidColor color
+  TokOpen (OListener slot)   -> Just $ SolidListener slot
   _                          -> Nothing
 
 closing :: Parser ()
