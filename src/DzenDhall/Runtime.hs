@@ -5,7 +5,7 @@ import Control.Monad
 import Data.Maybe
 import Dhall hiding (maybe)
 import DzenDhall.Arguments
-import DzenDhall.Config
+import DzenDhall.Config hiding (Hook)
 import Lens.Micro.TH
 import Paths_dzen_dhall
 import System.Directory

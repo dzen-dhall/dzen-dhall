@@ -7,9 +7,9 @@ import           Control.Concurrent.Async
 import           Control.Monad
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.State
+import           Data.Containers.ListUtils (nubOrd)
 import qualified Data.HashMap.Strict as H
 import           Data.IORef
-import           Data.List (nub)
 import           Data.Maybe
 import qualified Data.Text
 import           Data.Text (Text)
@@ -179,7 +179,7 @@ initialize (BarAutomaton stt stateMap) = do
   let subscription = [ AutomatonSubscription stt' stateMap' stateRef barRef ]
 
   -- Absolute slot addresses (incl. scope)
-  let slots :: [Text] = nub $ (^. _1) <$> H.keys (unSTT stt')
+  let slots :: [Text] = nubOrd $ (^. _1) <$> H.keys (unSTT stt')
 
   -- Add subscription for each slot
   modify $ automataHandles %~
@@ -201,8 +201,8 @@ initialize (BarScope child) = do
   modify $ scopeName .~ oldScopeName
   pure child'
 
-initialize (BarColor color p) =
-  BarColor color <$> initialize p
+initialize (BarProp prop p) =
+  BarProp prop <$> initialize p
 initialize (Bars ps) =
   Bars <$> mapM initialize ps
 initialize (BarRaw text) =
@@ -319,9 +319,9 @@ collectSources fontWidth (BarListener slot child) = do
   ast          <- collectSources fontWidth child
 
   -- Wrap AST into 7 clickable areas, one for each mouse button
-  pure $ foldr (attachClickHandler namedPipe) ast [1..7]
+  pure $ foldr (attachClickHandler namedPipe) ast allButtons
     where
-      attachClickHandler :: String -> Int -> AST -> AST
+      attachClickHandler :: String -> MouseButton -> AST -> AST
       attachClickHandler namedPipe eventCode =
         let command =
               ( "echo event:"
@@ -332,13 +332,13 @@ collectSources fontWidth (BarListener slot child) = do
              -- TODO: escape it
              <> Data.Text.pack namedPipe
               )
-        in Prop (CA (showPack eventCode, command))
+        in Prop $ CA (ClickableArea eventCode command)
 
 collectSources fontWidth (BarScope child) = do
   collectSources fontWidth child
 
-collectSources fontWidth (BarColor color p)
-  = Prop (FG color) <$> collectSources fontWidth p
+collectSources fontWidth (BarProp prop child)
+  = Prop prop <$> collectSources fontWidth child
 collectSources fontWidth (Bars ps)
   = mconcat <$> mapM (collectSources fontWidth) ps
 collectSources _         (BarText text)
@@ -355,6 +355,16 @@ escape EscapeMode{joinLines, escapeMarkup} =
   (if escapeMarkup then Data.Text.replace "^" "^^" else id) .
   (Data.Text.replace "\n" $ if joinLines then " " else "")
 
+allButtons :: [MouseButton]
+allButtons =
+  [ MouseLeft
+  , MouseMiddle
+  , MouseRight
+  , MouseScrollUp
+  , MouseScrollDown
+  , MouseScrollLeft
+  , MouseScrollRight
+  ]
 
 renderAST :: AST -> Text
 renderAST EmptyAST = ""
@@ -365,13 +375,15 @@ renderAST (Prop property ast) =
 
     case property of
       BG color ->
-        "^bg" <> color <> ")" <> inner <> "^bg()"
+        "^bg(" <> renderColor color <> ")" <> inner <> "^bg()"
       FG color ->
-        "^fg" <> color <> ")" <> inner <> "^fg()"
+        "^fg(" <> renderColor color <> ")" <> inner <> "^fg()"
       IB ->
         "^ib(1)" <> inner <> "^ib(0)"
-      CA (event, handler) ->
-        "^ca(" <> event <> "," <> handler <> ")" <> inner <> "^ca()"
+      CA ca ->
+        "^ca(" <> renderMouseButton (ca ^. caButton)  <> "," <> ca ^. caCommand <> ")" <> inner <> "^ca()"
+      PA (AbsolutePosition {x, y}) ->
+        "^pa(" <> showPack x <> ";" <> showPack y <> ")" <> inner <> "^pa()"
       P position ->
         open <> inner <> close
         where
@@ -382,7 +394,7 @@ renderAST (Prop property ast) =
                 ( "^p(" <> showPack x    <> ";" <> showPack y    <> ")"
                 , "^p(" <> showPack (-x) <> ";" <> showPack (-y) <> ")"
                 )
-              ResetY     -> ("^p()", "")
+              P_RESET_Y  -> ("^p()", "")
               P_LOCK_X   -> ("^p(_LOCK_X)", "")
               P_UNLOCK_X -> ("^p(_UNLOCK_X)", "")
               P_LEFT     -> ("^p(_LOCK_X)^p(_LEFT)", "^p(_UNLOCK_X)")
@@ -403,3 +415,19 @@ renderAST (Container shape width) =
         C r    -> "^c("  <> showPack r <> ")"
         CO r   -> "^co(" <> showPack r <> ")"
         Padding -> ""
+
+
+renderMouseButton :: MouseButton -> Text
+renderMouseButton = \case
+  MouseLeft -> "1"
+  MouseMiddle -> "2"
+  MouseRight -> "3"
+  MouseScrollUp -> "4"
+  MouseScrollDown -> "5"
+  MouseScrollLeft -> "6"
+  MouseScrollRight -> "7"
+
+renderColor :: Color -> Text
+renderColor = \case
+  ColorHex r -> r
+  ColorName r -> r

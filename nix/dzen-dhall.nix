@@ -1,9 +1,10 @@
-{ mkDerivation, async, base, bytestring, dhall, directory, filepath
-, hpack, hspec, http-conduit, HUnit, megaparsec, microlens
-, microlens-th, network-uri, optparse-applicative, parsec, parsers
-, process, stdenv, tasty, tasty-hspec, tasty-hunit
-, template-haskell, text, time, transformers, unix
-, unordered-containers, utf8-string
+{ mkDerivation, async, base, bytestring, containers, dhall
+, directory, filepath, hashable, hpack, hspec, http-conduit, HUnit
+, megaparsec, microlens, microlens-th, network-uri
+, optparse-applicative, parsec, parsers, pipes, process, random
+, stdenv, tasty, tasty-hspec, tasty-hunit, template-haskell, text
+, time, transformers, unix, unordered-containers, utf8-string
+, vector
 }:
 mkDerivation {
   pname = "dzen-dhall";
@@ -13,17 +14,17 @@ mkDerivation {
   isExecutable = true;
   enableSeparateDataOutput = true;
   libraryHaskellDepends = [
-    async base bytestring dhall directory filepath http-conduit
-    megaparsec microlens microlens-th network-uri optparse-applicative
-    parsec parsers process text time transformers unix
-    unordered-containers utf8-string
+    async base bytestring containers dhall directory filepath hashable
+    http-conduit megaparsec microlens microlens-th network-uri
+    optparse-applicative parsec parsers pipes process random text time
+    transformers unix unordered-containers utf8-string vector
   ];
   libraryToolDepends = [ hpack ];
   executableHaskellDepends = [ base ];
   testHaskellDepends = [
     base dhall filepath hspec HUnit microlens network-uri
     optparse-applicative parsec tasty tasty-hspec tasty-hunit
-    template-haskell text
+    template-haskell text unordered-containers vector
   ];
   doHaddock = false;
   preConfigure = "hpack";

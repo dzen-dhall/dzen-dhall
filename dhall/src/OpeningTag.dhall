@@ -4,12 +4,31 @@ let Slider = ./Slider.dhall
 
 let StateTransitionTable = ./StateTransitionTable.dhall
 
+let Color = ./Color.dhall
+
+let Position = ./Position.dhall
+
+let AbsolutePosition = ./AbsolutePosition.dhall
+
+let Button = ./Button.dhall
+
+let Hook = ./Hook.dhall
+
 in  < Marquee :
 		Marquee
 	| Slider :
 		Slider
-	| Color :
-		Text
+	| FG :
+		Color
+	| BG :
+		Color
+	| P :
+		Position
+	| PA :
+		AbsolutePosition
+	| CA :
+		{ button : Button, command : Text }
+	| IB
 	| Automaton :
 		StateTransitionTable
 	| StateMapKey :

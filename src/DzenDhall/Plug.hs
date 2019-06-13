@@ -37,7 +37,7 @@ data Plugin
     }
 
   | FromOrg String
-  -- ^ Load from https://github.com/dzen-dhall/plugins by name.
+  -- ^ Load from @https://github.com/dzen-dhall/plugins@ by name.
 
   | FromURL URI
   -- ^ Load from URL

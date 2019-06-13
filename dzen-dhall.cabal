@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cd86be2cfc073577aa21139c9ff7dbe1dac15e80f7970e636aeee692afa0ae09
+-- hash: c61de1a1b7ead638d1a3527e506a9827021f35d8ee8e06b0b1f5304ad9eb6c17
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -29,6 +29,7 @@ data-files:
     dhall/src/AbsolutePosition.dhall
     dhall/src/Bar.dhall
     dhall/src/BarSettings.dhall
+    dhall/src/Button.dhall
     dhall/src/ClosingTag.dhall
     dhall/src/Color.dhall
     dhall/src/Configuration.dhall
@@ -36,11 +37,13 @@ data-files:
     dhall/src/defaultSlider.dhall
     dhall/src/definitions.dhall
     dhall/src/EscapeMode.dhall
+    dhall/src/Event.dhall
+    dhall/src/Handler.dhall
+    dhall/src/Hook.dhall
     dhall/src/Image.dhall
     dhall/src/Marquee.dhall
     dhall/src/mkConfigs.dhall
     dhall/src/mkPlugin.dhall
-    dhall/src/MouseButton.dhall
     dhall/src/OpeningTag.dhall
     dhall/src/Plugin.dhall
     dhall/src/PluginMeta.dhall
@@ -48,6 +51,7 @@ data-files:
     dhall/src/Slider.dhall
     dhall/src/Slot.dhall
     dhall/src/Source.dhall
+    dhall/src/State.dhall
     dhall/src/StateMap.dhall
     dhall/src/StateTransitionTable.dhall
     dhall/src/Token.dhall
@@ -79,6 +83,7 @@ library
       async
     , base >=4.12.0.0 && <4.13
     , bytestring
+    , containers
     , dhall
     , directory
     , filepath

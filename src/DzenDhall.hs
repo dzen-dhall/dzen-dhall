@@ -14,6 +14,7 @@ import qualified System.IO
 main :: IO ()
 main = do
 
+  GHC.IO.Encoding.getLocaleEncoding >>= print
   GHC.IO.Encoding.setLocaleEncoding System.IO.utf8
 
   arguments <- execParser argumentsParser

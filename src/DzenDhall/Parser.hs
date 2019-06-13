@@ -21,7 +21,12 @@ data Separatable = SepSlider Slider
 -- | Used to tag bar elements that require a single child.
 data Solid
   = SolidMarquee Marquee
-  | SolidColor Color
+  | SolidFG Color
+  | SolidBG Color
+  | SolidP Position
+  | SolidPA AbsolutePosition
+  | SolidCA ClickableArea
+  | SolidIB
   | SolidListener Text
 
 bar :: Parser BarSpec
@@ -48,13 +53,18 @@ separated = do
 wrapped :: Parser BarSpec
 wrapped = do
   tag      <- solid
-  children <- topLevel
+  child <- topLevel
   closing
   pure $
     case tag of
-      SolidMarquee  settings -> BarMarquee  settings children
-      SolidColor    color    -> BarColor    color    children
-      SolidListener slot     -> BarListener slot     children
+      SolidMarquee settings -> BarMarquee  settings      child
+      SolidFG color         -> BarProp     (FG color)    child
+      SolidBG color         -> BarProp     (BG color)    child
+      SolidP position       -> BarProp     (P position)  child
+      SolidPA position      -> BarProp     (PA position) child
+      SolidCA ca            -> BarProp     (CA ca)       child
+      SolidIB               -> BarProp     IB            child
+      SolidListener slot    -> BarListener slot          child
 
 automaton :: Parser BarSpec
 automaton = do
@@ -90,7 +100,12 @@ separator = withPreview $ \case
 solid :: Parser Solid
 solid = withPreview $ \case
   TokOpen (OMarquee marquee) -> Just $ SolidMarquee marquee
-  TokOpen (OColor   color)   -> Just $ SolidColor color
+  TokOpen (OFG color)        -> Just $ SolidFG color
+  TokOpen (OBG color)        -> Just $ SolidBG color
+  TokOpen (OP position)      -> Just $ SolidP position
+  TokOpen (OPA position)     -> Just $ SolidPA position
+  TokOpen (OCA area)         -> Just $ SolidCA area
+  TokOpen OIB                -> Just $ SolidIB
   TokOpen (OListener slot)   -> Just $ SolidListener slot
   _                          -> Nothing
 

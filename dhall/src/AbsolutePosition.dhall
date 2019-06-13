@@ -1,3 +1,3 @@
-< XY : { x : Integer, y : Integer }
-| resetY
->
+let AbsolutePosition : Type = { x : Integer, y : Integer }
+
+in  AbsolutePosition

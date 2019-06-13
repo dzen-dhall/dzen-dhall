@@ -32,7 +32,7 @@ getTests = pure $
 
   , mkTest
     "parsing #2"
-    [ TokOpen (OColor "red")
+    [ TokOpen (OFG $ ColorName "red")
     , TokRaw "raw"
     , TokTxt "txt"
     , TokOpen (OMarquee marquee)
@@ -46,7 +46,7 @@ getTests = pure $
     ]
 
     $ Right $
-    Bars [ BarColor "red" $
+    Bars [ BarProp (FG $ ColorName "red") $
            Bars [ BarRaw "raw"
                 , BarText "txt"
                 , BarMarquee marquee $ Bars

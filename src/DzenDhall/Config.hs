@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+-- | Data types for marshalling dhall configs into Haskell.
 module DzenDhall.Config where
 
 import qualified Data.HashMap.Strict as H
@@ -8,7 +9,6 @@ import           Dhall
 import           Lens.Micro.TH
 
 import           DzenDhall.Extra
-
 
 data Marquee
   = Marquee
@@ -41,7 +41,7 @@ data MouseButton
   | MouseScrollDown
   | MouseScrollLeft
   | MouseScrollRight
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Hashable MouseButton
 
@@ -88,6 +88,22 @@ sliderType = record $
          <*> field "fadeOut" fadeType
          <*> field "delay"   (fromIntegral <$> natural)
 
+data Hook
+  = Hook
+  { _hookCommand           :: [Text]
+  , _hookStdIn             :: Maybe Text
+  , _hookAllowedExitCodes :: Maybe [Int]
+  }
+  deriving (Show, Eq, Generic)
+
+makeLenses ''Hook
+
+hookType :: Type Hook
+hookType = record $
+  Hook <$> field "command"          (list strictText)
+       <*> field "stdin"            (Dhall.maybe strictText)
+       <*> field "allowedExitCodes" (Dhall.maybe (list (fromIntegral <$> natural)))
+
 newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, MouseButton, Text) Text }
   deriving (Show, Eq, Generic)
 
@@ -98,10 +114,11 @@ stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
             <*> field "events" (list mouseButtonType)
             <*> field "from"   (list strictText)
             <*> field "to"     strictText
+            <*> field "hooks"     (list hookType)
     )
   )
   where
-    pack4 slots events froms to = (slots, events, froms, to)
+    pack4 slots events froms to hooks = (slots, events, froms, to)
 
     collect (slots, events, froms, to) =
 
@@ -110,20 +127,100 @@ stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
       , event <- events
       , from <- froms ]
 
+data Color
+  = ColorHex Text
+  | ColorName Text
+  deriving (Show, Eq, Generic)
+
+colorType :: Type Color
+colorType = union
+  $  (ColorHex  <$> constructor "hex" strictText)
+  <> (ColorName <$> constructor "name" strictText)
+
+data AbsolutePosition
+  = AbsolutePosition { x :: Int, y :: Int }
+  deriving (Show, Eq, Generic)
+
+absolutePositionType :: Type AbsolutePosition
+absolutePositionType = record $
+  AbsolutePosition <$> field "x" (fromIntegral <$> integer)
+                   <*> field "y" (fromIntegral <$> integer)
+
+
+{- | Specify position that will be passed to @^p()@. -}
+data Position =
+  -- | @^p(+-X;+-Y)@      - move X pixels to the right or left and Y pixels up or down of the current
+  --                      position (on the X and Y axis).
+  XY (Int, Int) |
+  -- | @^p()@             - Reset the Y position to its default.
+  P_RESET_Y |
+  -- | @_LOCK_X@          - Lock the current X position, useful if you want to align things vertically
+  P_LOCK_X |
+  -- | @_UNLOCK_X@        - Unlock the X position
+  P_UNLOCK_X |
+  -- | @_LEFT@            - Move current x-position to the left edge
+  P_LEFT |
+  -- | @_RIGHT@           - Move current x-position to the right edge
+  P_RIGHT |
+  -- | @_TOP@             - Move current y-position to the top edge
+  P_TOP |
+  -- | @_CENTER@          - Move current x-position to the center of the window
+  P_CENTER |
+  -- | @_BOTTOM@          - Move current y-position to the bottom edge
+  P_BOTTOM
+  deriving (Show, Eq, Generic)
+
+positionType :: Type Position
+positionType = union
+  $  (XY           <$> constructor "XY"        xy)
+  <> (P_RESET_Y    <$  constructor "_RESET_Y"  unit)
+  <> (P_LOCK_X     <$  constructor "_LOCK_X"   unit)
+  <> (P_UNLOCK_X   <$  constructor "_UNLOCK_X" unit)
+  <> (P_LEFT       <$  constructor "_LEFT"     unit)
+  <> (P_RIGHT      <$  constructor "_RIGHT"    unit)
+  <> (P_TOP        <$  constructor "_TOP"      unit)
+  <> (P_CENTER     <$  constructor "_CENTER"   unit)
+  <> (P_BOTTOM     <$  constructor "_BOTTOM"   unit)
+  where
+    xy = record ((,) <$> (fromIntegral <$> field "x" integer)
+                     <*> (fromIntegral <$> field "y" integer))
+data ClickableArea
+  = ClickableArea { _caButton :: MouseButton
+                  , _caCommand :: Text
+                  }
+  deriving (Show, Eq, Generic)
+
+makeLenses ''ClickableArea
+
+clickableAreaType :: Type ClickableArea
+clickableAreaType = record $
+  ClickableArea <$> field "button"  mouseButtonType
+                <*> field "command" strictText
+
 data OpeningTag
-  = OMarquee Marquee
-  | OSlider  Slider
-  | OColor   Text
-  | OAutomaton StateTransitionTable
+  = OMarquee     Marquee
+  | OSlider      Slider
+  | OFG          Color
+  | OBG          Color
+  | OP           Position
+  | OPA          AbsolutePosition
+  | OCA          ClickableArea
+  | OIB
+  | OAutomaton   StateTransitionTable
   | OStateMapKey Text
-  | OListener Text
+  | OListener    Text
   deriving (Show, Eq, Generic)
 
 openingTagType :: Type OpeningTag
 openingTagType = union
   $  (OMarquee     <$> constructor "Marquee"     marqueeType)
   <> (OSlider      <$> constructor "Slider"      sliderType)
-  <> (OColor       <$> constructor "Color"       strictText)
+  <> (OFG          <$> constructor "FG"          colorType)
+  <> (OBG          <$> constructor "BG"          colorType)
+  <> (OP           <$> constructor "P"           positionType)
+  <> (OPA          <$> constructor "PA"          absolutePositionType)
+  <> (OCA          <$> constructor "CA"          clickableAreaType)
+  <> (OIB          <$  constructor "IB"          unit)
   <> (OAutomaton   <$> constructor "Automaton"   stateTransitionTableType)
   <> (OStateMapKey <$> constructor "StateMapKey" strictText)
   <> (OListener    <$> constructor "Listener"    strictText)
@@ -152,12 +249,39 @@ barSettingsType = record $
               <*> field "font"           (Dhall.maybe string)
               <*> field "fontWidth"      (fmap fromIntegral <$> Dhall.maybe natural)
 
+
+data Image
+  = IRelative Text
+  | IAbsolute Text
+  deriving (Show, Eq, Generic)
+
+imageType :: Type Image
+imageType = union
+  $  (IRelative <$> constructor "relative" strictText)
+  <> (IAbsolute <$> constructor "absolute" strictText)
+
+data ShapeSize
+  = ShapeSize { _shapeSizeW :: Integer, _shapeSizeH :: Integer }
+  deriving (Show, Eq, Generic)
+
+makeLenses ''ShapeSize
+
+shapeSizeType :: Type ShapeSize
+shapeSizeType = record $
+  ShapeSize <$> field "w" (fromIntegral <$> natural)
+            <*> field "h" (fromIntegral <$> natural)
+
 data Token
   = TokOpen OpeningTag
   | TokRaw Text
   | TokSource Source
   | TokTxt Text
   | TokSeparator
+  | TokI Image
+  | TokR ShapeSize
+  | TokRO ShapeSize
+  | TokC Int
+  | TokCO Int
   | TokClose
   deriving (Show, Eq, Generic)
 
@@ -168,6 +292,11 @@ tokenType = union
   <> (TokSource    <$> constructor "Source"    sourceSettingsType)
   <> (TokTxt       <$> constructor "Txt"       strictText)
   <> (TokSeparator <$  constructor "Separator" unit)
+  <> (TokI         <$> constructor "I"         imageType)
+  <> (TokR         <$> constructor "R"         shapeSizeType)
+  <> (TokRO        <$> constructor "RO"        shapeSizeType)
+  <> (TokC         <$> constructor "C"         (fromIntegral <$> natural))
+  <> (TokCO        <$> constructor "CO"        (fromIntegral <$> natural))
   <> (TokClose     <$  constructor "Close"     unit)
 
 stateMapType :: Type (H.HashMap Text [Token])

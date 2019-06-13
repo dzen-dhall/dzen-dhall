@@ -18,6 +18,8 @@ import           DzenDhall.Extra
 
 type AutomatonState = Text
 
+-- | 'StateTransitionTable' is needed to know *how* to update, 'IORef' 'Bar' is needed
+-- to know *what* to update. Int parameter is a unique identifier for automata.
 data Subscription
   = AutomatonSubscription
     StateTransitionTable
@@ -25,8 +27,6 @@ data Subscription
     (IORef AutomatonState)
     (IORef Bar)
 
--- | 'StateTransitionTable' is needed to know *how* to update, 'IORef' 'Bar' is needed
--- to know *what* to update. Int parameter is unique identifier for automata.
 type AutomataHandles = H.HashMap SlotAddr [Subscription]
 
 type SlotAddr = Text

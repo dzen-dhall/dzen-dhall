@@ -12,8 +12,6 @@ import           DzenDhall.Config
 import           GHC.Generics
 import           Lens.Micro.TH
 
-type Color = Text
-
 type Cache = IORef (Maybe Text)
 
 data SourceHandle
@@ -34,7 +32,7 @@ data Bar_ atmRef stt sourceRef
   | BarAutomaton stt (atmRef (Bar_ atmRef stt sourceRef))
   | BarListener Text (Bar_ atmRef stt sourceRef)
   | BarScope (Bar_ atmRef stt sourceRef)
-  | BarColor Text (Bar_ atmRef stt sourceRef)
+  | BarProp Property (Bar_ atmRef stt sourceRef)
   | Bars [Bar_ atmRef stt sourceRef]
   deriving (Generic)
 
@@ -56,8 +54,9 @@ data Property
   = BG Color
   | IB
   | FG Color
-  | CA (Event, Handler)
+  | CA ClickableArea
   | P Position
+  | PA AbsolutePosition
   deriving (Eq, Show)
 
 type Event = Text
@@ -71,29 +70,6 @@ data Shape
   | C Int
   | CO Int
   | Padding
-  deriving (Eq, Show)
-
-{- | Specify position that will be passed to @^p()@. -}
-data Position =
-  -- | @^p(+-X;+-Y)@      - move X pixels to the right or left and Y pixels up or down of the current
-  --                      position (on the X and Y axis).
-  XY (Int, Int) |
-  -- | @^p()@             - Reset the Y position to its default.
-  ResetY |
-  -- | @_LOCK_X@          - Lock the current X position, useful if you want to align things vertically
-  P_LOCK_X |
-  -- | @_UNLOCK_X@        - Unlock the X position
-  P_UNLOCK_X |
-  -- | @_LEFT@            - Move current x-position to the left edge
-  P_LEFT |
-  -- | @_RIGHT@           - Move current x-position to the right edge
-  P_RIGHT |
-  -- | @_TOP@             - Move current y-position to the top edge
-  P_TOP |
-  -- | @_CENTER@          - Move current x-position to the center of the window
-  P_CENTER |
-  -- | @_BOTTOM@          - Move current y-position to the bottom edge
-  P_BOTTOM
   deriving (Eq, Show)
 
 data AST =

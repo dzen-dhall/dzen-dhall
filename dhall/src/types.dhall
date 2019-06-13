@@ -7,6 +7,10 @@
 	./Plugin.dhall
 , BarSettings =
 	./BarSettings.dhall
+, Button =
+	./Button.dhall
+, Hook =
+	./Hook.dhall
 , Source =
 	./Source.dhall
 , Marquee =
@@ -23,4 +27,12 @@
 	./StateMap.dhall
 , Slot =
 	./Slot.dhall
+, Color =
+	./Color.dhall
+, Image =
+	./Image.dhall
+, AbsolutePosition =
+	./AbsolutePosition.dhall
+, Position =
+	./Position.dhall
 }

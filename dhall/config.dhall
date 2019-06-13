@@ -4,29 +4,41 @@ let types = ./src/types.dhall
 
 let utils = ./src/utils.dhall
 
-let Configuration = types.Configuration
-
-let BarSettings = types.BarSettings
+let AbsolutePosition = types.AbsolutePosition
 
 let Bar = types.Bar
 
-let Source = types.Source
+let BarSettings = types.BarSettings
+
+let Button = types.Button
+
+let Hook = types.Hook
+
+let Color = types.Color
+
+let Configuration = types.Configuration
+
+let Image = types.Image
 
 let Marquee = types.Marquee
 
-let Slider = types.Slider
-
-let VerticalDirection = types.VerticalDirection
+let MouseButton = types.MouseButton
 
 let Plugin = types.Plugin
 
-let MouseButton = types.MouseButton
+let Position = types.Position
 
-let StateTransitionTable = types.StateTransitionTable
+let Slider = types.Slider
+
+let Slot = types.Slot
+
+let Source = types.Source
 
 let StateMap = types.StateMap
 
-let Slot = types.Slot
+let StateTransitionTable = types.StateTransitionTable
+
+let VerticalDirection = types.VerticalDirection
 
 let mkConfigs = utils.mkConfigs
 
@@ -35,15 +47,26 @@ let defaultBarSettings : BarSettings = utils.defaultBarSettings
 let defaultBar
 	: Bar
 	=   λ(Bar : Type)
-	  → λ(join : List Bar → Bar)
 	  → λ(text : Text → Bar)
-	  → λ(fg : Text → List Bar → Bar)
-	  → λ(source : Source → Bar)
-	  → λ(marquee : Marquee → Bar → Bar)
+	  → λ(raw : Text → Bar)
+	  → λ(join : List Bar → Bar)
+	  → λ(fg : Color → Bar → Bar)
+	  → λ(bg : Color → Bar → Bar)
+	  → λ(i : Image → Bar)
+	  → λ(r : Natural → Natural → Bar)
+	  → λ(ro : Natural → Natural → Bar)
+	  → λ(c : Natural → Bar)
+	  → λ(co : Natural → Bar)
+	  → λ(p : Position → Bar → Bar)
+	  → λ(pa : AbsolutePosition → Bar → Bar)
+	  → λ(ca : Button → Text → Bar → Bar)
+	  → λ(ib : Bar → Bar)
 	  → λ(slider : Slider → List Bar → Bar)
+	  → λ(marquee : Marquee → Bar → Bar)
+	  → λ(source : Source → Bar)
 	  → λ(plugin : Plugin → Bar)
-	  → λ(automaton : StateTransitionTable → StateMap Bar → Bar)
 	  → λ(listener : Slot → Bar → Bar)
+	  → λ(automaton : Text → StateTransitionTable → StateMap Bar → Bar)
 	  → let separateBy =
 				λ(sep : Bar)
 			  → λ(list : List Bar)
@@ -92,10 +115,55 @@ let defaultBar
 
 		let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
+		let mySlot = "a" : Slot
+
+		let mySwitcher =
+			  let default =
+					{ slots =
+						[ mySlot ]
+					, events =
+						[] : List MouseButton
+					, from =
+						[] : List Text
+					, hooks =
+						[] : List Hook
+					, to =
+						"NONE"
+					}
+
+			  let stt
+				  : StateTransitionTable
+				  = [   default
+					  ⫽ { events =
+							[ MouseButton.Left ]
+						, from =
+							[ "" ]
+						, to =
+							"1"
+						}
+					,   default
+					  ⫽ { events =
+							[ MouseButton.Left ]
+						, from =
+							[ "1" ]
+						, to =
+							""
+						}
+					]
+
+			  let sm
+				  : StateMap Bar
+				  = [ { state = "", bar = text "hello!" }
+					, { state = "1", bar = text "world!" }
+					]
+
+			  in  listener mySlot (automaton "MY_AUTOMATON" stt sm)
+
 		in  separate
 			[ join [ text "Mem: ", memoryUsage, text "%" ]
 			, join [ text "Swap: ", swapUsage, text "%" ]
 			, clocks
+			, mySwitcher
 			]
 
 in    mkConfigs

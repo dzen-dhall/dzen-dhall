@@ -1,3 +1,4 @@
+-- | Arguments data and parser.
 module DzenDhall.Arguments where
 
 import Options.Applicative
