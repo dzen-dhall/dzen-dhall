@@ -17,8 +17,8 @@
 	./Marquee.dhall
 , Slider =
 	./Slider.dhall
-, MouseButton =
-	./MouseButton.dhall
+, Event =
+	./Event.dhall
 , VerticalDirection =
 	./VerticalDirection.dhall
 , StateTransitionTable =

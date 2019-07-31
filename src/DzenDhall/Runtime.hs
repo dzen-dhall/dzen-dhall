@@ -1,18 +1,20 @@
 {-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Runtime where
 
+import DzenDhall.Arguments
+import DzenDhall.Config hiding (Hook)
+import Paths_dzen_dhall
+
+import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Dhall hiding (maybe)
-import DzenDhall.Arguments
-import DzenDhall.Config hiding (Hook)
+import Lens.Micro
 import Lens.Micro.TH
-import Paths_dzen_dhall
 import System.Directory
 import System.Exit (ExitCode(..), exitWith)
 import System.FilePath ((</>))
 import System.Posix.Files
-import Control.Exception
 import System.Random
 
 apiVersion :: Int
@@ -27,6 +29,7 @@ data Runtime = Runtime
   , _rtNamedPipe :: String
   -- ^ Named pipe to use as a communication channel for listening to mouse events
   , _rtAPIVersion :: Int
+  , _rtArguments :: Arguments
   }
   deriving (Eq, Show)
 
@@ -34,8 +37,8 @@ makeLenses ''Runtime
 
 -- Read runtime from configuration file, if possible.
 readRuntime :: Arguments -> IO Runtime
-readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
-  let dzenBinary = fromMaybe "dzen2" mbDzenBinary
+readRuntime args = do
+  let dzenBinary = fromMaybe "dzen2" (args ^. mbDzenBinary)
   let frameCounter = 0
 
   tmpDir <- getTemporaryDirectory `catch`
@@ -45,7 +48,7 @@ readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
   let namedPipe = tmpDir </> "dzen-dhall-rt-" <> randomSuffix
   createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
 
-  configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
+  configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure (args ^. mbConfigDir)
   exists <- doesDirectoryExist configDir
 
   unless exists $ do
@@ -65,11 +68,12 @@ readRuntime Arguments{mbConfigDir, mbDzenBinary} = do
     0
     namedPipe
     apiVersion
+    args
 
 -- | Create config directory and set file permissions.
 initCommand :: Arguments -> IO ()
-initCommand Arguments{mbConfigDir} = do
-  configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure mbConfigDir
+initCommand args = do
+  configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure (args ^. mbConfigDir)
 
   let pluginsDir = configDir </> "plugins"
       srcDir     = configDir </> "src"

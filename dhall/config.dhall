@@ -22,7 +22,9 @@ let Image = types.Image
 
 let Marquee = types.Marquee
 
-let MouseButton = types.MouseButton
+let Button = types.Button
+
+let Event = types.Event
 
 let Plugin = types.Plugin
 
@@ -118,46 +120,46 @@ let defaultBar
 		let mySlot = "a" : Slot
 
 		let mySwitcher =
-			  let default =
-					{ slots =
-						[ mySlot ]
-					, events =
-						[] : List MouseButton
-					, from =
-						[] : List Text
-					, hooks =
-						[] : List Hook
-					, to =
-						"NONE"
-					}
-
 			  let stt
 				  : StateTransitionTable
-				  = [   default
-					  ⫽ { events =
-							[ MouseButton.Left ]
-						, from =
-							[ "" ]
-						, to =
-							"1"
-						}
-					,   default
-					  ⫽ { events =
-							[ MouseButton.Left ]
-						, from =
-							[ "1" ]
-						, to =
-							""
-						}
-					]
+				  = let defaultTransition =
+						  { slots =
+							  [ mySlot ]
+						  , events =
+							  [] : List Button
+						  , from =
+							  [] : List Text
+						  , hooks =
+							  [] : List Hook
+						  , to =
+							  "NONE"
+						  }
 
-			  let sm
+					in  [   defaultTransition
+						  ⫽ { events =
+								[ Button.Left ]
+							, from =
+								[ "" ]
+							, to =
+								"1"
+							}
+						,   defaultTransition
+						  ⫽ { events =
+								[ Button.Left ]
+							, from =
+								[ "1" ]
+							, to =
+								""
+							}
+						]
+
+			  let stateMap
 				  : StateMap Bar
 				  = [ { state = "", bar = text "hello!" }
 					, { state = "1", bar = text "world!" }
 					]
 
-			  in  listener mySlot (automaton "MY_AUTOMATON" stt sm)
+			  in  listener mySlot (automaton "MY_AUTOMATON" stt stateMap)
 
 		in  separate
 			[ join [ text "Mem: ", memoryUsage, text "%" ]

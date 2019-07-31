@@ -1,21 +1,30 @@
+{-# LANGUAGE TemplateHaskell #-}
 -- | Arguments data and parser.
 module DzenDhall.Arguments where
 
-import Options.Applicative
-import Data.Semigroup ((<>))
+import           Options.Applicative
+import           Data.Semigroup ((<>))
+import           Lens.Micro.TH
 
-data Arguments
-  = Arguments
-  { mbConfigDir :: Maybe String
-  , mbDzenBinary :: Maybe String
-  , mbCommand  :: Maybe Command
-  }
+data StdoutFlag
+  = ToDzen | ToStdout
   deriving (Show, Eq)
 
 data Command
   = Init
   | Plug String
   deriving (Show, Eq)
+
+data Arguments
+  = Arguments
+  { _mbConfigDir :: Maybe String
+  , _mbDzenBinary :: Maybe String
+  , _stdoutFlag :: StdoutFlag
+  , _mbCommand  :: Maybe Command
+  }
+  deriving (Show, Eq)
+
+makeLenses ''Arguments
 
 argParser :: Parser Arguments
 argParser = Arguments
@@ -31,6 +40,11 @@ argParser = Arguments
       $ long "dzen-binary"
      <> metavar "FILE"
      <> help "Path to dzen2 executable. By default, 'dzen2' binary from $PATH will be used."
+      )
+
+  <*> flag ToDzen ToStdout
+      ( long "stdout"
+     <> help "Write output to stdout."
       )
 
   <*> optional

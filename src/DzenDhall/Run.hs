@@ -1,6 +1,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Run where
 
+import           DzenDhall.App as App
+import           DzenDhall.Arguments
+import           DzenDhall.Config
+import           DzenDhall.Data
+import           DzenDhall.Event
+import           DzenDhall.Extra
+import           DzenDhall.Runtime
+import qualified DzenDhall.Animation.Marquee as Marquee
+import qualified DzenDhall.Animation.Slider as Slider
+import qualified DzenDhall.Parser
+
 import           Control.Arrow
 import           Control.Concurrent
 import           Control.Concurrent.Async
@@ -22,16 +33,6 @@ import           System.Exit (ExitCode(..), exitWith)
 import qualified System.IO
 import           System.Process
 
-import qualified DzenDhall.Animation.Marquee as Marquee
-import qualified DzenDhall.Animation.Slider as Slider
-import           DzenDhall.App as App
-import           DzenDhall.Config
-import           DzenDhall.Data
-import           DzenDhall.Extra
-import           DzenDhall.Event
-import qualified DzenDhall.Parser
-import           DzenDhall.Runtime
-
 
 data StartupState
   = StartupState
@@ -42,6 +43,7 @@ data StartupState
   }
 
 makeLenses ''StartupState
+
 
 -- | Parses 'BarSpec's. For each 'Configuration' spawns its own dzen binary.
 useConfigurations :: App [Async ()]
@@ -103,7 +105,9 @@ startDzenBinary cfg barSpec = do
       forever $ do
         output <- renderAST <$> collectSources fontWidth bar
         liftIO $ do
-          Data.Text.IO.hPutStrLn stdin output
+          if runtime ^. rtArguments ^. stdoutFlag == ToStdout
+            then Data.Text.IO.putStrLn output
+            else Data.Text.IO.hPutStrLn stdin output
           threadDelay (cfg ^. cfgBarSettings ^. bsUpdateInterval)
         modifyRuntime $ rtFrameCounter +~ 1
 
@@ -322,17 +326,17 @@ collectSources fontWidth (BarListener slot child) = do
   pure $ foldr (attachClickHandler namedPipe) ast allButtons
     where
       attachClickHandler :: String -> MouseButton -> AST -> AST
-      attachClickHandler namedPipe eventCode =
+      attachClickHandler namedPipe mouseButton =
         let command =
               ( "echo event:"
-             <> showPack eventCode
+             <> renderMouseButton mouseButton
              <> ",slot:"
-             <> showPack slot
+             <> slot
              <> " >> "
              -- TODO: escape it
              <> Data.Text.pack namedPipe
               )
-        in Prop $ CA (ClickableArea eventCode command)
+        in Prop $ CA (ClickableArea mouseButton command)
 
 collectSources fontWidth (BarScope child) = do
   collectSources fontWidth child
@@ -355,16 +359,6 @@ escape EscapeMode{joinLines, escapeMarkup} =
   (if escapeMarkup then Data.Text.replace "^" "^^" else id) .
   (Data.Text.replace "\n" $ if joinLines then " " else "")
 
-allButtons :: [MouseButton]
-allButtons =
-  [ MouseLeft
-  , MouseMiddle
-  , MouseRight
-  , MouseScrollUp
-  , MouseScrollDown
-  , MouseScrollLeft
-  , MouseScrollRight
-  ]
 
 renderAST :: AST -> Text
 renderAST EmptyAST = ""
@@ -417,6 +411,18 @@ renderAST (Container shape width) =
         Padding -> ""
 
 
+allButtons :: [MouseButton]
+allButtons =
+  [ MouseLeft
+  , MouseMiddle
+  , MouseRight
+  , MouseScrollUp
+  , MouseScrollDown
+  , MouseScrollLeft
+  , MouseScrollRight
+  ]
+
+
 renderMouseButton :: MouseButton -> Text
 renderMouseButton = \case
   MouseLeft -> "1"
@@ -426,6 +432,7 @@ renderMouseButton = \case
   MouseScrollDown -> "5"
   MouseScrollLeft -> "6"
   MouseScrollRight -> "7"
+
 
 renderColor :: Color -> Text
 renderColor = \case

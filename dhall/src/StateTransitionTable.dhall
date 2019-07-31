@@ -1,4 +1,4 @@
-let MouseButton = ./MouseButton.dhall
+let Button = ./Button.dhall
 
 let Slot = ./Slot.dhall
 
@@ -12,7 +12,7 @@ let StateTransitionTable
 	  { slots :
 		  List Slot
 	  , events :
-		  List MouseButton
+		  List Button
 	  , from :
 		  List State
 	  , to :

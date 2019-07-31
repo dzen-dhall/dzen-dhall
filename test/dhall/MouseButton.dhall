@@ -1,10 +1,10 @@
-let MouseButton = ./src/MouseButton.dhall
+let Button = ./src/Button.dhall
 
-in  [ MouseButton.Left
-	, MouseButton.Middle
-	, MouseButton.Right
-	, MouseButton.ScrollUp
-	, MouseButton.ScrollDown
-	, MouseButton.ScrollLeft
-	, MouseButton.ScrollRight
-	] : List MouseButton
+in  [ Button.Left
+	, Button.Middle
+	, Button.Right
+	, Button.ScrollUp
+	, Button.ScrollDown
+	, Button.ScrollLeft
+	, Button.ScrollRight
+	] : List Button

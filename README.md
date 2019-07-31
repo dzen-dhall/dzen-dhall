@@ -1,6 +1,6 @@
 # dzen-dhall
 
-[Dzen](https://github.com/robm/dzen) is a general purpose messaging, notification and menuing program for X11. It features rich in-text formating & control language, allowing to create GUIs by piping output of arbitrary executables to the `dzen2` binary. There are plenty of good usage examples on [r/unixporn](https://www.reddit.com/r/unixporn/search/?q=dzen).
+[Dzen](https://github.com/robm/dzen) is a general purpose messaging, notification and menuing program for X11. It features rich in-text formating & control language, allowing to create GUIs by piping output of arbitrary executables to the `dzen2` binary. There are plenty of good usage examples on [r/unixporn](https://www.reddit.com/r/unixporn/search/?q=dzen&restrict_sr=1).
 
 Unfortunately, combining outputs of multiple executables before feeding it to `dzen2`, which is usually done by custom shell scripts, is a tedious and error-prone task. Consider the following problems:
 
@@ -143,6 +143,40 @@ After saving the file, run `dzen-dhall` again. You should be able to see the out
 ## Creating plugins
 
 
+<details><summary><strong>I want to make my Bar react to events</strong></summary>
+<p>
+
+Do you want your bar to be stateful or not? Stateful bar can react to the same events differently, depending on it's internal state, that can only be changed as a result of some event (not necessarily triggered by the user). Stateful bars can react to events emitted by [sources](#sources) and [hooks](#hooks), while stateless ones can only react to user-triggered mouse events.
+
+<details><summary><strong>I want a stateful Bar</strong></summary>
+<p>
+
+
+
+</p>
+</details>
+<details><summary><strong>I don't need my bar to be stateful</strong></summary>
+<p>
+
+Use this `Bar` constructor:
+
+```dhall
+∀(ca : Button → Text → Bar → Bar)
+```
+
+Its semantics resemble that of the `^ca()` dzen2 markup command.
+
+Example:
+
+```dhall
+(ca Button.Left "notify-send hello!" (text "Click me!"))
+```
+
+</p>
+</details>
+
+</p>
+</details>
 
 ## Concepts
 
@@ -302,7 +336,7 @@ let Source : Type =
   }
 ```
 
-<details><summary>**SHOW EXAMPLE**</summary>
+<details><summary><strong>SHOW EXAMPLE</strong></summary>
 <p>
 
 For example, a simple clock plugin can be created as follows:
@@ -325,7 +359,7 @@ Sources can be used to control automata.
 
 To query for current state of an automaton, it is sufficient to read the environment variable of the form `STATE_id`, where `id` part is the identifier of the [automaton](#automata).
 
-<details><summary>**SHOW EXAMPLE**</summary>
+<details><summary><strong>SHOW EXAMPLE</strong></summary>
 <p>
 
 ```dhall
@@ -344,7 +378,7 @@ let emitter : Source =
 
 To emit an [event](#events), `EMIT` environment variable can be used. It contains a path of an executable, which can be used to tell dzen-dhall that some event occured.
 
-<details><summary>**SHOW EXAMPLE**</summary>
+<details><summary><strong>SHOW EXAMPLE</strong></summary>
 <p>
 
 The following source emits an event every second:
@@ -363,12 +397,14 @@ let emitter : Source =
 </p>
 </details>
 
-### Events
+### [Events](dhall/src/Event.dhall)
 
-Events can be emitted by mouse interactions with [listeners], by [hooks] and by [sources]. Listeners and hooks can emit any events, while sources can only emit `Custom` events.
+Events can be emitted by mouse interactions with [listeners](#listeners), by [hooks](#hooks) and by [sources](#sources). Listeners can only emit mouse events, hooks can emit any events, and sources can only emit `Custom` events.
 
 ```dhall
-let Event = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | ScrollRight | Custom : Text > in Event
+let Button = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | ScrollRight >
+
+let Event = < Mouse : Button | Custom : Text >
 ```
 
 ### Scopes

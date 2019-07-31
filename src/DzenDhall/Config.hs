@@ -114,7 +114,7 @@ stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
             <*> field "events" (list mouseButtonType)
             <*> field "from"   (list strictText)
             <*> field "to"     strictText
-            <*> field "hooks"     (list hookType)
+            <*> field "hooks"  (list hookType)
     )
   )
   where
