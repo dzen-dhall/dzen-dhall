@@ -13,9 +13,10 @@ getTests = testSpec "Argument parser" $ do
     it "test #1" $ do
       runArgParser [ "--config-dir", ".", "--dzen-binary", "dzen", "init" ]
         `shouldBe`
-        pure Arguments { mbConfigDir = Just "."
-                       , mbDzenBinary = Just "dzen"
-                       , mbCommand = Just Init
+        pure Arguments { _mbConfigDir = Just "."
+                       , _mbDzenBinary = Just "dzen"
+                       , _stdoutFlag = ToDzen
+                       , _mbCommand = Just Init
                        }
 
 runArgParser :: [String] -> Maybe Arguments

@@ -21,6 +21,7 @@ getTests dhallDir =
                    , testSource               dhallDir
                    , testMarquee              dhallDir
                    , testMouseButton          dhallDir
+                   , testEvent                dhallDir
                    , testBarSettings          dhallDir
                    , testConfiguration        dhallDir
                    , testStateTransitionTable dhallDir
@@ -92,6 +93,15 @@ testMouseButton dhallDir = do
     , MouseScrollRight
     ]
 
+testEvent :: FilePath -> IO TestTree
+testEvent dhallDir = do
+  input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+           (list eventType) [litFile|test/dhall/Event.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "test/dhall/Event.dhall marshalling" $
+    input @?=
+    [ CustomEvent "some text"
+    , MouseEvent MouseLeft
+    ]
 
 testBarSettings :: FilePath -> IO TestTree
 testBarSettings dhallDir = do
@@ -131,18 +141,18 @@ testStateTransitionTable dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/StateTransitionTable.dhall marshalling" $
     input @?=
 
-    STT ( H.fromList [ (("a", MouseLeft,  ""), "1")
-                     , (("a", MouseRight, ""), "1")
-                     , (("b", MouseLeft,  ""), "1")
-                     , (("b", MouseRight, ""), "1")
-                     , (("a", MouseLeft,  "1"), "2")
-                     , (("a", MouseRight, "1"), "2")
-                     , (("b", MouseLeft,  "1"), "2")
-                     , (("b", MouseRight, "1"), "2")
-                     , (("a", MouseLeft,  "2"), "")
-                     , (("a", MouseRight, "2"), "")
-                     , (("b", MouseLeft,  "2"), "")
-                     , (("b", MouseRight, "2"), "")
+    STT ( H.fromList [ (("a", MouseEvent MouseLeft,  ""), "1")
+                     , (("a", MouseEvent MouseRight, ""), "1")
+                     , (("b", MouseEvent MouseLeft,  ""), "1")
+                     , (("b", MouseEvent MouseRight, ""), "1")
+                     , (("a", MouseEvent MouseLeft,  "1"), "2")
+                     , (("a", MouseEvent MouseRight, "1"), "2")
+                     , (("b", MouseEvent MouseLeft,  "1"), "2")
+                     , (("b", MouseEvent MouseRight, "1"), "2")
+                     , (("a", MouseEvent MouseLeft,  "2"), "")
+                     , (("a", MouseEvent MouseRight, "2"), "")
+                     , (("b", MouseEvent MouseLeft,  "2"), "")
+                     , (("b", MouseEvent MouseRight, "2"), "")
                      ]
         )
 

@@ -12,6 +12,8 @@ let BarSettings = types.BarSettings
 
 let Button = types.Button
 
+let Event = types.Event
+
 let Hook = types.Hook
 
 let Color = types.Color
@@ -23,8 +25,6 @@ let Image = types.Image
 let Marquee = types.Marquee
 
 let Button = types.Button
-
-let Event = types.Event
 
 let Plugin = types.Plugin
 
@@ -126,7 +126,7 @@ let defaultBar
 						  { slots =
 							  [ mySlot ]
 						  , events =
-							  [] : List Button
+							  [] : List Event
 						  , from =
 							  [] : List Text
 						  , hooks =
@@ -137,7 +137,7 @@ let defaultBar
 
 					in  [   defaultTransition
 						  ⫽ { events =
-								[ Button.Left ]
+								[ Event.Mouse Button.Left ]
 							, from =
 								[ "" ]
 							, to =
@@ -145,7 +145,7 @@ let defaultBar
 							}
 						,   defaultTransition
 						  ⫽ { events =
-								[ Button.Left ]
+								[ Event.Mouse Button.Left ]
 							, from =
 								[ "1" ]
 							, to =

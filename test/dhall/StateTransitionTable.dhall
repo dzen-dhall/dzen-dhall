@@ -1,6 +1,8 @@
 let StateTransitionTable = ./src/StateTransitionTable.dhall
 
-let MouseButton = ./src/MouseButton.dhall
+let Event = ./src/Event.dhall
+
+let Button = ./src/Button.dhall
 
 let Slot = ./src/Slot.dhall
 
@@ -12,7 +14,7 @@ let mkLeftClick =
 	  → [ { slots =
 			  [ "a", "b" ] : List Slot
 		  , events =
-			  [ MouseButton.Left, MouseButton.Right ]
+			  [ Event.Mouse Button.Left, Event.Mouse Button.Right ]
 		  , hooks =
 			  [] : List Hook
 		  , from =

@@ -4,7 +4,8 @@ import           Control.Exception
 import           Control.Monad
 import qualified Data.HashMap.Strict as H
 import           Data.IORef
-import           Data.Text
+import           Data.Text (Text)
+import qualified Data.Text
 import           Pipes
 import qualified Pipes.Prelude as P
 import           System.Exit
@@ -32,7 +33,7 @@ type AutomataHandles = H.HashMap SlotAddr [Subscription]
 
 type SlotAddr = Text
 
-data RoutedEvent = RoutedEvent MouseButton SlotAddr
+data RoutedEvent = RoutedEvent Event SlotAddr
   deriving (Eq, Show)
 
 -- | Start reading lines from a named pipe used to route events.
@@ -63,7 +64,7 @@ launchEventListener namedPipe handles = runEffect $ do
       putStrLn $ "Couldn't open named pipe " <> namedPipe <> ": " <> displayException e
       exitWith (ExitFailure 1)
 
-processSubscriptions :: SlotAddr -> MouseButton -> [Subscription] -> IO ()
+processSubscriptions :: SlotAddr -> Event -> [Subscription] -> IO ()
 processSubscriptions slotAddr mouseButton = mapM_ $ \case
 
   AutomatonSubscription stt stateMap stateRef barRef -> do
@@ -71,7 +72,7 @@ processSubscriptions slotAddr mouseButton = mapM_ $ \case
     currentState <- readIORef stateRef
 
     let
-      transitions = unSTT stt :: H.HashMap (SlotAddr, MouseButton, Text) Text
+      transitions = unSTT stt :: H.HashMap (SlotAddr, Event, Text) Text
       mbNextState = H.lookup (slotAddr, mouseButton, currentState) transitions
 
     whenJust mbNextState $ \nextState -> do
@@ -86,16 +87,24 @@ parseRoutedEvent = parseMaybe routedEventParser
 routedEventParser :: Parsec () String RoutedEvent
 routedEventParser = do
   void $ string "event:"
-  mb <- MouseLeft        <$ char '1'
-    <|> MouseMiddle      <$ char '2'
-    <|> MouseRight       <$ char '3'
-    <|> MouseScrollUp    <$ char '4'
-    <|> MouseScrollDown  <$ char '5'
-    <|> MouseScrollLeft  <$ char '6'
-    <|> MouseScrollRight <$ char '7'
+  mb <- (MouseEvent  <$> mouseButtonParser) <|>
+        (CustomEvent <$> customEventParser)
   void $ char ','
   void $ string "slot:"
   slotName <- some alphaNumChar
   void $ string "@"
   scope <- some (alphaNumChar <|> char '-')
   pure $ RoutedEvent mb (Data.Text.pack (slotName <> "@" <> scope))
+
+mouseButtonParser :: Parsec () String MouseButton
+mouseButtonParser = do
+      MouseLeft        <$ char '1'
+  <|> MouseMiddle      <$ char '2'
+  <|> MouseRight       <$ char '3'
+  <|> MouseScrollUp    <$ char '4'
+  <|> MouseScrollDown  <$ char '5'
+  <|> MouseScrollLeft  <$ char '6'
+  <|> MouseScrollRight <$ char '7'
+
+customEventParser :: Parsec () String Text
+customEventParser = Data.Text.pack <$> some alphaNumChar

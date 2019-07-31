@@ -59,7 +59,6 @@ data Property
   | PA AbsolutePosition
   deriving (Eq, Show)
 
-type Event = Text
 type Handler = Text
 type ImagePath = Text
 

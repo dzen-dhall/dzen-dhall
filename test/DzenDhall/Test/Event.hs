@@ -17,10 +17,10 @@ getTests = pure $
 
   [ mkTest "parsing #1"
     "event:1,slot:name@scope" $
-    Just $ RoutedEvent MouseLeft "name@scope"
+    Just $ RoutedEvent (MouseEvent MouseLeft) "name@scope"
   , mkTest "parsing #2"
     "event:2,slot:name@another-scope" $
-    Just $ RoutedEvent MouseMiddle "name@another-scope"
+    Just $ RoutedEvent (MouseEvent MouseMiddle) "name@another-scope"
   , mkTest "parsing #3"
     "event:,slot:name@scope" $
     Nothing

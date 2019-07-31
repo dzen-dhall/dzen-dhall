@@ -1,4 +1,4 @@
-let Button = ./Button.dhall
+let Event = ./Event.dhall
 
 let Slot = ./Slot.dhall
 
@@ -12,7 +12,7 @@ let StateTransitionTable
 	  { slots :
 		  List Slot
 	  , events :
-		  List Button
+		  List Event
 	  , from :
 		  List State
 	  , to :

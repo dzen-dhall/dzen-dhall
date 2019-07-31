@@ -55,6 +55,18 @@ mouseButtonType = union
   <> (MouseScrollLeft  <$ constructor "ScrollLeft"  unit)
   <> (MouseScrollRight <$ constructor "ScrollRight" unit)
 
+data Event
+  = MouseEvent MouseButton
+  | CustomEvent Text
+  deriving (Show, Eq, Ord, Generic)
+
+instance Hashable Event
+
+eventType :: Type Event
+eventType = union
+  $  (MouseEvent  <$> constructor "Mouse"  mouseButtonType)
+  <> (CustomEvent <$> constructor "Custom" strictText)
+
 data Fade
   = Fade
   { _fadeDirection   :: VDirection
@@ -104,14 +116,14 @@ hookType = record $
        <*> field "stdin"            (Dhall.maybe strictText)
        <*> field "allowedExitCodes" (Dhall.maybe (list (fromIntegral <$> natural)))
 
-newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, MouseButton, Text) Text }
+newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, Event, Text) Text }
   deriving (Show, Eq, Generic)
 
 stateTransitionTableType :: Type StateTransitionTable
 stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
   ( record
     ( pack4 <$> field "slots"  (list strictText)
-            <*> field "events" (list mouseButtonType)
+            <*> field "events" (list eventType)
             <*> field "from"   (list strictText)
             <*> field "to"     strictText
             <*> field "hooks"  (list hookType)
