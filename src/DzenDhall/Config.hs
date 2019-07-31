@@ -33,7 +33,7 @@ directionType = union
   $  (VUp   <$ constructor "Up"   unit)
   <> (VDown <$ constructor "Down" unit)
 
-data MouseButton
+data Button
   = MouseLeft
   | MouseMiddle
   | MouseRight
@@ -43,10 +43,10 @@ data MouseButton
   | MouseScrollRight
   deriving (Show, Eq, Ord, Generic)
 
-instance Hashable MouseButton
+instance Hashable Button
 
-mouseButtonType :: Type MouseButton
-mouseButtonType = union
+buttonType :: Type Button
+buttonType = union
   $  (MouseLeft        <$ constructor "Left"        unit)
   <> (MouseMiddle      <$ constructor "Middle"      unit)
   <> (MouseRight       <$ constructor "Right"       unit)
@@ -56,7 +56,7 @@ mouseButtonType = union
   <> (MouseScrollRight <$ constructor "ScrollRight" unit)
 
 data Event
-  = MouseEvent MouseButton
+  = MouseEvent Button
   | CustomEvent Text
   deriving (Show, Eq, Ord, Generic)
 
@@ -64,7 +64,7 @@ instance Hashable Event
 
 eventType :: Type Event
 eventType = union
-  $  (MouseEvent  <$> constructor "Mouse"  mouseButtonType)
+  $  (MouseEvent  <$> constructor "Mouse"  buttonType)
   <> (CustomEvent <$> constructor "Custom" strictText)
 
 data Fade
@@ -197,7 +197,7 @@ positionType = union
     xy = record ((,) <$> (fromIntegral <$> field "x" integer)
                      <*> (fromIntegral <$> field "y" integer))
 data ClickableArea
-  = ClickableArea { _caButton :: MouseButton
+  = ClickableArea { _caButton :: Button
                   , _caCommand :: Text
                   }
   deriving (Show, Eq, Generic)
@@ -206,7 +206,7 @@ makeLenses ''ClickableArea
 
 clickableAreaType :: Type ClickableArea
 clickableAreaType = record $
-  ClickableArea <$> field "button"  mouseButtonType
+  ClickableArea <$> field "button"  buttonType
                 <*> field "command" strictText
 
 data OpeningTag

@@ -325,18 +325,18 @@ collectSources fontWidth (BarListener slot child) = do
   -- Wrap AST into 7 clickable areas, one for each mouse button
   pure $ foldr (attachClickHandler namedPipe) ast allButtons
     where
-      attachClickHandler :: String -> MouseButton -> AST -> AST
-      attachClickHandler namedPipe mouseButton =
+      attachClickHandler :: String -> Button -> AST -> AST
+      attachClickHandler namedPipe button =
         let command =
               ( "echo event:"
-             <> renderMouseButton mouseButton
+             <> renderButton button
              <> ",slot:"
              <> slot
              <> " >> "
              -- TODO: escape it
              <> Data.Text.pack namedPipe
               )
-        in Prop $ CA (ClickableArea mouseButton command)
+        in Prop $ CA (ClickableArea button command)
 
 collectSources fontWidth (BarScope child) = do
   collectSources fontWidth child
@@ -375,7 +375,7 @@ renderAST (Prop property ast) =
       IB ->
         "^ib(1)" <> inner <> "^ib(0)"
       CA ca ->
-        "^ca(" <> renderMouseButton (ca ^. caButton)  <> "," <> ca ^. caCommand <> ")" <> inner <> "^ca()"
+        "^ca(" <> renderButton (ca ^. caButton)  <> "," <> ca ^. caCommand <> ")" <> inner <> "^ca()"
       PA (AbsolutePosition {x, y}) ->
         "^pa(" <> showPack x <> ";" <> showPack y <> ")" <> inner <> "^pa()"
       P position ->
@@ -411,7 +411,7 @@ renderAST (Container shape width) =
         Padding -> ""
 
 
-allButtons :: [MouseButton]
+allButtons :: [Button]
 allButtons =
   [ MouseLeft
   , MouseMiddle
@@ -423,8 +423,8 @@ allButtons =
   ]
 
 
-renderMouseButton :: MouseButton -> Text
-renderMouseButton = \case
+renderButton :: Button -> Text
+renderButton = \case
   MouseLeft -> "1"
   MouseMiddle -> "2"
   MouseRight -> "3"

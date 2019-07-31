@@ -20,7 +20,7 @@ getTests dhallDir =
                    , testToken                dhallDir
                    , testSource               dhallDir
                    , testMarquee              dhallDir
-                   , testMouseButton          dhallDir
+                   , testButton               dhallDir
                    , testEvent                dhallDir
                    , testBarSettings          dhallDir
                    , testConfiguration        dhallDir
@@ -78,11 +78,11 @@ testMarquee dhallDir = do
             , _mqWidth = 3
             }
 
-testMouseButton :: FilePath -> IO TestTree
-testMouseButton dhallDir = do
+testButton :: FilePath -> IO TestTree
+testButton dhallDir = do
   input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
-           (list mouseButtonType) [litFile|test/dhall/MouseButton.dhall|]
-  pure $ Test.Tasty.HUnit.testCase "test/dhall/MouseButton.dhall marshalling" $
+           (list buttonType) [litFile|test/dhall/Button.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "test/dhall/Button.dhall marshalling" $
     input @?=
     [ MouseLeft
     , MouseMiddle

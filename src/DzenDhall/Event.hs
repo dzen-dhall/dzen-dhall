@@ -48,10 +48,10 @@ launchEventListener namedPipe handles = runEffect $ do
   for (P.fromHandle fh) $ \line -> do
     lift $ do
       case parseRoutedEvent line of
-        Just (RoutedEvent mouseButton slotAddr) ->
+        Just (RoutedEvent button slotAddr) ->
           case H.lookup slotAddr handles of
             Just subscriptions ->
-              processSubscriptions slotAddr mouseButton subscriptions
+              processSubscriptions slotAddr button subscriptions
             Nothing ->
               Data.Text.IO.putStrLn $ "Failed to find subscriptions for slot address: " <> slotAddr
 
@@ -65,7 +65,7 @@ launchEventListener namedPipe handles = runEffect $ do
       exitWith (ExitFailure 1)
 
 processSubscriptions :: SlotAddr -> Event -> [Subscription] -> IO ()
-processSubscriptions slotAddr mouseButton = mapM_ $ \case
+processSubscriptions slotAddr button = mapM_ $ \case
 
   AutomatonSubscription stt stateMap stateRef barRef -> do
 
@@ -73,21 +73,21 @@ processSubscriptions slotAddr mouseButton = mapM_ $ \case
 
     let
       transitions = unSTT stt :: H.HashMap (SlotAddr, Event, Text) Text
-      mbNextState = H.lookup (slotAddr, mouseButton, currentState) transitions
+      mbNextState = H.lookup (slotAddr, button, currentState) transitions
 
     whenJust mbNextState $ \nextState -> do
       whenJust (H.lookup nextState stateMap) $ \nextBar -> do
         writeIORef barRef nextBar
         writeIORef stateRef nextState
 
--- | E.g. @parseRoutedEvent "event:1,slot:name@some-scope" == Just (Event MouseLeft 10)@
+-- | E.g. @parseRoutedEvent "event:1,slot:name@some-scope" == Just (RoutedEvent (MouseEvent MouseLeft) "name@some-scope")@
 parseRoutedEvent :: String -> Maybe RoutedEvent
 parseRoutedEvent = parseMaybe routedEventParser
 
 routedEventParser :: Parsec () String RoutedEvent
 routedEventParser = do
   void $ string "event:"
-  mb <- (MouseEvent  <$> mouseButtonParser) <|>
+  mb <- (MouseEvent  <$> buttonParser) <|>
         (CustomEvent <$> customEventParser)
   void $ char ','
   void $ string "slot:"
@@ -96,8 +96,8 @@ routedEventParser = do
   scope <- some (alphaNumChar <|> char '-')
   pure $ RoutedEvent mb (Data.Text.pack (slotName <> "@" <> scope))
 
-mouseButtonParser :: Parsec () String MouseButton
-mouseButtonParser = do
+buttonParser :: Parsec () String Button
+buttonParser = do
       MouseLeft        <$ char '1'
   <|> MouseMiddle      <$ char '2'
   <|> MouseRight       <$ char '3'
