@@ -117,41 +117,34 @@ let defaultBar
 
 		let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
-		let mySlot = "a" : Slot
-
 		let mySwitcher =
+			  let mySlot = "MY_SLOT" : Slot
+
 			  let stt
 				  : StateTransitionTable
-				  = let defaultTransition =
-						  { slots =
-							  [ mySlot ]
-						  , events =
-							  [] : List Event
-						  , from =
-							  [] : List Text
-						  , hooks =
-							  [] : List Hook
-						  , to =
-							  "NONE"
-						  }
-
-					in  [   defaultTransition
-						  ⫽ { events =
-								[ Event.Mouse Button.Left ]
-							, from =
-								[ "" ]
-							, to =
-								"1"
-							}
-						,   defaultTransition
-						  ⫽ { events =
-								[ Event.Mouse Button.Left ]
-							, from =
-								[ "1" ]
-							, to =
-								""
-							}
-						]
+				  = [ { slots =
+						  [ mySlot ]
+					  , hooks =
+						  [] : List Hook
+					  , events =
+						  [ Event.Mouse Button.Left ]
+					  , from =
+						  [ "" ]
+					  , to =
+						  "1"
+					  }
+					, { slots =
+						  [ mySlot ]
+					  , hooks =
+						  [] : List Hook
+					  , events =
+						  [ Event.Mouse Button.Left ]
+					  , from =
+						  [ "1" ]
+					  , to =
+						  ""
+					  }
+					]
 
 			  let stateMap
 				  : StateMap Bar
@@ -159,7 +152,9 @@ let defaultBar
 					, { state = "1", bar = text "world!" }
 					]
 
-			  in  listener mySlot (automaton "MY_AUTOMATON" stt stateMap)
+			  let myID = "MY_AUTOMATON"
+
+			  in  listener mySlot (automaton myID stt stateMap)
 
 		in  separate
 			[ join [ text "Mem: ", memoryUsage, text "%" ]

@@ -2,7 +2,7 @@
 
 [Dzen](https://github.com/robm/dzen) is a general purpose messaging, notification and menuing program for X11. It features rich in-text formating & control language, allowing to create GUIs by piping output of arbitrary executables to the `dzen2` binary. There are plenty of good usage examples on [r/unixporn](https://www.reddit.com/r/unixporn/search/?q=dzen&restrict_sr=1).
 
-Unfortunately, combining outputs of multiple executables before feeding it to `dzen2`, which is usually done by custom shell scripts, is a tedious and error-prone task. Consider the following problems:
+Unfortunately, combining outputs of multiple executables before feeding them to `dzen2`, which is usually done by custom shell scripts, is a tedious and error-prone task. Consider the following problems:
 
 ### Use of newlines
 
@@ -151,7 +151,59 @@ Do you want your bar to be stateful or not? Stateful bar can react to the same e
 <details><summary><strong>I want a stateful Bar</strong></summary>
 <p>
 
+To create a stateful `Bar`, you'll need to define an [automaton](#automata) and set up event routing for it.
 
+The following components are required:
+
+- a [slot](#slots) - an "address" that will be used to route events.
+- a [state transition table](#state-transition-table) - a table describing how the automaton should react to events.
+- a [state map](#state-maps) - a mapping from automaton states to `Bar`s.
+- an automaton ID - just a string, that can be used from [sources](#sources) to query your automaton state.
+
+For example, the following piece of code defines a `Bar` that switches between two states.
+
+```dhall
+let mySwitcher : Bar =
+	  let mySlot = "MY_SLOT" : Slot
+
+	  let stt
+		  : StateTransitionTable
+		  = [ { slots =
+				  [ mySlot ]
+			  , hooks =
+				  [] : List Hook
+			  , events =
+				  [ Event.Mouse Button.Left ]
+			  , from =
+				  [ "" ]
+			  , to =
+				  "1"
+			  }
+			, { slots =
+				  [ mySlot ]
+			  , hooks =
+				  [] : List Hook
+			  , events =
+				  [ Event.Mouse Button.Left ]
+			  , from =
+				  [ "1" ]
+			  , to =
+				  ""
+			  }
+			]
+
+	  let stateMap
+		  : StateMap Bar
+		  = [ { state = "", bar = text "hello!" }
+			, { state = "1", bar = text "world!" }
+			]
+
+	  let myID = "MY_AUTOMATON"
+
+	  in  listener mySlot (automaton myID stt stateMap)
+```
+
+A [listener](#listeners) awaits for mouse events and sends them to the slot. Two state transitions are bound to the left-click event on the same slot. The default state of the automaton is `""` (by convention).
 
 </p>
 </details>

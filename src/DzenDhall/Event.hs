@@ -1,5 +1,9 @@
 module DzenDhall.Event where
 
+import           DzenDhall.Config
+import           DzenDhall.Data
+import           DzenDhall.Extra
+
 import           Control.Exception
 import           Control.Monad
 import qualified Data.HashMap.Strict as H
@@ -14,9 +18,6 @@ import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import qualified Data.Text.IO
 
-import           DzenDhall.Config
-import           DzenDhall.Data
-import           DzenDhall.Extra
 
 type AutomatonState = Text
 
@@ -91,10 +92,10 @@ routedEventParser = do
         (CustomEvent <$> customEventParser)
   void $ char ','
   void $ string "slot:"
-  slotName <- some alphaNumChar
+  slotName <- slotNameParser
   void $ string "@"
-  scope <- some (alphaNumChar <|> char '-')
-  pure $ RoutedEvent mb (Data.Text.pack (slotName <> "@" <> scope))
+  scope <- scopeParser
+  pure $ RoutedEvent mb (slotName <> "@" <> scope)
 
 buttonParser :: Parsec () String Button
 buttonParser = do
@@ -106,5 +107,15 @@ buttonParser = do
   <|> MouseScrollLeft  <$ char '6'
   <|> MouseScrollRight <$ char '7'
 
+slotNameParser :: Parsec () String Text
+slotNameParser = capitalized
+
 customEventParser :: Parsec () String Text
-customEventParser = Data.Text.pack <$> some alphaNumChar
+customEventParser = capitalized
+
+capitalized :: Parsec () String Text
+capitalized = Data.Text.pack <$>
+  liftM2 (:) upperChar (many (upperChar <|> digitChar <|> char '_'))
+
+scopeParser :: Parsec () String Text
+scopeParser = Data.Text.pack <$> some (alphaNumChar <|> char '-')
