@@ -28,3 +28,7 @@ loopWhileM pr act = do
 
 whenJust :: (Monad m, Monoid b) => Maybe a -> (a -> m b) -> m b
 whenJust = flip $ maybe (return mempty)
+
+leftToJust :: Either a b -> Maybe a
+leftToJust (Left a) = Just a
+leftToJust _ = Nothing

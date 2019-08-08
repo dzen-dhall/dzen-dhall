@@ -16,11 +16,11 @@ getTests = pure $
   testGroup "Event parser"
 
   [ mkTest "parsing #1"
-    "event:1,slot:name@scope" $
-    Just $ RoutedEvent (MouseEvent MouseLeft) "name@scope"
+    "event:1,slot:SLOT@scope" $
+    Just $ RoutedEvent (MouseEvent MouseLeft) "SLOT@scope"
   , mkTest "parsing #2"
-    "event:2,slot:name@another-scope" $
-    Just $ RoutedEvent (MouseEvent MouseMiddle) "name@another-scope"
+    "event:2,slot:SLOT@another-scope" $
+    Just $ RoutedEvent (MouseEvent MouseMiddle) "SLOT@another-scope"
   , mkTest "parsing #3"
     "event:,slot:name@scope" $
     Nothing
@@ -35,5 +35,12 @@ getTests = pure $
     Nothing
   , mkTest "parsing #7"
     "event:1,slot:some-name@scope" $
+    Nothing
+  -- slot name must be [A-Z_]
+  , mkTest "parsing #8"
+    "event:2,slot:slot@another-scope" $
+    Nothing
+  , mkTest "parsing #9"
+    "event:2,slot:Slot@another-scope" $
     Nothing
   ]

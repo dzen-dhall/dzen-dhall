@@ -30,7 +30,7 @@ in  < Marquee :
 		{ button : Button, command : Text }
 	| IB
 	| Automaton :
-		StateTransitionTable
+		{ stt : StateTransitionTable, id : Text }
 	| StateMapKey :
 		Text
 	| Listener :

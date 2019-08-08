@@ -58,6 +58,7 @@ library:
   - DzenDhall.Plug
   - DzenDhall.Run
   - DzenDhall.Runtime
+  - DzenDhall.Validation
   - Paths_dzen_dhall
 
   default-extensions: &extensions

@@ -8,6 +8,7 @@ import           DzenDhall.Data
 import           DzenDhall.Event
 import           DzenDhall.Extra
 import           DzenDhall.Runtime
+import           DzenDhall.Validation
 import qualified DzenDhall.Animation.Marquee as Marquee
 import qualified DzenDhall.Animation.Slider as Slider
 import qualified DzenDhall.Parser
@@ -54,17 +55,24 @@ useConfigurations = do
     go :: Configuration -> App ()
     go cfg = do
       let barTokens = cfg ^. cfgBarTokens
-      let eiBar     = DzenDhall.Parser.runBarParser barTokens
 
-      case eiBar of
-        Left err -> liftIO $ do
-          putStrLn $ "Internal error when parsing BarSpec, debug info: " <> show barTokens
-          putStrLn $ "Error: " <> show err
-          putStrLn $ "Please report as bug."
-          exitWith $ ExitFailure 3
+      case validate barTokens of
 
-        Right (bar :: BarSpec) -> do
-          startDzenBinary cfg bar
+        [] -> do
+          case DzenDhall.Parser.runBarParser barTokens of
+            Left err -> liftIO $ do
+              putStrLn $ "Internal error when parsing BarSpec, debug info: " <> show barTokens
+              putStrLn $ "Error: " <> show err
+              putStrLn $ "Please report as bug."
+              exitWith $ ExitFailure 3
+
+            Right (bar :: BarSpec) -> do
+              startDzenBinary cfg bar
+
+        errors -> liftIO $ do
+            Data.Text.IO.putStrLn $ report errors
+            exitWith $ ExitFailure 3
+
 
 
 -- | Starts dzen binary according to 'BarSettings'.
@@ -127,7 +135,7 @@ runInitialization bs barSpec =
 initialize
   :: BarSpec
   -> Initialization Bar
-initialize (BarSource source@(Source{escapeMode}))
+initialize (BarSource source@Source{escapeMode})
   = lift . liftIO $ do
 
   outputRef <- newIORef ""
@@ -152,7 +160,7 @@ initialize (BarSlider slider children) = do
 
   BarSlider slider' <$> mapM initialize children
 
-initialize (BarAutomaton stt stateMap) = do
+initialize (BarAutomaton address stt stateMap) = do
 
   -- This binding determines what state to enter first
   let initialState = ""
@@ -190,7 +198,7 @@ initialize (BarAutomaton stt stateMap) = do
     (\handleMap -> foldr (\slot -> H.insertWith (++) slot subscription) handleMap slots)
 
   -- No need to keep state transition table - hence ()
-  pure $ BarAutomaton () barRef
+  pure $ BarAutomaton address () barRef
 
 initialize (BarListener slot child) = do
 
@@ -280,7 +288,7 @@ runSourceProcess cp outputRef cacheRef mbInput = do
     _ -> do
       putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
 
--- | Reads outputs of 'SourceHandle's and puts it into the AST.
+-- | Reads outputs of 'SourceHandle's and puts them into an AST.
 collectSources
   :: Int
   -> Bar
@@ -312,7 +320,7 @@ collectSources fontWidth (BarSlider slider ss) = do
   asts         <- mapM (collectSources fontWidth) ss
   pure $ Slider.run slider frameCounter asts
 
-collectSources fontWidth (BarAutomaton () ref) = do
+collectSources fontWidth (BarAutomaton _ () ref) = do
 
   bar          <- liftIO (readIORef ref)
   collectSources fontWidth bar

@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c61de1a1b7ead638d1a3527e506a9827021f35d8ee8e06b0b1f5304ad9eb6c17
+-- hash: ba211c1b3de741af5f75015e9181af98bf7576a94c14b7afbf8386cddfa1bd91
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -74,6 +74,7 @@ library
       DzenDhall.Plug
       DzenDhall.Run
       DzenDhall.Runtime
+      DzenDhall.Validation
       Paths_dzen_dhall
   hs-source-dirs:
       src

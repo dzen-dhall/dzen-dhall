@@ -218,7 +218,7 @@ data OpeningTag
   | OPA          AbsolutePosition
   | OCA          ClickableArea
   | OIB
-  | OAutomaton   StateTransitionTable
+  | OAutomaton   Text StateTransitionTable
   | OStateMapKey Text
   | OListener    Text
   deriving (Show, Eq, Generic)
@@ -233,7 +233,11 @@ openingTagType = union
   <> (OPA          <$> constructor "PA"          absolutePositionType)
   <> (OCA          <$> constructor "CA"          clickableAreaType)
   <> (OIB          <$  constructor "IB"          unit)
-  <> (OAutomaton   <$> constructor "Automaton"   stateTransitionTableType)
+  <> (uncurry OAutomaton <$> constructor "Automaton"
+       ( record $ (,) <$> field "id"  strictText
+                      <*> field "stt" stateTransitionTableType
+       )
+     )
   <> (OStateMapKey <$> constructor "StateMapKey" strictText)
   <> (OListener    <$> constructor "Listener"    strictText)
 

@@ -16,7 +16,7 @@ type Tokens = [DzenDhall.Config.Token]
 
 -- | Used to tag bar elements that require a list of children.
 -- These lists of children are parsed using 'sepBy' with 'TokSeparator' as a delimiter.
-data Separatable = SepSlider Slider
+newtype Separatable = SepSlider Slider
 
 -- | Used to tag bar elements that require a single child.
 data Solid
@@ -28,6 +28,9 @@ data Solid
   | SolidCA ClickableArea
   | SolidIB
   | SolidListener Text
+
+runBarParser :: Tokens -> Either ParseError BarSpec
+runBarParser = Text.Parsec.runParser bar () "Bar"
 
 bar :: Parser BarSpec
 bar = topLevel <* eof
@@ -68,19 +71,19 @@ wrapped = do
 
 automaton :: Parser BarSpec
 automaton = do
-  stt <- stateTransitionTable
+  (address, stt) <- stateTransitionTable
   kvs <- many $ do
     smk <- stateMapKey
     bar <- topLevel
     closing
     pure (smk, bar)
   closing
-  pure $ BarAutomaton stt $ H.fromList kvs
+  pure $ BarAutomaton address stt $ H.fromList kvs
 
-stateTransitionTable :: Parser StateTransitionTable
+stateTransitionTable :: Parser (Text, StateTransitionTable)
 stateTransitionTable = withPreview $ \case
-  TokOpen (OAutomaton stt) -> Just stt
-  _                        -> Nothing
+  TokOpen (OAutomaton address stt) -> Just (address, stt)
+  _                                -> Nothing
 
 stateMapKey :: Parser Text
 stateMapKey = withPreview $ \case
@@ -131,6 +134,3 @@ source = withPreview $ \case
 
 withPreview :: Stream s m t => Show t => (t -> Maybe a) -> ParsecT s u m a
 withPreview = tokenPrim show (\pos _ _ -> pos)
-
-runBarParser :: Tokens -> Either ParseError BarSpec
-runBarParser = Text.Parsec.runParser bar () "Bar"

@@ -17,6 +17,7 @@ import           System.IO
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import qualified Data.Text.IO
+import           Data.Void
 
 
 type AutomatonState = Text
@@ -85,7 +86,9 @@ processSubscriptions slotAddr button = mapM_ $ \case
 parseRoutedEvent :: String -> Maybe RoutedEvent
 parseRoutedEvent = parseMaybe routedEventParser
 
-routedEventParser :: Parsec () String RoutedEvent
+type Parser = Parsec Void String
+
+routedEventParser :: Parser RoutedEvent
 routedEventParser = do
   void $ string "event:"
   mb <- (MouseEvent  <$> buttonParser) <|>
@@ -97,7 +100,7 @@ routedEventParser = do
   scope <- scopeParser
   pure $ RoutedEvent mb (slotName <> "@" <> scope)
 
-buttonParser :: Parsec () String Button
+buttonParser :: Parser Button
 buttonParser = do
       MouseLeft        <$ char '1'
   <|> MouseMiddle      <$ char '2'
@@ -107,15 +110,18 @@ buttonParser = do
   <|> MouseScrollLeft  <$ char '6'
   <|> MouseScrollRight <$ char '7'
 
-slotNameParser :: Parsec () String Text
+automatonAddressParser :: Parser Text
+automatonAddressParser = capitalized
+
+slotNameParser :: Parser Text
 slotNameParser = capitalized
 
-customEventParser :: Parsec () String Text
+customEventParser :: Parser Text
 customEventParser = capitalized
 
-capitalized :: Parsec () String Text
+capitalized :: Parser Text
 capitalized = Data.Text.pack <$>
   liftM2 (:) upperChar (many (upperChar <|> digitChar <|> char '_'))
 
-scopeParser :: Parsec () String Text
+scopeParser :: Parser Text
 scopeParser = Data.Text.pack <$> some (alphaNumChar <|> char '-')

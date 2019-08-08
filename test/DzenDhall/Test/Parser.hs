@@ -117,7 +117,7 @@ getTests = pure $
 
   , let stt = STT mempty in
       mkTest "parsing #5 - automaton"
-      [ TokOpen (OAutomaton stt)
+      [ TokOpen (OAutomaton "id" stt)
       , TokOpen (OStateMapKey "a")
       , TokTxt "A"
       , TokTxt "A"
@@ -133,7 +133,7 @@ getTests = pure $
       , TokClose
       ]
       $ Right $ Bars
-      [ BarAutomaton stt $
+      [ BarAutomaton "id" stt $
         H.fromList
         [ ( "a"
           , Bars [ BarText "A"

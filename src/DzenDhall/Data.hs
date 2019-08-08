@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE StandaloneDeriving #-}
 module DzenDhall.Data where
 
 import qualified Data.HashMap.Strict as H
@@ -29,12 +29,15 @@ data Bar_ atmRef stt sourceRef
   | BarText Text
   | BarMarquee Marquee (Bar_ atmRef stt sourceRef)
   | BarSlider Slider (Vector (Bar_ atmRef stt sourceRef))
-  | BarAutomaton stt (atmRef (Bar_ atmRef stt sourceRef))
+  | BarAutomaton Text stt (atmRef (Bar_ atmRef stt sourceRef))
   | BarListener Text (Bar_ atmRef stt sourceRef)
   | BarScope (Bar_ atmRef stt sourceRef)
   | BarProp Property (Bar_ atmRef stt sourceRef)
   | Bars [Bar_ atmRef stt sourceRef]
   deriving (Generic)
+
+deriving instance (Show stt, Show sourceRef) => Show (Bar_ (H.HashMap Text) stt sourceRef)
+deriving instance (Eq stt, Eq sourceRef) => Eq (Bar_ (H.HashMap Text) stt sourceRef)
 
 instance Semigroup (Bar_ atmRef stt sourceRef) where
   a <> b = Bars [a, b]
@@ -44,9 +47,6 @@ instance Monoid (Bar_ arm stt sourceRef) where
 
 -- | 'BarSpec' is a not-yet-initialized 'Bar'
 type BarSpec = Bar_ (H.HashMap Text) StateTransitionTable Source
-
-deriving instance Show BarSpec
-deriving instance Eq BarSpec
 
 type Bar = Bar_ IORef () SourceHandle
 
