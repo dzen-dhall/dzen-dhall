@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 module DzenDhall.Data where
 
 import qualified Data.HashMap.Strict as H
@@ -11,6 +12,7 @@ import           Data.Vector
 import           DzenDhall.Config
 import           GHC.Generics
 import           Lens.Micro.TH
+import           Data.Void
 
 type Cache = IORef (Maybe Text)
 
@@ -23,32 +25,42 @@ data SourceHandle
 
 makeLenses ''SourceHandle
 
-data Bar_ atmRef stt sourceRef
+data Bar id
   = BarRaw Text
-  | BarSource sourceRef
+  | BarSource (SourceRefX id)
   | BarText Text
-  | BarMarquee Marquee (Bar_ atmRef stt sourceRef)
-  | BarSlider Slider (Vector (Bar_ atmRef stt sourceRef))
-  | BarAutomaton Text stt (atmRef (Bar_ atmRef stt sourceRef))
-  | BarListener Text (Bar_ atmRef stt sourceRef)
-  | BarScope (Bar_ atmRef stt sourceRef)
-  | BarProp Property (Bar_ atmRef stt sourceRef)
-  | Bars [Bar_ atmRef stt sourceRef]
+  | BarMarquee Marquee (Bar id)
+  | BarSlider Slider (Vector (Bar id))
+  | BarAutomaton Text (StateTransitionTableX id) (AutomataRefX id (Bar id))
+  | BarListener Text (Bar id)
+  | BarScope (Bar id)
+  | BarProp Property (Bar id)
+  | Bars [Bar id]
   deriving (Generic)
 
-deriving instance (Show stt, Show sourceRef) => Show (Bar_ (H.HashMap Text) stt sourceRef)
-deriving instance (Eq stt, Eq sourceRef) => Eq (Bar_ (H.HashMap Text) stt sourceRef)
+type family AutomataRefX          id :: * -> *
+type family StateTransitionTableX id
+type family SourceRefX            id
 
-instance Semigroup (Bar_ atmRef stt sourceRef) where
+newtype Initialized = Initialized Void
+newtype Marshalled  = Marshalled  Void
+
+type instance AutomataRefX          Marshalled = H.HashMap Text
+type instance StateTransitionTableX Marshalled = StateTransitionTable
+type instance SourceRefX            Marshalled = Source
+
+type instance AutomataRefX          Initialized = IORef
+type instance StateTransitionTableX Initialized = ()
+type instance SourceRefX            Initialized = SourceHandle
+
+deriving instance Show (Bar Marshalled)
+deriving instance Eq   (Bar Marshalled)
+
+instance Semigroup (Bar id) where
   a <> b = Bars [a, b]
 
-instance Monoid (Bar_ arm stt sourceRef) where
+instance Monoid (Bar id) where
   mempty = Bars []
-
--- | 'BarSpec' is a not-yet-initialized 'Bar'
-type BarSpec = Bar_ (H.HashMap Text) StateTransitionTable Source
-
-type Bar = Bar_ IORef () SourceHandle
 
 data Property
   = BG Color

@@ -46,7 +46,7 @@ data StartupState
 makeLenses ''StartupState
 
 
--- | Parses 'BarSpec's. For each 'Configuration' spawns its own dzen binary.
+-- | Parses 'Bar's. For each 'Configuration' spawns its own dzen binary.
 useConfigurations :: App [Async ()]
 useConfigurations = do
   runtime <- App.getRuntime
@@ -61,12 +61,12 @@ useConfigurations = do
         [] -> do
           case DzenDhall.Parser.runBarParser barTokens of
             Left err -> liftIO $ do
-              putStrLn $ "Internal error when parsing BarSpec, debug info: " <> show barTokens
+              putStrLn $ "Internal error when parsing configuration, debug info: " <> show barTokens
               putStrLn $ "Error: " <> show err
               putStrLn $ "Please report as bug."
               exitWith $ ExitFailure 3
 
-            Right (bar :: BarSpec) -> do
+            Right (bar :: Bar Marshalled) -> do
               startDzenBinary cfg bar
 
         errors -> liftIO $ do
@@ -78,7 +78,7 @@ useConfigurations = do
 -- | Starts dzen binary according to 'BarSettings'.
 startDzenBinary
   :: Configuration
-  -> BarSpec
+  -> Bar Marshalled
   -> App ()
 startDzenBinary cfg barSpec = do
 
@@ -92,7 +92,8 @@ startDzenBinary cfg barSpec = do
       fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
       flags       = fontFlags <> extraFlags
 
-  (bar :: Bar, handles :: AutomataHandles) <- runInitialization barSettings barSpec
+  (bar :: Bar Initialized, handles :: AutomataHandles) <-
+    runInitialization barSettings barSpec
 
   void $ liftIO $ async $ launchEventListener (runtime ^. rtNamedPipe) handles
 
@@ -124,7 +125,7 @@ startDzenBinary cfg barSpec = do
 
 type Initialization = StateT StartupState App
 
-runInitialization :: BarSettings -> BarSpec -> App (Bar, AutomataHandles)
+runInitialization :: BarSettings -> Bar Marshalled -> App (Bar Initialized, AutomataHandles)
 runInitialization bs barSpec =
   second (^. automataHandles) <$> runStateT (initialize barSpec) initialState
   where
@@ -133,8 +134,8 @@ runInitialization bs barSpec =
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
 initialize
-  :: BarSpec
-  -> Initialization Bar
+  :: Bar Marshalled
+  -> Initialization (Bar Initialized)
 initialize (BarSource source@Source{escapeMode})
   = lift . liftIO $ do
 
@@ -181,11 +182,11 @@ initialize (BarAutomaton address stt stateMap) = do
   stateRef :: IORef Text <- lift . liftIO $ newIORef initialState
 
   -- Initialize all children
-  stateMap' :: H.HashMap Text Bar <- mapM initialize stateMap
+  stateMap' :: H.HashMap Text (Bar Initialized) <- mapM initialize stateMap
 
   -- Create a reference to the current Bar (so that collectSources will not need to
   -- look up the correct Bar in stateMap').
-  barRef :: IORef Bar <- lift . liftIO $
+  barRef :: IORef (Bar Initialized) <- lift . liftIO $
     newIORef $ fromMaybe mempty (H.lookup initialState stateMap')
 
   let subscription = [ AutomatonSubscription stt' stateMap' stateRef barRef ]
@@ -197,7 +198,6 @@ initialize (BarAutomaton address stt stateMap) = do
   modify $ automataHandles %~
     (\handleMap -> foldr (\slot -> H.insertWith (++) slot subscription) handleMap slots)
 
-  -- No need to keep state transition table - hence ()
   pure $ BarAutomaton address () barRef
 
 initialize (BarListener slot child) = do
@@ -291,7 +291,7 @@ runSourceProcess cp outputRef cacheRef mbInput = do
 -- | Reads outputs of 'SourceHandle's and puts them into an AST.
 collectSources
   :: Int
-  -> Bar
+  -> Bar Initialized
   -> App AST
 collectSources _ (BarSource handle) = liftIO $ do
   let outputRef  = handle ^. shOutputRef
@@ -320,7 +320,7 @@ collectSources fontWidth (BarSlider slider ss) = do
   asts         <- mapM (collectSources fontWidth) ss
   pure $ Slider.run slider frameCounter asts
 
-collectSources fontWidth (BarAutomaton _ () ref) = do
+collectSources fontWidth (BarAutomaton _ _ ref) = do
 
   bar          <- liftIO (readIORef ref)
   collectSources fontWidth bar

@@ -29,13 +29,13 @@ data Solid
   | SolidIB
   | SolidListener Text
 
-runBarParser :: Tokens -> Either ParseError BarSpec
+runBarParser :: Tokens -> Either ParseError (Bar Marshalled)
 runBarParser = Text.Parsec.runParser bar () "Bar"
 
-bar :: Parser BarSpec
+bar :: Parser (Bar Marshalled)
 bar = topLevel <* eof
 
-topLevel :: Parser BarSpec
+topLevel :: Parser (Bar Marshalled)
 topLevel = fmap Bars $ many $
       BarRaw    <$> raw
   <|> BarText   <$> text
@@ -44,7 +44,7 @@ topLevel = fmap Bars $ many $
   <|> separated
   <|> automaton
 
-separated :: Parser BarSpec
+separated :: Parser (Bar Marshalled)
 separated = do
   tag <- separatable
   children <- topLevel `sepBy` separator
@@ -53,7 +53,7 @@ separated = do
     case tag of
       SepSlider slider -> BarSlider slider (V.fromList children)
 
-wrapped :: Parser BarSpec
+wrapped :: Parser (Bar Marshalled)
 wrapped = do
   tag      <- solid
   child <- topLevel
@@ -69,7 +69,7 @@ wrapped = do
       SolidIB               -> BarProp     IB            child
       SolidListener slot    -> BarListener slot          child
 
-automaton :: Parser BarSpec
+automaton :: Parser (Bar Marshalled)
 automaton = do
   (address, stt) <- stateTransitionTable
   kvs <- many $ do

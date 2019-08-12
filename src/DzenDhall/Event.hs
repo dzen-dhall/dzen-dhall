@@ -27,9 +27,9 @@ type AutomatonState = Text
 data Subscription
   = AutomatonSubscription
     StateTransitionTable
-    (H.HashMap AutomatonState Bar)
+    (H.HashMap AutomatonState (Bar Initialized))
     (IORef AutomatonState)
-    (IORef Bar)
+    (IORef (Bar Initialized))
 
 type AutomataHandles = H.HashMap SlotAddr [Subscription]
 

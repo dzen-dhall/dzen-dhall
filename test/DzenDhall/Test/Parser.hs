@@ -10,7 +10,7 @@ import           DzenDhall.Config
 import           DzenDhall.Data
 import           DzenDhall.Parser
 
-mkTest :: TestName -> [Token] -> Either ParseError BarSpec -> TestTree
+mkTest :: TestName -> [Token] -> Either ParseError (Bar Marshalled) -> TestTree
 mkTest name tokenList expected =
   Test.Tasty.HUnit.testCase name $
     DzenDhall.Parser.runBarParser tokenList @?= expected
