@@ -8,7 +8,6 @@ import           DzenDhall.Extra
 import qualified Text.Megaparsec
 import qualified Data.Text
 import           Data.Text (Text)
-import           Data.Maybe
 import           Data.Void
 
 

@@ -9,6 +9,7 @@ import Text.Parsec.Prim
 import Text.Parsec
 import qualified Data.HashMap.Strict as H
 import qualified Data.Vector as V
+import           Lens.Micro
 
 type Parser a = Parsec Tokens () a
 
@@ -28,6 +29,7 @@ data Solid
   | SolidCA ClickableArea
   | SolidIB
   | SolidListener Text
+  | SolidPadding Int Padding
 
 runBarParser :: Tokens -> Either ParseError (Bar Marshalled)
 runBarParser = Text.Parsec.runParser bar () "Bar"
@@ -40,6 +42,7 @@ topLevel = fmap Bars $ many $
       BarRaw    <$> raw
   <|> BarText   <$> text
   <|> BarSource <$> source
+  <|> BarShape  <$> shape
   <|> wrapped
   <|> separated
   <|> automaton
@@ -68,6 +71,7 @@ wrapped = do
       SolidCA ca            -> BarProp     (CA ca)       child
       SolidIB               -> BarProp     IB            child
       SolidListener slot    -> BarListener slot          child
+      SolidPadding width padding -> BarPadding width padding child
 
 automaton :: Parser (Bar Marshalled)
 automaton = do
@@ -110,6 +114,8 @@ solid = withPreview $ \case
   TokOpen (OCA area)         -> Just $ SolidCA area
   TokOpen OIB                -> Just $ SolidIB
   TokOpen (OListener slot)   -> Just $ SolidListener slot
+  TokOpen (OPadding width padding)
+                             -> Just $ SolidPadding width padding
   _                          -> Nothing
 
 closing :: Parser ()
@@ -131,6 +137,17 @@ source :: Parser Source
 source = withPreview $ \case
   TokSource settings -> Just settings
   _                  -> Nothing
+
+shape :: Parser Shape
+shape = withPreview $ \case
+  TokI  image     -> Just $ I $ case image of
+    IRelative path -> path
+    IAbsolute path -> path
+  TokR  shapeSize -> Just $ R  (shapeSize ^. shapeSizeW) (shapeSize ^. shapeSizeH)
+  TokRO shapeSize -> Just $ RO (shapeSize ^. shapeSizeW) (shapeSize ^. shapeSizeH)
+  TokC  radius    -> Just $ C  radius
+  TokCO radius    -> Just $ CO radius
+  _               -> Nothing
 
 withPreview :: Stream s m t => Show t => (t -> Maybe a) -> ParsecT s u m a
 withPreview = tokenPrim show (\pos _ _ -> pos)

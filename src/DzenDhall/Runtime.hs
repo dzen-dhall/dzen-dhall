@@ -57,6 +57,8 @@ readRuntime args = do
 
   let configFile = configDir </> "config.dhall"
 
+  putStrLn $ "Reading configuration from " <> configFile
+
   configurations :: [Configuration] <- do
     detailed $ inputFile (list configurationType) configFile
 

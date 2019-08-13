@@ -8,6 +8,8 @@ let Color = ./Color.dhall
 
 let Position = ./Position.dhall
 
+let Padding = ./Padding.dhall
+
 let AbsolutePosition = ./AbsolutePosition.dhall
 
 let Button = ./Button.dhall
@@ -29,6 +31,7 @@ in  < Marquee :
 	| CA :
 		{ button : Button, command : Text }
 	| IB
+	| Padding : { width : Natural, padding: Padding }
 	| Automaton :
 		{ stt : StateTransitionTable, id : Text }
 	| StateMapKey :

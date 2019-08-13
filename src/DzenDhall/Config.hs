@@ -209,6 +209,18 @@ clickableAreaType = record $
   ClickableArea <$> field "button"  buttonType
                 <*> field "command" strictText
 
+data Padding
+  = PLeft
+  | PRight
+  | PSides
+  deriving (Show, Eq, Generic)
+
+paddingType :: Type Padding
+paddingType = union
+  $  (PLeft  <$ constructor "Left"  unit)
+  <> (PRight <$ constructor "Right" unit)
+  <> (PSides <$ constructor "Sides" unit)
+
 data OpeningTag
   = OMarquee     Marquee
   | OSlider      Slider
@@ -218,6 +230,7 @@ data OpeningTag
   | OPA          AbsolutePosition
   | OCA          ClickableArea
   | OIB
+  | OPadding     Int  Padding
   | OAutomaton   Text StateTransitionTable
   | OStateMapKey Text
   | OListener    Text
@@ -233,6 +246,11 @@ openingTagType = union
   <> (OPA          <$> constructor "PA"          absolutePositionType)
   <> (OCA          <$> constructor "CA"          clickableAreaType)
   <> (OIB          <$  constructor "IB"          unit)
+  <> (uncurry OPadding   <$> constructor "Padding"
+       ( record $ (,) <$> field "width"   (fromIntegral <$> natural)
+                      <*> field "padding" paddingType
+       )
+     )
   <> (uncurry OAutomaton <$> constructor "Automaton"
        ( record $ (,) <$> field "id"  strictText
                       <*> field "stt" stateTransitionTableType
@@ -277,7 +295,7 @@ imageType = union
   <> (IAbsolute <$> constructor "absolute" strictText)
 
 data ShapeSize
-  = ShapeSize { _shapeSizeW :: Integer, _shapeSizeH :: Integer }
+  = ShapeSize { _shapeSizeW :: Int, _shapeSizeH :: Int }
   deriving (Show, Eq, Generic)
 
 makeLenses ''ShapeSize

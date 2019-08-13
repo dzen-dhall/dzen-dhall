@@ -5,6 +5,7 @@ module DzenDhall.Test.AST
 where
 
 import DzenDhall.Data
+import DzenDhall.Config
 
 import Data.Text hiding (split)
 import Test.Hspec
@@ -31,6 +32,15 @@ getTests = testSpec "AST" $ do
       split 1 tree `shouldBe` (txt "a",      txt "bc" <> txt "def")
       split 2 tree `shouldBe` (txt "ab",     txt "c"  <> txt "def")
       split 3 tree `shouldBe` (txt "abc",    txt "def")
+
+    it "splits `ASTPadding` correctly" $ do
+      let tree = ASTPadding 4 PRight (txt "a")
+      split 0 tree `shouldBe` (mempty, tree)
+      split 1 tree `shouldBe` (txt "a", txt "   ")
+      split 2 tree `shouldBe` (txt "a" <> txt " ", txt "  ")
+      split 3 tree `shouldBe` (txt "a" <> txt "  ", txt " ")
+      split 4 tree `shouldBe` (txt "a" <> txt "   ", mempty)
+      split 5 tree `shouldBe` (txt "a" <> txt "   ", mempty)
 
   describe "DzenDhall.Data.splitAST" $ do
     it "Calculates consumed lengths correctly for Txt" $ do

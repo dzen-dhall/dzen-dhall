@@ -29,6 +29,8 @@ let AbsolutePosition = ./AbsolutePosition.dhall
 
 let Button = ./Button.dhall
 
+let Padding = ./Padding.dhall
+
 let Hook = ./Hook.dhall
 
 let concat = ./../lib/List/concat.dhall
@@ -82,6 +84,10 @@ let mkPlugin
 		(   λ(marquee : Marquee)
 		  → λ(child : Plugin)
 		  → enclose (OpeningTag.Marquee marquee) child
+		)
+		(   λ(width : Natural)
+		  → λ(padding : Padding)
+		  → enclose (OpeningTag.Padding { width = width, padding = padding })
 		)
 		(λ(source : Source) → [ Token.Source source ])
 		(λ(p : Plugin) → p)

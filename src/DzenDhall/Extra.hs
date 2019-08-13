@@ -2,7 +2,6 @@ module DzenDhall.Extra where
 
 import Data.Text
 import Control.Monad
-import Data.Void
 
 nonNegative :: Int -> Int
 nonNegative x

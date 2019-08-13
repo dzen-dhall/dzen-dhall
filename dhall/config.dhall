@@ -28,6 +28,8 @@ let Button = types.Button
 
 let Plugin = types.Plugin
 
+let Padding = types.Padding
+
 let Position = types.Position
 
 let Slider = types.Slider
@@ -65,6 +67,7 @@ let defaultBar
 	  → λ(ib : Bar → Bar)
 	  → λ(slider : Slider → List Bar → Bar)
 	  → λ(marquee : Marquee → Bar → Bar)
+	  → λ(padding : Natural -> Padding -> Bar → Bar)
 	  → λ(source : Source → Bar)
 	  → λ(plugin : Plugin → Bar)
 	  → λ(listener : Slot → Bar → Bar)

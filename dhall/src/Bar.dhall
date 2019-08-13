@@ -6,31 +6,20 @@ For example, ./mkPlugin.dhall converts `Bar` to `Plugin`, which is a synonym for
  `List Token`.
 -}
 
-let Color = ./Color.dhall
-
-let Image = ./Image.dhall
-
-let Position = ./Position.dhall
-
 let AbsolutePosition = ./AbsolutePosition.dhall
-
-let Slider = ./Slider.dhall
-
-let Marquee = ./Marquee.dhall
-
 let Button = ./Button.dhall
-
-let Source = ./Source.dhall
-
-let Plugin = ./Plugin.dhall
-
+let Color = ./Color.dhall
 let Hook = ./Hook.dhall
-
-let StateTransitionTable = ./StateTransitionTable.dhall
-
-let StateMap = ./StateMap.dhall
-
+let Image = ./Image.dhall
+let Marquee = ./Marquee.dhall
+let Padding = ./Padding.dhall
+let Plugin = ./Plugin.dhall
+let Position = ./Position.dhall
+let Slider = ./Slider.dhall
 let Slot = ./Slot.dhall
+let Source = ./Source.dhall
+let StateMap = ./StateMap.dhall
+let StateTransitionTable = ./StateTransitionTable.dhall
 
 let Bar =
       ∀(Bar : Type)
@@ -59,6 +48,7 @@ let Bar =
 	→ ∀(marquee : Marquee → Bar → Bar)
 
     -- Other
+	→ ∀(padding : Natural -> Padding -> Bar -> Bar)
 	→ ∀(source : Source → Bar)
 	→ ∀(plugin : Plugin → Bar)
 	→ ∀(listener : Slot → Bar → Bar)

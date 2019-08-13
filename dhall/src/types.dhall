@@ -35,4 +35,6 @@
 	./AbsolutePosition.dhall
 , Position =
 	./Position.dhall
+, Padding =
+	./Padding.dhall
 }

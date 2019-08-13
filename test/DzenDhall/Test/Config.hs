@@ -21,6 +21,7 @@ getTests dhallDir =
                    , testSource               dhallDir
                    , testMarquee              dhallDir
                    , testButton               dhallDir
+                   , testPadding              dhallDir
                    , testEvent                dhallDir
                    , testBarSettings          dhallDir
                    , testConfiguration        dhallDir
@@ -92,6 +93,13 @@ testButton dhallDir = do
     , MouseScrollLeft
     , MouseScrollRight
     ]
+
+testPadding :: FilePath -> IO TestTree
+testPadding dhallDir = do
+  input <- inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
+           (list paddingType) [litFile|test/dhall/Padding.dhall|]
+  pure $ Test.Tasty.HUnit.testCase "test/dhall/Padding.dhall marshalling" $
+    input @?= [ PLeft, PRight, PSides ]
 
 testEvent :: FilePath -> IO TestTree
 testEvent dhallDir = do

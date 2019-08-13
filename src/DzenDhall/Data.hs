@@ -26,15 +26,17 @@ data SourceHandle
 makeLenses ''SourceHandle
 
 data Bar id
-  = BarRaw Text
+  = BarAutomaton Text (StateTransitionTableX id) (AutomataRefX id (Bar id))
+  | BarPadding Int Padding (Bar id)
+  | BarListener Text (Bar id)
+  | BarMarquee Marquee (Bar id)
+  | BarProp Property (Bar id)
+  | BarRaw Text
+  | BarScope (Bar id)
+  | BarShape Shape
+  | BarSlider Slider (Vector (Bar id))
   | BarSource (SourceRefX id)
   | BarText Text
-  | BarMarquee Marquee (Bar id)
-  | BarSlider Slider (Vector (Bar id))
-  | BarAutomaton Text (StateTransitionTableX id) (AutomataRefX id (Bar id))
-  | BarListener Text (Bar id)
-  | BarScope (Bar id)
-  | BarProp Property (Bar id)
   | Bars [Bar id]
   deriving (Generic)
 
@@ -80,7 +82,6 @@ data Shape
   | RO Int Int
   | C Int
   | CO Int
-  | Padding
   deriving (Eq, Show)
 
 data AST =
@@ -90,13 +91,17 @@ data AST =
   ASTs AST AST |
   -- | Some property that does not change the visible size of the inner AST.
   Prop Property AST |
-  -- | Some shape (@^r, ^i, ^co, etc.@) together with its size in characters.
-  Container Shape Int |
+  -- | Some shape (@^r@, @^i@, @^co@, etc.)
+  ASTShape Shape |
+  ASTPadding Int Padding AST |
   EmptyAST
   deriving (Eq, Show)
 
 instance Semigroup AST where
-  (<>) = ASTs
+  EmptyAST <> a = a
+  a <> EmptyAST = a
+  a <> b = ASTs a b
+
 
 instance Monoid AST where
   mempty = EmptyAST
@@ -168,21 +173,32 @@ splitAST n t@(ASTText text)
                       n
   | otherwise = EmptyR t l
   where l = Data.Text.length text
-
 splitAST n (ASTs l r) =
   let res = splitAST n l in
     res =>> splitAST (n - getProgress res) r
 splitAST n (Prop c t) = fmap (Prop c) (splitAST n t)
-splitAST n res@(Container _ l)
-  | l > n = Twain res (ASTText $ spaces (l - n)) n
-  | otherwise = EmptyR res l
-  where
-    spaces :: Int -> Text
-    spaces w = Data.Text.justifyRight w ' ' ""
+splitAST n (ASTPadding width padding child) =
+  splitAST n (spaces leftPadding <> child <> spaces rightPadding)
+    where
+      (leftPadding, rightPadding) = paddingWidths padding $ width - astWidth child
+      spaces :: Int -> AST
+      spaces 0 = EmptyAST
+      spaces w = ASTText $ Data.Text.justifyRight w ' ' ""
+splitAST n res@(ASTShape _) =
+  EmptyR res 1 -- TODO
+
+paddingWidths :: Padding -> Int -> (Int, Int)
+paddingWidths PLeft  w = (w, 0)
+paddingWidths PRight w = (0, w)
+paddingWidths PSides w
+  | w `mod` 2 == 0 = (w `div` 2, w `div` 2)
+  | otherwise = (w `div` 2, w `div` 2 + 1)
 
 astWidth :: AST -> Int
 astWidth (ASTText txt) = Data.Text.length txt
 astWidth (ASTs a b) = astWidth a + astWidth b
 astWidth (Prop _ a) = astWidth a
-astWidth (Container _ w) = w
+astWidth (ASTPadding width _padding child) =
+  max (astWidth child) width
+astWidth (ASTShape _shape) = 1 -- TODO
 astWidth EmptyAST = 0

@@ -215,8 +215,12 @@ initialize (BarScope child) = do
 
 initialize (BarProp prop p) =
   BarProp prop <$> initialize p
+initialize (BarPadding width padding p) =
+  BarPadding width padding <$> initialize p
 initialize (Bars ps) =
   Bars <$> mapM initialize ps
+initialize (BarShape shape) = do
+  pure $ BarShape shape
 initialize (BarRaw text) =
   pure $ BarRaw text
 initialize (BarText text) =
@@ -349,6 +353,12 @@ collectSources fontWidth (BarListener slot child) = do
 collectSources fontWidth (BarScope child) = do
   collectSources fontWidth child
 
+collectSources fontWidth (BarPadding width padding child) = do
+  ASTPadding width padding <$> collectSources fontWidth child
+
+collectSources _         (BarShape shape) = do
+  pure $ ASTShape shape
+
 collectSources fontWidth (BarProp prop child)
   = Prop prop <$> collectSources fontWidth child
 collectSources fontWidth (Bars ps)
@@ -405,18 +415,23 @@ renderAST (Prop property ast) =
               P_CENTER   -> ("^p(_CENTER)", "^p()")
               P_BOTTOM   -> ("^p(_BOTTOM)", "^p()")
 
-renderAST (Container shape width) =
-  "^p(_LOCK_X)" <> shapeSpec <> "^p(_UNLOCK_X)^ib(1)" <> padding <> "^ib(0)"
+renderAST (ASTPadding width padding child) =
+  "^p(_LOCK_X)" <>
+  mkPadding leftPadding <> renderAST child <> mkPadding rightPadding <>
+  "^p(_UNLOCK_X)^ib(1)" <>
+  mkPadding width <>
+  "^ib(0)"
   where
-    padding = Data.Text.justifyRight width ' ' ""
-    shapeSpec =
+    mkPadding w = Data.Text.justifyRight w ' ' ""
+    (leftPadding, rightPadding) = paddingWidths padding width
+
+renderAST (ASTShape shape) =
       case shape of
         I path -> "^i("  <> path       <> ")"
         R w h  -> "^r("  <> showPack w <> "x" <> showPack h <> ")"
         RO w h -> "^ro(" <> showPack w <> "x" <> showPack h <> ")"
         C r    -> "^c("  <> showPack r <> ")"
         CO r   -> "^co(" <> showPack r <> ")"
-        Padding -> ""
 
 
 allButtons :: [Button]
