@@ -1,8 +1,9 @@
 module DzenDhall.Test.Animation.Marquee where
 
-import qualified DzenDhall.Animation.Marquee as Marquee
+import           DzenDhall.AST
 import           DzenDhall.Config
-import           DzenDhall.Data
+import qualified DzenDhall.Animation.Marquee as Marquee
+
 import           Test.Tasty (TestTree, TestName, testGroup)
 import           Test.Tasty.HUnit
 

@@ -4,7 +4,7 @@ module DzenDhall.Test.AST
   )
 where
 
-import DzenDhall.Data
+import DzenDhall.AST
 import DzenDhall.Config
 
 import Data.Text hiding (split)

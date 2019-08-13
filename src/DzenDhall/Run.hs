@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Run where
 
+import           DzenDhall.AST
 import           DzenDhall.App as App
 import           DzenDhall.Arguments
 import           DzenDhall.Config

@@ -1,8 +1,10 @@
 module DzenDhall.Animation.Marquee where
 
+import           DzenDhall.AST
 import           DzenDhall.Config
 import           DzenDhall.Data
 import qualified DzenDhall.Extra as Extra
+
 import           Lens.Micro.Extras
 
 run :: Int -> Marquee -> AST -> Int -> AST
@@ -20,9 +22,9 @@ run fontWidth settings ast frameCounter =
      | otherwise       ->
          -- Select a part of AST
          let shifted = snd $
-               DzenDhall.Data.split ((frameCounter `div` framesPerChar) `mod` (difference + 1)) ast
+               DzenDhall.AST.split ((frameCounter `div` framesPerChar) `mod` (difference + 1)) ast
              trimmed = fst $
-               DzenDhall.Data.split desiredWidth shifted in
+               DzenDhall.AST.split desiredWidth shifted in
            if | framesPerChar == 1 -> trimmed
               | otherwise ->
                 let pxShift = calculatePxShift frameCounter fontWidth framesPerChar in

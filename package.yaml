@@ -46,14 +46,15 @@ library:
 
   exposed-modules:
   - DzenDhall
+  - DzenDhall.AST
   - DzenDhall.Animation.Marquee
   - DzenDhall.Animation.Slider
   - DzenDhall.App
   - DzenDhall.Arguments
   - DzenDhall.Config
   - DzenDhall.Data
-  - DzenDhall.Extra
   - DzenDhall.Event
+  - DzenDhall.Extra
   - DzenDhall.Parser
   - DzenDhall.Plug
   - DzenDhall.Run

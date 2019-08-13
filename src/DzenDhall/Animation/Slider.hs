@@ -1,9 +1,11 @@
 module DzenDhall.Animation.Slider where
 
-import Data.Vector (Vector, (!), null, length)
 import DzenDhall.Config
+import DzenDhall.AST
 import DzenDhall.Data
 import DzenDhall.Extra
+
+import Data.Vector (Vector, (!), null, length)
 import Lens.Micro
 
 -- | There are three stages of the animation in a cycle:
