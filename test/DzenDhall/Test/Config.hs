@@ -49,7 +49,7 @@ testToken dhallDir = do
     , TokRaw "raw"
     , TokSource (Source { updateInterval = Just 1000
                         , command = [ "bash" ]
-                        , stdin = Just "echo 1"
+                        , input = Just "echo 1"
                         , escapeMode = EscapeMode True True
                         })
     , TokTxt "txt"
@@ -64,7 +64,7 @@ testSource dhallDir = do
 
     Source { updateInterval = Just 1000
            , command = [ "bash" ]
-           , stdin = Just "echo hi"
+           , input = Just "echo hi"
            , escapeMode = EscapeMode True True
            }
 

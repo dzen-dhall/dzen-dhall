@@ -2,7 +2,7 @@ let Hook
 	: Type
 	= { command :
 		  List Text
-	  , stdin :
+	  , input :
 		  Optional Text
 	  , allowedExitCodes :
 		  Optional (List Natural)

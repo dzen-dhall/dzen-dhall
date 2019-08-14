@@ -12,7 +12,7 @@ data AST =
   -- | Branching
   ASTs AST AST |
   -- | Some property that does not change the visible size of the inner AST.
-  Prop Property AST |
+  ASTProp Property AST |
   -- | Some shape (@^r@, @^i@, @^co@, etc.)
   ASTShape Shape |
   ASTPadding Int Padding AST |
@@ -98,7 +98,7 @@ splitAST n t@(ASTText text)
 splitAST n (ASTs l r) =
   let res = splitAST n l in
     res =>> splitAST (n - getProgress res) r
-splitAST n (Prop c t) = fmap (Prop c) (splitAST n t)
+splitAST n (ASTProp c t) = fmap (ASTProp c) (splitAST n t)
 splitAST n (ASTPadding width padding child) =
   splitAST n (spaces leftPadding <> child <> spaces rightPadding)
     where
@@ -119,7 +119,7 @@ paddingWidths PSides w
 astWidth :: AST -> Int
 astWidth (ASTText txt) = Data.Text.length txt
 astWidth (ASTs a b) = astWidth a + astWidth b
-astWidth (Prop _ a) = astWidth a
+astWidth (ASTProp _ a) = astWidth a
 astWidth (ASTPadding width _padding child) =
   max (astWidth child) width
 astWidth (ASTShape _shape) = 1 -- TODO

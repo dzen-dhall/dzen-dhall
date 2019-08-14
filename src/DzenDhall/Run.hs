@@ -53,28 +53,27 @@ useConfigurations :: App [Async ()]
 useConfigurations = do
   runtime <- App.getRuntime
   forM (view rtConfigurations runtime) (App.mapApp async . go)
-  where
-    go :: Configuration -> App ()
-    go cfg = do
-      let barTokens = cfg ^. cfgBarTokens
+    where
+      go :: Configuration -> App ()
+      go cfg = do
+        let barTokens = cfg ^. cfgBarTokens
 
-      case validate barTokens of
+        case validate barTokens of
 
-        [] -> do
-          case DzenDhall.Parser.runBarParser barTokens of
-            Left err -> liftIO $ do
-              putStrLn $ "Internal error when parsing configuration, debug info: " <> show barTokens
-              putStrLn $ "Error: " <> show err
-              putStrLn $ "Please report as bug."
-              exitWith $ ExitFailure 3
+          [] -> do
+            case DzenDhall.Parser.runBarParser barTokens of
+              Left err -> liftIO $ do
+                putStrLn $ "Internal error when parsing configuration, debug info: " <> show barTokens
+                putStrLn $ "Error: " <> show err
+                putStrLn $ "Please report as bug."
+                exitWith $ ExitFailure 3
 
-            Right (bar :: Bar Marshalled) -> do
-              startDzenBinary cfg bar
+              Right (bar :: Bar Marshalled) -> do
+                startDzenBinary cfg bar
 
-        errors -> liftIO $ do
+          errors -> liftIO $ do
             Data.Text.IO.putStrLn $ report errors
             exitWith $ ExitFailure 3
-
 
 
 -- | Starts dzen binary according to 'BarSettings'.
@@ -242,7 +241,7 @@ mkThread Source { command = [] } outputRef cacheRef = do
 mkThread
   Source { updateInterval
          , command = (binary : args)
-         , stdin }
+         , input }
   outputRef
   cacheRef = do
 
@@ -258,13 +257,13 @@ mkThread
     Just interval -> do
 
       forever $ do
-        runSourceProcess sourceProcess outputRef cacheRef stdin
+        runSourceProcess sourceProcess outputRef cacheRef input
 
         threadDelay interval
 
     -- If update interval is not specified, run the source once.
     Nothing -> do
-      runSourceProcess (proc binary args) outputRef cacheRef stdin
+      runSourceProcess (proc binary args) outputRef cacheRef input
 
 -- | Creates a process, subscribes to its stdout handle and updates the output ref.
 runSourceProcess :: CreateProcess -> IORef Text -> Cache -> Maybe Text -> IO ()
@@ -350,7 +349,7 @@ collectSources fontWidth (BarListener slot child) = do
              -- TODO: escape it
              <> Data.Text.pack namedPipe
               )
-        in Prop $ CA (ClickableArea button command)
+        in ASTProp $ CA (ClickableArea button command)
 
 collectSources fontWidth (BarScope child) = do
   collectSources fontWidth child
@@ -362,7 +361,7 @@ collectSources _         (BarShape shape) = do
   pure $ ASTShape shape
 
 collectSources fontWidth (BarProp prop child)
-  = Prop prop <$> collectSources fontWidth child
+  = ASTProp prop <$> collectSources fontWidth child
 collectSources fontWidth (Bars ps)
   = mconcat <$> mapM (collectSources fontWidth) ps
 collectSources _         (BarText text)

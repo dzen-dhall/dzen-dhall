@@ -68,7 +68,7 @@ run slider frame asts =
              -- are remaining
              -> renderFade (slider ^. fadeOut) (totalFrames - frameNumber) outFrameCount
   in
-    Prop (P (XY (0, yShift))) ast
+    ASTProp (P (XY (0, yShift))) ast
 
 
 renderFade

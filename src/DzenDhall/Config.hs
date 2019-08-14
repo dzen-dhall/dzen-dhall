@@ -102,8 +102,8 @@ sliderType = record $
 
 data Hook
   = Hook
-  { _hookCommand           :: [Text]
-  , _hookStdIn             :: Maybe Text
+  { _hookCommand          :: [Text]
+  , _hookInput            :: Maybe Text
   , _hookAllowedExitCodes :: Maybe [Int]
   }
   deriving (Show, Eq, Generic)
@@ -113,7 +113,7 @@ makeLenses ''Hook
 hookType :: Type Hook
 hookType = record $
   Hook <$> field "command"          (list strictText)
-       <*> field "stdin"            (Dhall.maybe strictText)
+       <*> field "input"            (Dhall.maybe strictText)
        <*> field "allowedExitCodes" (Dhall.maybe (list (fromIntegral <$> natural)))
 
 newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, Event, Text) Text }
@@ -150,8 +150,10 @@ colorType = union
   <> (ColorName <$> constructor "name" strictText)
 
 data AbsolutePosition
-  = AbsolutePosition { x :: Int, y :: Int }
+  = AbsolutePosition { _apX :: Int, _apY :: Int }
   deriving (Show, Eq, Generic)
+
+makeLenses ''AbsolutePosition
 
 absolutePositionType :: Type AbsolutePosition
 absolutePositionType = record $
@@ -355,7 +357,7 @@ data Source
   { updateInterval :: Maybe Int
   -- ^ In microseconds
   , command        :: [String]
-  , stdin          :: Maybe Text
+  , input          :: Maybe Text
   , escapeMode     :: EscapeMode
   } deriving (Show, Eq, Generic)
 
@@ -363,7 +365,7 @@ sourceSettingsType :: Type Source
 sourceSettingsType = record $
   Source <$> field "updateInterval" (Dhall.maybe $ (* 1000) . fromIntegral <$> natural)
          <*> field "command"        (list string)
-         <*> field "stdin"          (Dhall.maybe strictText)
+         <*> field "input"          (Dhall.maybe strictText)
          <*> field "escapeMode"     escapeModeType
 
 data Configuration = Configuration

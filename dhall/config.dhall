@@ -86,7 +86,7 @@ let defaultBar
 			  → source
 				{ command =
 					[ "bash" ]
-				, stdin =
+				, input =
 					Some input
 				, updateInterval =
 					Some interval

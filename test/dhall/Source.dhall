@@ -4,7 +4,7 @@ in  { updateInterval =
 		Some 1
 	, command =
 		[ "bash" ]
-	, stdin =
+	, input =
 		Some "echo hi"
 	, escapeMode =
 		{ joinLines = True, escapeMarkup = True }

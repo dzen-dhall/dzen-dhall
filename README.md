@@ -361,7 +361,7 @@ let Hook
 	: Type
 	= { command :
 		  List Text
-	  , stdin :
+	  , input :
 		  Optional Text
 	  , allowedExitCodes :
 		  Optional (List Natural)
@@ -375,7 +375,7 @@ For example, The following hook will succeed only if a certain file exists:
 ```dhall
 let myHook : Hook =
   { command = "bash"
-  , stdin = "[ -f ~/some-file ]"
+  , input = "[ -f ~/some-file ]"
   , allowedExitCodes = Some [ 0 ]
   }
 ```
@@ -392,7 +392,7 @@ Sources serve two purposes:
 let Source : Type =
   { updateInterval : Optional Natural
   , command : List Text
-  , stdin : Optional Text
+  , input : Optional Text
   , escapeMode : { joinLines : Bool, escapeMarkup : Bool }
   }
 ```
@@ -406,7 +406,7 @@ For example, a simple clock plugin can be created as follows:
 let clocks : Source =
   { updateInterval = Some 1000
   , command = "date +%H:%M"
-  , stdin = None : Optional Text
+  , input = None : Optional Text
   , escapeMode = { joinLines = False, escapeMarkup = True }
   }
 ```
@@ -427,7 +427,7 @@ To query for current state of an automaton, it is sufficient to read the environ
 let emitter : Source =
   { updateInterval = Some 1000
   , command = "bash"
-  , stdin = Some ''
+  , input = Some ''
     echo "''$STATE_MY_AUTOMATON"
     ''
   , escapeMode = { joinLines = False, escapeMarkup = True }
@@ -448,7 +448,7 @@ The following source emits an event every second:
 let emitter : Source =
   { updateInterval = Some 1000
   , command = "bash"
-  , stdin = Some ''
+  , input = Some ''
     ''$EMIT MY_SLOT MyEvent
     ''
   , escapeMode = { joinLines = False, escapeMarkup = True }

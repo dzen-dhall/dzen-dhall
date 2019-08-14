@@ -27,9 +27,9 @@ import qualified Data.Text
 --
 -- @
 -- runRender $
---   Prop (FG (ColorName "red"))
+--   ASTProp (FG (ColorName "red"))
 --     (ASTs (ASTs (ASTText "a")
---                 (Prop (FG (ColorName "green"))
+--                 (ASTProp (FG (ColorName "green"))
 --                   (ASTText "b")))
 --           (ASTText "c"))
 -- @
@@ -83,8 +83,8 @@ instance Renderable ClickableArea where
     write $ ca ^. caCommand
 
 instance Renderable AbsolutePosition where
-  render AbsolutePosition {x, y} =
-    write $ showPack x <> ";" <> showPack y
+  render position =
+    write $ showPack (position ^. apX) <> ";" <> showPack (position ^. apY)
 
 instance Renderable Shape where
   render = write . \case
@@ -101,24 +101,24 @@ instance Renderable AST where
     write text
   render (ASTs a b) =
     (<>) <$> render a <*> render b
-  render (Prop (FG color) ast) =
+  render (ASTProp (FG color) ast) =
     usingStackWithTag fgStack "fg" color ast
-  render (Prop (BG color) ast) =
+  render (ASTProp (BG color) ast) =
     usingStackWithTag bgStack "bg" color ast
-  render (Prop IB ast) =
+  render (ASTProp IB ast) =
     usingStackWithTag ibStack "ib" IgnoreBackground ast
-  render (Prop (CA ca) ast) = do
+  render (ASTProp (CA ca) ast) = do
     write "^ca("
     render ca
     write ")"
     render ast
     write "^ca()"
-  render (Prop (PA position) ast) = do
+  render (ASTProp (PA position) ast) = do
     write "^pa("
     render position
     write ")"
     render ast
-  render (Prop (P position) ast) = do
+  render (ASTProp (P position) ast) = do
     write open
     render ast
     write close

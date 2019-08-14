@@ -51,7 +51,7 @@ addPxShift
   -> AST
   -> AST
 addPxShift pxShift ast =
-  let shifted     = Prop (P (XY (  pxShift, 0))) ast
-      compensator = Prop (P (XY (- pxShift, 0))) mempty
+  let shifted     = ASTProp (P (XY (  pxShift, 0))) ast
+      compensator = ASTProp (P (XY (- pxShift, 0))) mempty
   in
     shifted <> compensator
