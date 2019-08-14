@@ -47,6 +47,7 @@ library:
   exposed-modules:
   - DzenDhall
   - DzenDhall.AST
+  - DzenDhall.AST.Render
   - DzenDhall.Animation.Marquee
   - DzenDhall.Animation.Slider
   - DzenDhall.App

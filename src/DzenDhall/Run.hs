@@ -2,6 +2,7 @@
 module DzenDhall.Run where
 
 import           DzenDhall.AST
+import           DzenDhall.AST.Render
 import           DzenDhall.App as App
 import           DzenDhall.Arguments
 import           DzenDhall.Config
@@ -113,7 +114,7 @@ startDzenBinary cfg barSpec = do
         hSetBuffering stdout LineBuffering
 
       forever $ do
-        output <- renderAST <$> collectSources fontWidth bar
+        output <- runRender <$> collectSources fontWidth bar
         liftIO $ do
           if runtime ^. rtArguments ^. stdoutFlag == ToStdout
             then Data.Text.IO.putStrLn output
@@ -342,7 +343,7 @@ collectSources fontWidth (BarListener slot child) = do
       attachClickHandler namedPipe button =
         let command =
               ( "echo event:"
-             <> renderButton button
+             <> runRender button
              <> ",slot:"
              <> slot
              <> " >> "
@@ -379,62 +380,6 @@ escape EscapeMode{joinLines, escapeMarkup} =
   (Data.Text.replace "\n" $ if joinLines then " " else "")
 
 
-renderAST :: AST -> Text
-renderAST EmptyAST = ""
-renderAST (ASTText text) = text
-renderAST (ASTs a b) = renderAST a <> renderAST b
-renderAST (Prop property ast) =
-  let inner = renderAST ast in
-
-    case property of
-      BG color ->
-        "^bg(" <> renderColor color <> ")" <> inner <> "^bg()"
-      FG color ->
-        "^fg(" <> renderColor color <> ")" <> inner <> "^fg()"
-      IB ->
-        "^ib(1)" <> inner <> "^ib(0)"
-      CA ca ->
-        "^ca(" <> renderButton (ca ^. caButton)  <> "," <> ca ^. caCommand <> ")" <> inner <> "^ca()"
-      PA (AbsolutePosition {x, y}) ->
-        "^pa(" <> showPack x <> ";" <> showPack y <> ")" <> inner <> "^pa()"
-      P position ->
-        open <> inner <> close
-        where
-          -- Compensate position shift if possible
-          (open, close) =
-            case position of
-              XY (x, y)  ->
-                ( "^p(" <> showPack x    <> ";" <> showPack y    <> ")"
-                , "^p(" <> showPack (-x) <> ";" <> showPack (-y) <> ")"
-                )
-              P_RESET_Y  -> ("^p()", "")
-              P_LOCK_X   -> ("^p(_LOCK_X)", "")
-              P_UNLOCK_X -> ("^p(_UNLOCK_X)", "")
-              P_LEFT     -> ("^p(_LOCK_X)^p(_LEFT)", "^p(_UNLOCK_X)")
-              P_RIGHT    -> ("^p(_LOCK_X)^p(_RIGHT)", "^p(_UNLOCK_X)")
-              P_TOP      -> ("^p(_TOP)", "^p()")
-              P_CENTER   -> ("^p(_CENTER)", "^p()")
-              P_BOTTOM   -> ("^p(_BOTTOM)", "^p()")
-
-renderAST (ASTPadding width padding child) =
-  "^p(_LOCK_X)" <>
-  mkPadding leftPadding <> renderAST child <> mkPadding rightPadding <>
-  "^p(_UNLOCK_X)^ib(1)" <>
-  mkPadding width <>
-  "^ib(0)"
-  where
-    mkPadding w = Data.Text.justifyRight w ' ' ""
-    (leftPadding, rightPadding) = paddingWidths padding width
-
-renderAST (ASTShape shape) =
-      case shape of
-        I path -> "^i("  <> path       <> ")"
-        R w h  -> "^r("  <> showPack w <> "x" <> showPack h <> ")"
-        RO w h -> "^ro(" <> showPack w <> "x" <> showPack h <> ")"
-        C r    -> "^c("  <> showPack r <> ")"
-        CO r   -> "^co(" <> showPack r <> ")"
-
-
 allButtons :: [Button]
 allButtons =
   [ MouseLeft
@@ -445,20 +390,3 @@ allButtons =
   , MouseScrollLeft
   , MouseScrollRight
   ]
-
-
-renderButton :: Button -> Text
-renderButton = \case
-  MouseLeft -> "1"
-  MouseMiddle -> "2"
-  MouseRight -> "3"
-  MouseScrollUp -> "4"
-  MouseScrollDown -> "5"
-  MouseScrollLeft -> "6"
-  MouseScrollRight -> "7"
-
-
-renderColor :: Color -> Text
-renderColor = \case
-  ColorHex r -> r
-  ColorName r -> r

@@ -1,11 +1,10 @@
+{-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.AST where
 
 import qualified Data.Text
 import           Data.Text (Text)
 import           DzenDhall.Config
 import           DzenDhall.Data
-import           GHC.Generics
-import           Lens.Micro.TH
 
 data AST =
   -- | Text.

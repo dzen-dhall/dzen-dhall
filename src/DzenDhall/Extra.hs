@@ -1,7 +1,9 @@
 module DzenDhall.Extra where
 
-import Data.Text
-import Control.Monad
+import           Control.Monad
+import qualified Data.List
+import qualified Data.Text
+import           Data.Text (Text)
 
 nonNegative :: Int -> Int
 nonNegative x
@@ -32,3 +34,9 @@ whenJust = flip $ maybe (return mempty)
 leftToJust :: Either a b -> Maybe a
 leftToJust (Left a) = Just a
 leftToJust _ = Nothing
+
+safeHead :: [a] -> Maybe a
+safeHead = fmap fst . Data.List.uncons
+
+safeTail :: [a] -> Maybe [a]
+safeTail = fmap snd . Data.List.uncons

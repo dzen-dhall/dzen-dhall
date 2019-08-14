@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b43014253fd1bf5cdff6dc3cd983f38e9ca6abdc25a0495b58608bb97c16fc78
+-- hash: 2dde7cbfe76201c5c348551a403ea1132ea41fa615829e680828c8ef9f167939
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -64,6 +64,7 @@ library
   exposed-modules:
       DzenDhall
       DzenDhall.AST
+      DzenDhall.AST.Render
       DzenDhall.Animation.Marquee
       DzenDhall.Animation.Slider
       DzenDhall.App
@@ -130,6 +131,7 @@ test-suite tasty
       DzenDhall.Test.Animation.Marquee
       DzenDhall.Test.Arguments
       DzenDhall.Test.AST
+      DzenDhall.Test.AST.Render
       DzenDhall.Test.Config
       DzenDhall.Test.Event
       DzenDhall.Test.Parser
