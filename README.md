@@ -22,17 +22,20 @@ It is hard to share pieces of code used to produce output in dzen2 markup format
 
 ### Non-trivial markup is hard
 
-Dzen markup language is quite rich: it features almost-arbitrary text positioning (using `^p` command), text coloring (`^fg`, `^bg`), drawing shapes (`^c`, `^co`, `^r`, `^ro`), loading XBM images (`^i`) and even allows to define clickable areas (`^ca`). However, these control structures are too low-level: implementing UI elements we want to use (for example, [marquee](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee)-like blocks with arbitrary content) would require too much effort.
+Dzen markup language is quite rich: it features almost-arbitrary text positioning (using `^p` command), text coloring (`^fg`, `^bg`), drawing shapes (`^c`, `^co`, `^r`, `^ro`), loading XBM images (`^i`) and even allows to define clickable areas (`^ca`). However, these control structures are too low-level: implementing UI elements we want to use (for example, [marquee](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee)-like blocks with arbitrary content) would require too much effort. Besides, one more problem with this markup language is that nested tags are not supported.
 
 To fill the *abstraction gap*, new DSL should be introduced. This language should allow its users to abstract away from markup-as-text and focus on markup-as-[syntax-tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) instead - no need to say, tree structures are more suitable for the purpose of defining UIs. It is also way easier to process tree representations programmatically.
 
 ## The solution
 
-[Dhall](https://dhall-lang.org/) is a statically-typed [total](https://en.wikipedia.org/wiki/Total_functional_programming) programming language mostly used for dealing with complex user-defined configurations. This repository contains data type and function definitions in Dhall that form a DSL for defining almost arbitrary Dzen UIs, called "bars", and a Haskell program capable of reading bar definitions and producing input for `dzen2` binary based on them.
+[Dhall](https://dhall-lang.org/) is a statically-typed [total](https://en.wikipedia.org/wiki/Total_functional_programming) functional programming language. Its unique properties make it a good choice for dealing with complex user-defined configurations. Static typing allows to catch typos and errors early, and totality guarantees that the configuration program will never hang. Unlike some other configuration languages, it requires very little learning (even for people with no background in functional programming).
+
+This repository contains data type and function definitions in Dhall that form a DSL for defining almost arbitrary Dzen UIs, called "bars", and a Haskell program capable of reading bar definitions and producing input for `dzen2` binary based on them.
 
 The essence of the DSL can be illustrated by the following excerpt from [the default config file](dhall/config.dhall) (with additional comments):
 
 ```dhall
+-- A bar that shows how much memory is used:
 let memoryUsage
 -- ^ `let` keyword introduces new binding
 	: Bar
@@ -48,8 +51,9 @@ let memoryUsage
 	  UsedMem="''${TMP[ 2 ]}"
 	  echo "$((UsedMem * 100 / TotalMem))"
 	  ''
-	  -- ^ And a multiline string with script contents
+	  -- ^ And a multiline string containing a bash script
 
+-- A bar that shows how much swap is used:
 let swapUsage
 	: Bar
 	= bash
@@ -61,7 +65,7 @@ let swapUsage
 	  UsedSwap="''${TMP[ 2 ]}"
 	  echo "$((UsedSwap * 100 / TotalSwap))"
 	  ''
-
+-- A bar that shows current time:
 let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
 in  separate
@@ -73,6 +77,10 @@ in  separate
 	, clocks
 	] : Bar
 ```
+
+This definition results in the following Dzen output:
+
+![Example 1](img/example1.png)
 
 ## Getting started
 
@@ -246,11 +254,11 @@ The definition of `Bar` is the following:
 let Bar =
       ∀(Bar : Type)
     -- Text
-	→ ∀(text : Text → Bar)
-	→ ∀(raw : Text → Bar)
+    → ∀(text : Text → Bar)
+    → ∀(raw : Text → Bar)
 
-	-- Used to combine multiple Bars into one.
-	→ ∀(join : List Bar → Bar)
+    -- Used to combine multiple Bars into one.
+    → ∀(join : List Bar → Bar)
 
     -- Primitives of Dzen markup language.
     → ∀(fg : Color → Bar → Bar)
@@ -266,15 +274,16 @@ let Bar =
     → ∀(ib : Bar → Bar)
 
     -- Animations
-	→ ∀(slider : Slider → List Bar → Bar)
-	→ ∀(marquee : Marquee → Bar → Bar)
+    → ∀(slider : Slider → List Bar → Bar)
+    → ∀(marquee : Marquee → Bar → Bar)
 
     -- Other
-	→ ∀(source : Source → Bar)
-	→ ∀(plugin : Plugin → Bar)
-	→ ∀(listener : Slot → Bar → Bar)
-	→ ∀(automaton : Text → StateTransitionTable → StateMap Bar → Bar)
-	→ Bar
+    → ∀(padding : Natural → Padding → Bar → Bar)
+    → ∀(source : Source → Bar)
+    → ∀(plugin : Plugin → Bar)
+    → ∀(listener : Slot → Bar → Bar)
+    → ∀(automaton : Text → StateTransitionTable → StateMap Bar → Bar)
+    → Bar
 in Bar
 ```
 

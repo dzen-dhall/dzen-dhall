@@ -41,7 +41,6 @@ data RenderState
   { _bgStack :: [Color]
   , _fgStack :: [Color]
   , _ibStack :: [IgnoreBackground]
-  , _caStack :: [ClickableArea]
   }
 
 -- | A flag that indicates that background should be ignored (analogous to @^ib()@ dzen markup command).
@@ -54,7 +53,7 @@ type Stack a = Lens' RenderState [a]
 type Render = StateT RenderState (Writer Text)
 
 runRender :: Renderable a => a -> Text
-runRender a = snd $ runWriter (runStateT (render a) $ RenderState [] [] [] [])
+runRender a = snd $ runWriter (runStateT (render a) $ RenderState [] [] [])
 
 class Renderable a where
   render :: a -> Render ()
@@ -108,8 +107,12 @@ instance Renderable AST where
     usingStackWithTag bgStack "bg" color ast
   render (Prop IB ast) =
     usingStackWithTag ibStack "ib" IgnoreBackground ast
-  render (Prop (CA ca) ast) =
-    usingStackWithTag caStack "ca" ca ast
+  render (Prop (CA ca) ast) = do
+    write "^ca("
+    render ca
+    write ")"
+    render ast
+    write "^ca()"
   render (Prop (PA position) ast) = do
     write "^pa("
     render position
@@ -149,7 +152,7 @@ instance Renderable AST where
 write :: Text -> Render ()
 write = lift . tell
 
--- | @^fg()@, @^bg()@, @^ca()@ and @^ib()@ are rendered using the same algorithm.
+-- | @^fg()@, @^bg()@ and @^ib()@ are rendered using the same algorithm.
 usingStackWithTag :: Renderable a => Stack a -> Text -> a -> AST -> Render ()
 usingStackWithTag stack tag value ast = do
     push stack value

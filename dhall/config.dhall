@@ -67,7 +67,7 @@ let defaultBar
 	  → λ(ib : Bar → Bar)
 	  → λ(slider : Slider → List Bar → Bar)
 	  → λ(marquee : Marquee → Bar → Bar)
-	  → λ(padding : Natural -> Padding -> Bar → Bar)
+	  → λ(padding : Natural → Padding → Bar → Bar)
 	  → λ(source : Source → Bar)
 	  → λ(plugin : Plugin → Bar)
 	  → λ(listener : Slot → Bar → Bar)
@@ -120,50 +120,10 @@ let defaultBar
 
 		let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
-		let mySwitcher =
-			  let mySlot = "MY_SLOT" : Slot
-
-			  let stt
-				  : StateTransitionTable
-				  = [ { slots =
-						  [ mySlot ]
-					  , hooks =
-						  [] : List Hook
-					  , events =
-						  [ Event.Mouse Button.Left ]
-					  , from =
-						  [ "" ]
-					  , to =
-						  "1"
-					  }
-					, { slots =
-						  [ mySlot ]
-					  , hooks =
-						  [] : List Hook
-					  , events =
-						  [ Event.Mouse Button.Left ]
-					  , from =
-						  [ "1" ]
-					  , to =
-						  ""
-					  }
-					]
-
-			  let stateMap
-				  : StateMap Bar
-				  = [ { state = "", bar = text "hello!" }
-					, { state = "1", bar = text "world!" }
-					]
-
-			  let myID = "MY_AUTOMATON"
-
-			  in  listener mySlot (automaton myID stt stateMap)
-
 		in  separate
 			[ join [ text "Mem: ", memoryUsage, text "%" ]
 			, join [ text "Swap: ", swapUsage, text "%" ]
 			, clocks
-			, mySwitcher
 			]
 
 in    mkConfigs

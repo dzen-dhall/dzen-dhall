@@ -48,7 +48,7 @@ let Bar =
 	→ ∀(marquee : Marquee → Bar → Bar)
 
     -- Other
-	→ ∀(padding : Natural -> Padding -> Bar -> Bar)
+	→ ∀(padding : Natural → Padding → Bar → Bar)
 	→ ∀(source : Source → Bar)
 	→ ∀(plugin : Plugin → Bar)
 	→ ∀(listener : Slot → Bar → Bar)
