@@ -606,11 +606,7 @@ let myHook : Hook =
 
 ### Checks
 
-Startup-time checks allow to assert that certain condition is true.
-
-#### Assertions
-
-It is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
+Startup-time checks allow to assert that some condition is true before proceeding to the execution, i.e. it is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
 
 ```dhall
 let Check = < BinaryInPath : Text | SuccessfulExit : Text >
@@ -622,6 +618,20 @@ in  Assertion
 ```
 
 A `message` will be printed to the console on assertion failure. Assertions, when used wisely, greatly reduce debugging time.
+
+For example, this assertion fails if there's no `something` binary in `$PATH`:
+
+```dhall
+check
+[ { message = "Did you miss something?", check = Check.BinaryInPath "something" } ]
+```
+
+And this assertion fails on weekends:
+
+```dhall
+check
+[ { message = "Not going to work!", check = Check.SuccessfulExit "[[ \$(date +%u) -lt 6 ]]" } ]
+```
 
 ## Naming conventions
 
@@ -652,12 +662,41 @@ Another possible source of this problem is non-monospace font being used. Non-mo
 
 ### Writing shell scripts in Dhall
 
-String interpolation in Dhall syntactically conflicts with bash notation for array expansion and indexing. E.g. `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` (in a double-quoted string) or as `'' ''${arr[ ix ]} ''` in a multiline string (that is, `''` serves as both an escape sequence and a quote symbol). See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
+The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file.
+
+So, the following rules apply:
+
+1. Use `\` to escape `$` characters in a double-quoted string.
+
+2. Use `''` to escape `$` characters in a multiline (`''`-quoted) string. (That is, `''` serves as both an escape sequence and a quote symbol).
+
+For example, bash array expansion expression `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` (in a double-quoted string) or as `'' ''${arr[ ix ]} ''` in a multiline string.
+
+See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
 
 ## Implementation details
 
-Read this section if you want to understand how dzen-dhall works.
+Read this section if you want to understand how dzen-dhall works. It is not required neither to use the program, nor to create custom plugins.
 
-Dhall does not support recursive ADTs (which are obviously required to construct tree-like statusbar configurations), but there is a [trick](https://github.com/dhall-lang/dhall-lang/wiki/How-to-translate-recursive-code-to-Dhall) to bypass that, called [Boehm-Berarducci encoding](http://okmij.org/ftp/tagless-final/course/Boehm-Berarducci.html). [dhall/src/Bar.dhall](dhall/src/Bar.dhall) contains the encoded definition for the recursive data type representing status bars. On the stage of [config](dhall/config.dhall) processing, before mashalling the configuration structure into Haskell, it is first converted to a non-recursive data called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s. These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
+### Data encoding
 
-Dzen-dhall then spawns threads for each output source (like shell script or binary) and processes the outputs as specified in the configuration.
+Dhall does not support recursive ADTs (which are obviously required to construct tree-like statusbar configurations), but there is a [trick](https://github.com/dhall-lang/dhall-lang/wiki/How-to-translate-recursive-code-to-Dhall) to bypass that, called [Boehm-Berarducci encoding](http://okmij.org/ftp/tagless-final/course/Boehm-Berarducci.html).
+
+We use this method in a slightly modified variant: [`Carrier`](dhall/src/Carrier.dhall) type is introduced to hide all the constructors in a huge record.
+
+Essentially, [our definitions of `Bar`](dhall/src/Bar.dhall) is equivalent to something like the following, which is a direct Boehm-Berarducci encoding:
+
+```dhall
+let Bar =
+      ∀(Bar : Type)
+    → ∀(text : Text → Bar)
+    → ∀(raw : Text → Bar)
+    → ∀(join : List Bar → Bar)
+    -- ... some constructors omitted
+    → ∀(check : List Assertion → Bar)
+    → Bar
+```
+
+During the stage of [config](dhall/config.dhall) processing, before mashalling the configuration structure into Haskell, `Bar`s are converted to a non-recursive data called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s. These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
+
+After that, dzen-dhall spawns some threads for each output source (like shell script or binary) and processes the outputs as specified in the configuration.
