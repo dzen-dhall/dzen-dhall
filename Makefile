@@ -9,6 +9,3 @@ build: cabal2nix
 
 run: build
 	./result/bin/dzen-dhall
-
-test: update-data-files
-	stack test

@@ -1,15 +1,14 @@
 module DzenDhall where
 
 import           DzenDhall.App
+import           DzenDhall.App.Run (useConfigurations)
 import           DzenDhall.Arguments
 import           DzenDhall.Plug
-import           DzenDhall.Run
 import           DzenDhall.Runtime
 
 import           Lens.Micro
 import           Options.Applicative (execParser)
 import           System.Exit (exitWith, ExitCode(..))
-import qualified Control.Concurrent.Async as Async
 import qualified GHC.IO.Encoding
 import qualified System.IO
 
@@ -23,9 +22,9 @@ main = do
   case arguments ^. mbCommand of
     Nothing -> do
       runtime <- readRuntime arguments
-      runApp runtime $ do
-        asyncs <- useConfigurations
-        liftIO $ mapM_ Async.wait asyncs
+      runApp runtime () $ do
+        useConfigurations
+        waitForever
 
     Just Init -> do
       initCommand arguments
@@ -33,6 +32,6 @@ main = do
 
     Just (Plug str) -> do
       runtime <- readRuntime arguments
-      runApp runtime $ do
+      runApp runtime () $ do
         plugCommand str
         liftIO $ exitWith ExitSuccess

@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2dde7cbfe76201c5c348551a403ea1132ea41fa615829e680828c8ef9f167939
+-- hash: c39e52829f1fe34d76f72b883435ca852ee808dedeff71ca055d3407927b6fce
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -68,6 +68,9 @@ library
       DzenDhall.Animation.Marquee
       DzenDhall.Animation.Slider
       DzenDhall.App
+      DzenDhall.App.Run
+      DzenDhall.App.StartingUp
+      DzenDhall.App.Forked
       DzenDhall.Arguments
       DzenDhall.Config
       DzenDhall.Data
@@ -75,7 +78,6 @@ library
       DzenDhall.Extra
       DzenDhall.Parser
       DzenDhall.Plug
-      DzenDhall.Run
       DzenDhall.Runtime
       DzenDhall.Validation
       Paths_dzen_dhall
@@ -84,8 +86,7 @@ library
   default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections
   ghc-options: -Wall
   build-depends:
-      async
-    , base >=4.12.0.0 && <4.13
+      base >=4.12.0.0 && <4.13
     , bytestring
     , containers
     , dhall

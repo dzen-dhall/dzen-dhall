@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
-module DzenDhall.Run where
+module DzenDhall.App.StartingUp where
 
 import           DzenDhall.AST
 import           DzenDhall.AST.Render
@@ -10,154 +9,111 @@ import           DzenDhall.Data
 import           DzenDhall.Event
 import           DzenDhall.Extra
 import           DzenDhall.Runtime
-import           DzenDhall.Validation
 import qualified DzenDhall.Animation.Marquee as Marquee
 import qualified DzenDhall.Animation.Slider as Slider
-import qualified DzenDhall.Parser
 
 import           Control.Arrow
 import           Control.Concurrent
-import           Control.Concurrent.Async
+import           Control.Exception hiding (handle)
 import           Control.Monad
-import           Control.Monad.Trans.Class
-import           Control.Monad.Trans.State
 import           Data.Containers.ListUtils (nubOrd)
-import qualified Data.HashMap.Strict as H
 import           Data.IORef
 import           Data.Maybe
-import qualified Data.Text
 import           Data.Text (Text)
-import qualified Data.Text.IO
 import           GHC.IO.Handle
 import           Lens.Micro
 import           Lens.Micro.Extras
-import           Lens.Micro.TH
-import           System.Exit (ExitCode(..), exitWith)
-import qualified System.IO
+import           System.Directory
+import           System.FilePath ((</>))
+import           System.Posix.Files
 import           System.Process
+import           System.Random
+import qualified Data.HashMap.Strict as H
+import qualified Data.Text
+import qualified Data.Text.IO
+import qualified System.IO
 
 
-data StartupState
-  = StartupState
-  { _automataHandles :: AutomataHandles
-  , _scopeLevel :: Int
-  , _scopeName :: Text
-  , _suBarSettings :: BarSettings
-  }
-
-makeLenses ''StartupState
-
-
--- | Parses 'Bar's. For each 'Configuration' spawns its own dzen binary.
-useConfigurations :: App [Async ()]
-useConfigurations = do
-  runtime <- App.getRuntime
-  forM (view rtConfigurations runtime) (App.mapApp async . go)
-    where
-      go :: Configuration -> App ()
-      go cfg = do
-        let barTokens = cfg ^. cfgBarTokens
-
-        case validate barTokens of
-
-          [] -> do
-            case DzenDhall.Parser.runBarParser barTokens of
-              Left err -> liftIO $ do
-                putStrLn $ "Internal error when parsing configuration, debug info: " <> show barTokens
-                putStrLn $ "Error: " <> show err
-                putStrLn $ "Please report as bug."
-                exitWith $ ExitFailure 3
-
-              Right (bar :: Bar Marshalled) -> do
-                startDzenBinary cfg bar
-
-          errors -> liftIO $ do
-            Data.Text.IO.putStrLn $ report errors
-            exitWith $ ExitFailure 3
-
-
--- | Starts dzen binary according to 'BarSettings'.
-startDzenBinary
+startUp
   :: Configuration
   -> Bar Marshalled
-  -> App ()
-startDzenBinary cfg barSpec = do
+  -> App StartingUp (Bar Initialized, AutomataHandles, BarRuntime)
+startUp cfg bar = do
+  bar' <- initialize bar
+  startupState <- get
+  let handles = startupState ^. ssAutomataHandles
+  barRuntime <- mkBarRuntime cfg
+  pure (bar', handles, barRuntime)
 
-  runtime <- App.getRuntime
+
+mkBarRuntime
+  :: Configuration
+  -> App StartingUp BarRuntime
+mkBarRuntime cfg = do
+  runtime <- getRuntime
 
   let dzenBinary  = runtime ^. rtDzenBinary
       barSettings = cfg ^. cfgBarSettings
-      fontWidth   = fromMaybe 10 $ barSettings ^. bsFontWidth
 
       extraFlags  = barSettings ^. bsExtraFlags
       fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
       flags       = fontFlags <> extraFlags
 
-  (bar :: Bar Initialized, handles :: AutomataHandles) <-
-    runInitialization barSettings barSpec
+  tmpDir <- liftIO $
+    getTemporaryDirectory `catch` \(_e :: IOException) -> getCurrentDirectory
+  randomSuffix <- liftIO $
+    take 10 . randomRs ('a','z') <$> newStdGen
+  let namedPipe = tmpDir </> "dzen-dhall-rt-" <> randomSuffix
 
-  void $ liftIO $ async $ launchEventListener (runtime ^. rtNamedPipe) handles
+  liftIO $ createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
 
-  (mb_stdin, mb_stdout, _, _) <- liftIO $ do
-    createProcess $ (proc dzenBinary flags) { std_out = CreatePipe
-                                            , std_in  = CreatePipe
-                                            }
+  handle <- case runtime ^. rtArguments ^. stdoutFlag of
 
-  case (mb_stdin, mb_stdout) of
+    ToStdout -> pure System.IO.stdout
 
-    (Just stdin, Just stdout) -> do
-      liftIO $ do
-        hSetEncoding  stdin  System.IO.utf8
-        hSetEncoding  stdout System.IO.utf8
-        hSetBuffering stdin  LineBuffering
-        hSetBuffering stdout LineBuffering
+    ToDzen -> do
+      (mb_stdin, mb_stdout, _, _) <- liftIO $
+        createProcess $
+          (proc (runtime ^. rtDzenBinary) flags)
+            { std_out = CreatePipe
+            , std_in  = CreatePipe }
 
-      forever $ do
-        output <- runRender <$> collectSources fontWidth bar
-        liftIO $ do
-          if runtime ^. rtArguments ^. stdoutFlag == ToStdout
-            then Data.Text.IO.putStrLn output
-            else Data.Text.IO.hPutStrLn stdin output
-          threadDelay (cfg ^. cfgBarSettings ^. bsUpdateInterval)
-        modifyRuntime $ rtFrameCounter +~ 1
+      case (mb_stdin, mb_stdout) of
+        (Just stdin, Just stdout) -> liftIO $ do
+          hSetEncoding  stdin  System.IO.utf8
+          hSetEncoding  stdout System.IO.utf8
+          hSetBuffering stdin  LineBuffering
+          hSetBuffering stdout LineBuffering
+          pure stdin
+        _ -> App.exit 4 $
+          "Couldn't open IO handles for dzen binary " <>
+          showPack dzenBinary
 
-    _ -> liftIO $ do
-      putStrLn $ "Couldn't open IO handles for dzen binary " <> show dzenBinary
+  pure $ BarRuntime cfg 0 namedPipe handle
 
-type Initialization = StateT StartupState App
-
-runInitialization :: BarSettings -> Bar Marshalled -> App (Bar Initialized, AutomataHandles)
-runInitialization bs barSpec =
-  second (^. automataHandles) <$> runStateT (initialize barSpec) initialState
-  where
-    initialState = StartupState mempty 0 "scope" bs
 
 -- | During initialization, IORefs for source outputs and caches are created.
 -- Also, new thread for each source is created. This thread then updates the outputs.
 initialize
   :: Bar Marshalled
-  -> Initialization (Bar Initialized)
+  -> App StartingUp (Bar Initialized)
 initialize (BarSource source@Source{escapeMode})
-  = lift . liftIO $ do
+  = liftIO $ do
 
   outputRef <- newIORef ""
   cacheRef  <- newIORef Nothing
 
-  void $ async (mkThread source outputRef cacheRef)
+  void $ forkIO (mkThread source outputRef cacheRef)
 
-  pure $ BarSource $
-    SourceHandle
-    outputRef
-    cacheRef
-    escapeMode
+  pure $ BarSource $ SourceHandle outputRef cacheRef escapeMode
 
 initialize (BarMarquee i p) =
   BarMarquee i <$> initialize p
 initialize (BarSlider slider children) = do
-  bs <- (^. suBarSettings) <$> get
+  barSettings <- (^. ssBarSettings) <$> get
 
   -- Convert delay of a slider from microseconds to frames.
-  let updateInterval = bs ^. bsUpdateInterval
+  let updateInterval = barSettings ^. bsUpdateInterval
       slider' = slider & sliderDelay %~ (\x -> x * 1000 `div` positive updateInterval)
 
   BarSlider slider' <$> mapM initialize children
@@ -167,7 +123,7 @@ initialize (BarAutomaton address stt stateMap) = do
   -- This binding determines what state to enter first
   let initialState = ""
 
-  scope <- (^. scopeName) <$> get
+  scope <- (^. ssScopeName) <$> get
 
   let addScope = (<> ("@" <> scope))
 
@@ -180,14 +136,14 @@ initialize (BarAutomaton address stt stateMap) = do
            $ stt
 
   -- Create a reference to the current state
-  stateRef :: IORef Text <- lift . liftIO $ newIORef initialState
+  stateRef :: IORef Text <- liftIO $ newIORef initialState
 
   -- Initialize all children
   stateMap' :: H.HashMap Text (Bar Initialized) <- mapM initialize stateMap
 
   -- Create a reference to the current Bar (so that collectSources will not need to
   -- look up the correct Bar in stateMap').
-  barRef :: IORef (Bar Initialized) <- lift . liftIO $
+  barRef :: IORef (Bar Initialized) <- liftIO $
     newIORef $ fromMaybe mempty (H.lookup initialState stateMap')
 
   let subscription = [ AutomatonSubscription stt' stateMap' stateRef barRef ]
@@ -196,22 +152,22 @@ initialize (BarAutomaton address stt stateMap) = do
   let slots :: [Text] = nubOrd $ (^. _1) <$> H.keys (unSTT stt')
 
   -- Add subscription for each slot
-  modify $ automataHandles %~
+  modify $ ssAutomataHandles %~
     (\handleMap -> foldr (\slot -> H.insertWith (++) slot subscription) handleMap slots)
 
   pure $ BarAutomaton address () barRef
 
 initialize (BarListener slot child) = do
 
-  scope <- (^. scopeName) <$> get
+  scope <- (^. ssScopeName) <$> get
   BarListener (slot <> "@" <> scope) <$> initialize child
 
 initialize (BarScope child) = do
-  counter <- lift getCounter
-  oldScopeName <- (^. scopeName) <$> get
-  modify $ scopeName <>~ ("-" <> showPack counter)
+  counter <- getCounter
+  oldScopeName <- (^. ssScopeName) <$> get
+  modify $ ssScopeName <>~ ("-" <> showPack counter)
   child' <- initialize child
-  modify $ scopeName .~ oldScopeName
+  modify $ ssScopeName .~ oldScopeName
   pure child'
 
 initialize (BarProp prop p) =
@@ -220,7 +176,7 @@ initialize (BarPadding width padding p) =
   BarPadding width padding <$> initialize p
 initialize (Bars ps) =
   Bars <$> mapM initialize ps
-initialize (BarShape shape) = do
+initialize (BarShape shape) =
   pure $ BarShape shape
 initialize (BarRaw text) =
   pure $ BarRaw text
@@ -265,8 +221,14 @@ mkThread
     Nothing -> do
       runSourceProcess (proc binary args) outputRef cacheRef input
 
+
 -- | Creates a process, subscribes to its stdout handle and updates the output ref.
-runSourceProcess :: CreateProcess -> IORef Text -> Cache -> Maybe Text -> IO ()
+runSourceProcess
+  :: CreateProcess
+  -> IORef Text
+  -> Cache
+  -> Maybe Text
+  -> IO ()
 runSourceProcess cp outputRef cacheRef mbInput = do
   (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, ph) <- createProcess cp
 
@@ -293,11 +255,12 @@ runSourceProcess cp outputRef cacheRef mbInput = do
     _ -> do
       putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
 
+
 -- | Reads outputs of 'SourceHandle's and puts them into an AST.
 collectSources
   :: Int
   -> Bar Initialized
-  -> App AST
+  -> App Forked AST
 collectSources _ (BarSource handle) = liftIO $ do
   let outputRef  = handle ^. shOutputRef
       cacheRef   = handle ^. shCacheRef
@@ -316,12 +279,12 @@ collectSources _ (BarSource handle) = liftIO $ do
 collectSources fontWidth (BarMarquee marquee p) = do
 
   ast          <- collectSources fontWidth p
-  frameCounter <- view rtFrameCounter <$> App.getRuntime
+  frameCounter <- view brFrameCounter <$> App.get
   pure $ Marquee.run fontWidth marquee ast frameCounter
 
 collectSources fontWidth (BarSlider slider ss) = do
 
-  frameCounter <- view rtFrameCounter <$> App.getRuntime
+  frameCounter <- view brFrameCounter <$> App.get
   asts         <- mapM (collectSources fontWidth) ss
   pure $ Slider.run slider frameCounter asts
 
@@ -332,7 +295,7 @@ collectSources fontWidth (BarAutomaton _ _ ref) = do
 
 collectSources fontWidth (BarListener slot child) = do
 
-  namedPipe    <- view rtNamedPipe <$> App.getRuntime
+  namedPipe    <- view brNamedPipe <$> App.get
   ast          <- collectSources fontWidth child
 
   -- Wrap AST into 7 clickable areas, one for each mouse button
@@ -370,6 +333,7 @@ collectSources _         (BarRaw text)
   = pure $ ASTText text
 
 
+-- | Escape @^@ characters and replace newlines.
 escape
   :: EscapeMode
   -> Text

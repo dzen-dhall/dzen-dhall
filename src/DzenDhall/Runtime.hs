@@ -2,10 +2,10 @@
 module DzenDhall.Runtime where
 
 import DzenDhall.Arguments
+import DzenDhall.Event
 import DzenDhall.Config hiding (Hook)
 import Paths_dzen_dhall
 
-import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Dhall hiding (maybe)
@@ -15,7 +15,7 @@ import System.Directory
 import System.Exit (ExitCode(..), exitWith)
 import System.FilePath ((</>))
 import System.Posix.Files
-import System.Random
+import System.IO
 
 apiVersion :: Int
 apiVersion = 1
@@ -24,10 +24,6 @@ data Runtime = Runtime
   { _rtConfigDir :: String
   , _rtConfigurations :: [Configuration]
   , _rtDzenBinary :: String
-  , _rtFrameCounter :: Int
-  , _rtCounter :: Int
-  , _rtNamedPipe :: String
-  -- ^ Named pipe to use as a communication channel for listening to mouse events
   , _rtAPIVersion :: Int
   , _rtArguments :: Arguments
   }
@@ -35,18 +31,35 @@ data Runtime = Runtime
 
 makeLenses ''Runtime
 
+data StartupState
+  = StartupState
+  { _ssAutomataHandles :: AutomataHandles
+  , _ssScopeName :: Text
+  , _ssBarSettings :: BarSettings
+  , _ssCounter :: Int
+  -- ^ Counter that is incremented each time it is requested (used as a source
+  -- of unique identifiers). See also: 'DzenDhall.App.getCounter'
+  }
+
+makeLenses ''StartupState
+
+data BarRuntime = BarRuntime
+  { _brConfiguration :: Configuration
+  , _brFrameCounter :: Int
+  , _brNamedPipe :: String
+  -- ^ Named pipe to use as a communication channel for listening to mouse events
+  , _brHandle :: Handle
+  -- ^ A handle to write to. The value is either stdin of a @dzen2@ process or
+  -- 'System.IO.stdout', if @--stdout@ flag is passed.
+  }
+  deriving (Eq, Show)
+
+makeLenses ''BarRuntime
+
 -- Read runtime from configuration file, if possible.
 readRuntime :: Arguments -> IO Runtime
 readRuntime args = do
   let dzenBinary = fromMaybe "dzen2" (args ^. mbDzenBinary)
-  let frameCounter = 0
-
-  tmpDir <- getTemporaryDirectory `catch`
-            \(_e :: IOException) ->
-               getCurrentDirectory
-  randomSuffix <- take 10 . randomRs ('a','z') <$> newStdGen
-  let namedPipe = tmpDir </> "dzen-dhall-rt-" <> randomSuffix
-  createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
 
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure (args ^. mbConfigDir)
   exists <- doesDirectoryExist configDir
@@ -66,9 +79,6 @@ readRuntime args = do
     configDir
     configurations
     dzenBinary
-    frameCounter
-    0
-    namedPipe
     apiVersion
     args
 

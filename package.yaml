@@ -18,7 +18,6 @@ library:
 
   dependencies:
   - base ^>=4.12.0.0
-  - async
   - bytestring
   - containers
   - dhall
@@ -51,6 +50,9 @@ library:
   - DzenDhall.Animation.Marquee
   - DzenDhall.Animation.Slider
   - DzenDhall.App
+  - DzenDhall.App.Run
+  - DzenDhall.App.StartingUp
+  - DzenDhall.App.Forked
   - DzenDhall.Arguments
   - DzenDhall.Config
   - DzenDhall.Data
@@ -58,7 +60,6 @@ library:
   - DzenDhall.Extra
   - DzenDhall.Parser
   - DzenDhall.Plug
-  - DzenDhall.Run
   - DzenDhall.Runtime
   - DzenDhall.Validation
   - Paths_dzen_dhall

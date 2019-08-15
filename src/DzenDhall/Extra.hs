@@ -40,3 +40,6 @@ safeHead = fmap fst . Data.List.uncons
 
 safeTail :: [a] -> Maybe [a]
 safeTail = fmap snd . Data.List.uncons
+
+fromLines :: [Text] -> Text
+fromLines = Data.Text.intercalate "\n"

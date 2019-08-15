@@ -44,7 +44,7 @@ data Plugin
   deriving (Eq, Show)
 
 
-plugCommand :: String -> App ()
+plugCommand :: String -> App Common ()
 plugCommand argument = do
 
   runtime <- getRuntime
