@@ -332,11 +332,59 @@ Various primitives of dzen2 markup language are represented by the corresponding
 
 #### Sliders
 
-TODO
+Sliders change their outputs, variating between `Bar`s from a given list. Transitions are rendered smoothly.
+
+E.g.
+
+```
+slider
+{ fadeIn =
+  { direction =
+    VerticalDirection.Down -- or `Up`
+  , frameCount =
+    10
+  -- ^ How many frames to spend on switching.
+  , height =
+    20
+  -- ^ How many pixels up or down move the output.
+  }
+, fadeOut =
+  { direction =
+    VerticalDirection.Down
+  , frameCount =
+    10
+  , height =
+    20
+  }
+, delay =
+  3000
+  -- ^ How many milliseconds to wait between output changes
+}
+[ join [ text "Mem: ", memoryUsage, text "%" ]
+, join [ text "Swap: ", swapUsage, text "%" ]
+]
+```
+
+results in the following output:
+
+![Slider preview](img/slider.gif)
+
 
 #### Marquees
 
-TODO
+This animation type is analogous to the [deprecated marquee HTML tag](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee).
+
+For example,
+
+```
+marquee
+  { framesPerCharacter = 4, width = 32 }
+  (text "The most annoying HTML code in the history of HTML codes.")
+```
+
+will be rendered as:
+
+![Marquee preview](img/marquee.gif)
 
 ### Paddings
 
@@ -346,9 +394,9 @@ TODO
 
 Sources serve two purposes:
 
-- Generate text output for [`Bar`s](#bars)
+- Generating text output for [`Bar`s](#bars) (from command's stdout)
 
-- Emit [events](#events)
+- Emitting [events](#events)
 
 ```dhall
 let Source : Type =
