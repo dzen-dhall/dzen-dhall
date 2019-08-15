@@ -99,10 +99,9 @@ let defaultBar
 			= bash
 			  5000
 			  ''
-			  TMP=`free -b | grep 'Mem'`;
-			  TMP=( $TMP );
-			  TotalMem="''${TMP[ 1 ]}"
-			  UsedMem="''${TMP[ 2 ]}"
+			  TMP=`free -b | grep 'Mem'`
+			  TotalMem=`echo "$TMP" | awk '{ print $2; }'`
+			  UsedMem=`echo "$TMP" | awk '{ print $3; }'`
 			  echo "$((UsedMem * 100 / TotalMem))"
 			  ''
 
@@ -111,10 +110,9 @@ let defaultBar
 			= bash
 			  5000
 			  ''
-			  TMP=`free -b | grep 'Swap'`;
-			  TMP=( $TMP );
-			  TotalSwap="''${TMP[ 1 ]}"
-			  UsedSwap="''${TMP[ 2 ]}"
+			  TMP=`free -b | grep 'Swap'`
+			  TotalSwap=`echo "$TMP" | awk '{ print $2; }'`
+			  UsedSwap=`echo "$TMP" | awk '{ print $3; }'`
 			  echo "$((UsedSwap * 100 / TotalSwap))"
 			  ''
 

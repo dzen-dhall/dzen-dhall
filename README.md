@@ -45,13 +45,11 @@ let memoryUsage
 	  5000
 	  -- ^ Update interval in milliseconds
 	  ''
-	  TMP=`free -b | grep 'Mem'`;
-	  TMP=( $TMP );
-	  TotalMem="''${TMP[ 1 ]}"
-	  UsedMem="''${TMP[ 2 ]}"
+	  TMP=`free -b | grep 'Mem'`
+	  TotalMem=`echo "$TMP" | awk '{ print $2; }'`
+	  UsedMem=`echo "$TMP" | awk '{ print $3; }'`
 	  echo "$((UsedMem * 100 / TotalMem))"
 	  ''
-	  -- ^ And a multiline string containing a bash script
 
 -- A bar that shows how much swap is used:
 let swapUsage
@@ -59,13 +57,13 @@ let swapUsage
 	= bash
 	  5000
 	  ''
-	  TMP=`free -b | grep 'Swap'`;
-	  TMP=( $TMP );
-	  TotalSwap="''${TMP[ 1 ]}"
-	  UsedSwap="''${TMP[ 2 ]}"
+	  TMP=`free -b | grep 'Swap'`
+	  TotalSwap=`echo "$TMP" | awk '{ print $2; }'`
+	  UsedSwap=`echo "$TMP" | awk '{ print $3; }'`
 	  echo "$((UsedSwap * 100 / TotalSwap))"
 	  ''
--- A bar that shows current time:
+
+-- A bar that shows current date and time:
 let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
 in  separate
@@ -244,149 +242,109 @@ This chapter describes dzen-dhall DSL in depth. You can safely skip most of it i
 
 It's best to read the [Dhall wiki](https://github.com/dhall-lang/dhall-lang/wiki) to become familiar with Dhall syntax before reading this chapter.
 
-### Bar
+### [Bars](dhall/src/Bar.dhall)
 
 The most important concept is `Bar`. Essentially, `Bar` is a tree containing text, images, shapes, etc. in its leaves.
 
 The definition of `Bar` is the following:
 
-```dhall
+<big><pre>
 let Bar =
-      ∀(Bar : Type)
-    -- Text
-    → ∀(text : Text → Bar)
-    → ∀(raw : Text → Bar)
+  ∀(Bar : Type)
+-- [Text primitives](#text-primitives):
+→ ∀(text : Text → Bar)
+→ ∀(raw : Text → Bar)
 
-    -- Used to combine multiple Bars into one.
-    → ∀(join : List Bar → Bar)
+-- Used to combine multiple Bars into one:
+→ ∀([join](#join) : List Bar → Bar)
 
-    -- Primitives of Dzen markup language.
-    → ∀(fg : Color → Bar → Bar)
-    → ∀(bg : Color → Bar → Bar)
-    → ∀(i : Image → Bar)
-    → ∀(r : Natural → Natural → Bar)
-    → ∀(ro : Natural → Natural → Bar)
-    → ∀(c : Natural → Bar)
-    → ∀(co : Natural → Bar)
-    → ∀(p : Position → Bar → Bar)
-    → ∀(pa : AbsolutePosition → Bar → Bar)
-    → ∀(ca : Button → Text → Bar → Bar)
-    → ∀(ib : Bar → Bar)
+-- [Primitives of Dzen markup language](#primitives):
+→ ∀([fg](#coloring) : Color → Bar → Bar)
+→ ∀([bg](#coloring) : Color → Bar → Bar)
+→ ∀([i](#drawing-images) : Image → Bar)
+→ ∀([r](#drawing-shapes) : Natural → Natural → Bar)
+→ ∀([ro](#drawing-shapes) : Natural → Natural → Bar)
+→ ∀([c](#drawing-shapes) : Natural → Bar)
+→ ∀([co](#drawing-shapes) : Natural → Bar)
+→ ∀([p](#positioning) : Position → Bar → Bar)
+→ ∀([pa](#positioning) : AbsolutePosition → Bar → Bar)
+→ ∀([ca](#clickable-areas) : Button → Text → Bar → Bar)
+→ ∀([ib](#ignoring-background-color) : Bar → Bar)
 
-    -- Animations
-    → ∀(slider : Slider → List Bar → Bar)
-    → ∀(marquee : Marquee → Bar → Bar)
+-- [Animations](#animations)
+→ ∀([slider](#sliders) : Slider → List Bar → Bar)
+→ ∀([marquee](#marquees) : Marquee → Bar → Bar)
 
-    -- Other
-    → ∀(padding : Natural → Padding → Bar → Bar)
-    → ∀(source : Source → Bar)
-    → ∀(plugin : Plugin → Bar)
-    → ∀(listener : Slot → Bar → Bar)
-    → ∀(automaton : Text → StateTransitionTable → StateMap Bar → Bar)
-    → Bar
+-- Other
+→ ∀([padding](#paddings) : Natural → Padding → Bar → Bar)
+→ ∀([source](#sources) : Source → Bar)
+→ ∀([plugin](#plugins) : Plugin → Bar)
+→ ∀([listener](#listeners) : Slot → Bar → Bar)
+→ ∀([automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar)
+→ Bar
 in Bar
-```
+</pre></big>
+
+### Text primitives
 
 `text` is used to create `Bar`s containing static, escaped pieces of text. `raw`, on the contrary, does not escape the given text, so that if it does contain markup, it will be interpreted by dzen2.
 
+
+#### Coloring
+
+TODO
+
+#### Drawing images
+
+TODO
+
+#### Drawing shapes
+
+TODO
+
+#### Positioning
+
+TODO
+
+#### Clickable areas
+
+TODO
+
+#### Ignoring background color
+
+TODO
+
+### Join
+
 `join` is used to concatenate multiple bars together.
+
+TODO
+
+### Primitives
 
 Various primitives of dzen2 markup language are represented by the corresponding constructors (`fg`, `bg`, `i`, etc.). See [dzen2 README](https://github.com/robm/dzen) for details on them.
 
-dzen-dhall provides two kinds of high-level animations: `slider`s and `marquee`s.
+### Animations
 
-### Automata
+#### Sliders
 
-Each Bar is essentialy a finite-state automaton. States are tagged by `Text` labels, and transitions are triggered by [events] (very much like in some functional reactive programming frameworks). In the trivial case, a bar has only one state: you can think of any static `Bar` as of automaton with a single state, the name of which is implicit.
+TODO
 
-A bar with more than one state can be defined by its state transition function (encoded as a table), a mapping from state labels to `Bar`s, which defines its visual representation for different states, and an identifier used to query current state of the automaton from [sources](#sources).
+#### Marquees
 
-### [State Transition Table](dhall/src/StateTransitionTable.dhall)
+TODO
 
-State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, dzen-dhall tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in a table, dzen-dhall executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
+### Paddings
 
-```dhall
-let StateTransitionTable
-	: Type
-	= List
-	  { slots :
-		  List Slot
-	  , events :
-		  List Event
-	  , from :
-		  List State
-	  , to :
-		  State
-	  , hooks :
-		  List Hook
-	  }
-```
-
-For example, let's define a simple transition table with two states: "on" and "off".
-
-```dhall
-let stt = [ { slots: [ "slot1" ]
-            , events: [ Event.Left ]
-		    , from: [ "on" ]
-			, to: [ "off" ]
-			, hooks: [] : List Hook
-			}
-		  , { slots: [ "slot1" ]
-            , events: [ Event.Left ]
-		    , from: [ "off" ]
-			, to: [ "on" ]
-			, hooks: [] : List Hook
-			}
-		  ]
-```
-
-This state transition table, when coupled with a [state map](#state-maps) to form an [automaton](#automata) and subscribed to some [listener](#listeners) that awaits for mouse events and sends them to the "slot1" slot, will result in a clickable area that switches between two states as the user clicks on a certain area.
-
-### [Slots](dhall/src/Slot.dhall)
-
-Slots are used to route events throughout the interface: you can think of slots as of adresses from which events can be sent. Each slot is essentially a piece of `Text`:
-
-```dhall
-let Slot : Type = Text in Slot
-```
-
-### [Hooks](dhall/src/Hook.dhall)
-
-Hooks allow to execute arbitrary commands before state transitions of automata. They can also be used to prevent state transitions from happening - the
-`requiredExitCodes : Optional (List Natural)`
-field allows to specify a list of allowed exit codes for the command. If `allowedExitCodes` is set `None : Optional (List Natural)`, hook will always succeed. If it is `Some ([] : List Natural)`, it will always fail.
-
-```dhall
-let Hook
-	: Type
-	= { command :
-		  List Text
-	  , input :
-		  Optional Text
-	  , allowedExitCodes :
-		  Optional (List Natural)
-	  }
-
-in  Hook
-```
-
-For example, The following hook will succeed only if a certain file exists:
-
-```dhall
-let myHook : Hook =
-  { command = "bash"
-  , input = "[ -f ~/some-file ]"
-  , allowedExitCodes = Some [ 0 ]
-  }
-```
+TODO
 
 ### Sources
 
 Sources serve two purposes:
 
-- Generate text output for `Bar`s
+- Generate text output for [`Bar`s](#bars)
 
-- Emit [events]
+- Emit [events](#events)
 
 ```dhall
 let Source : Type =
@@ -419,6 +377,8 @@ let clocks : Source =
 Sources can be used to control automata.
 
 To query for current state of an automaton, it is sufficient to read the environment variable of the form `STATE_id`, where `id` part is the identifier of the [automaton](#automata).
+
+TODO
 
 <details><summary><strong>SHOW EXAMPLE</strong></summary>
 <p>
@@ -472,13 +432,133 @@ let Event = < Mouse : Button | Custom : Text >
 
 Scopes are used for encapsulation, to ensure that slots, automata and listeners from different plugins are unable to communicate with each other. You should always enclose your plugins in a separate scope.
 
+### Automata
+
+Each Bar is essentialy a finite-state automaton. States are tagged by `Text` labels, and transitions are triggered by [events](#events) (very much like in some functional reactive programming frameworks). In the trivial case, a bar has only one state: you can think of any static `Bar` as of automaton with a single state, the name of which is implicit.
+
+A bar with more than one state can be defined by its state transition function (encoded as a table), a mapping from state labels to `Bar`s, which defines its visual representation for different states, and an identifier used to query current state of the automaton from [sources](#sources).
+
+### [State Transition Table](dhall/src/StateTransitionTable.dhall)
+
+State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, dzen-dhall tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in a table, dzen-dhall executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
+
+```dhall
+let StateTransitionTable
+	: Type
+	= List
+	  { slots :
+		  List Slot
+	  , events :
+		  List Event
+	  , from :
+		  List State
+	  , to :
+		  State
+	  , hooks :
+		  List Hook
+	  }
+```
+
+For example, let's define a simple transition table with two states: "on" and "off".
+
+```dhall
+let stt = [ { slots: [ "slot1" ]
+            , events: [ Event.Left ]
+		    , from: [ "on" ]
+			, to: [ "off" ]
+			, hooks: [] : List Hook
+			}
+		  , { slots: [ "slot1" ]
+            , events: [ Event.Left ]
+		    , from: [ "off" ]
+			, to: [ "on" ]
+			, hooks: [] : List Hook
+			}
+		  ]
+```
+
+This state transition table, when coupled with a [state map](#state-maps) to form an [automaton](#automata) and subscribed to some [listener](#listeners) that awaits for mouse events and sends them to the "slot1" slot, will result in a clickable area that switches between two states as the user clicks on a certain area.
+
+### [State maps](dhall/src/StateMap.dhall)
+
+`StateMap`s are used to define a mapping from states to bars.
+
+<details><summary><strong>SHOW IMPLEMENTATION</strong></summary>
+<p>
+
+```dhall
+let StateMap : Type → Type = λ(Bar : Type) → List { state : Text, bar : Bar }
+
+in  StateMap
+```
+
+Note that it is parametrized by `Bar` type.
+
+</p>
+</details>
+
+<details><summary><strong>SHOW EXAMPLE</strong></summary>
+<p>
+
+The following `StateMap` has two states. The default one (`""`) corresponds to the text `hello!`.
+
+```dhall
+let stateMap
+  : StateMap Bar
+  = [ { state = "", bar = text "hello!" }
+	, { state = "1", bar = text "world!" }
+	]
+```
+
+</p>
+</details>
+
+
+### [Slots](dhall/src/Slot.dhall)
+
+Slots are used to route events throughout the interface: you can think of slots as of adresses from which events can be sent. Each slot is essentially a piece of `Text`:
+
+```dhall
+let Slot : Type = Text in Slot
+```
+
+### [Hooks](dhall/src/Hook.dhall)
+
+Hooks allow to execute arbitrary commands before state transitions of automata. They can also be used to prevent state transitions from happening - the
+`requiredExitCodes : Optional (List Natural)`
+field allows to specify a list of allowed exit codes for the command. If `allowedExitCodes` is set `None : Optional (List Natural)`, hook will always succeed. If it is `Some ([] : List Natural)`, it will always fail.
+
+```dhall
+let Hook
+	: Type
+	= { command :
+		  List Text
+	  , input :
+		  Optional Text
+	  , allowedExitCodes :
+		  Optional (List Natural)
+	  }
+
+in  Hook
+```
+
+For example, The following hook will succeed only if a certain file exists:
+
+```dhall
+let myHook : Hook =
+  { command = "bash"
+  , input = "[ -f ~/some-file ]"
+  , allowedExitCodes = Some [ 0 ]
+  }
+```
+
 ## Naming conventions
 
-These conventions are not enforced by dzen-dhall and will never be. These are just an attempt to lower cognitive noise for users and plugin maintainers.
+These conventions are enforced by dzen-dhall as an attempt to lower cognitive noise for users and plugin maintainers.
 
 - [Slot](#slots) names should contain only capital letters, numbers and `_`: `SLOT_1`, `MY_SLOT`, etc.
 - [Event](#events) names should be written camel-cased, first letter capitalized: `TimeHasCome`, `ButtonClicked`, etc.
-- [Automata] `id`s should contain only capital letters, numbers and `_`.
+- [Automata](#automata) addresses should contain only capital letters, numbers and `_`.
 
 ## Troubleshooting
 

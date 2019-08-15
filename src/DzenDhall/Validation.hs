@@ -47,12 +47,19 @@ report :: [Error] -> Text
 report [] = "No errors."
 report errors = mappend header $ foldMap ((<> "\n\n") . reportError) errors
   where
-    header = "Some errors encountered when trying to read the configuration:\n\n\n"
+    header = "Some errors encountered while trying to read the configuration:\n\n\n"
+
+    namingConventions = "More info: https://github.com/dzen-dhall/dzen-dhall#naming-conventions"
+
     reportError :: Error -> Text
     reportError = \case
-      InvalidSlotAddress err address ->
-        "Invalid slot address: " <> address <> "\n" <>
-        "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
-      InvalidAutomatonAddress err address ->
-        "Invalid automaton address: " <> address <> "\n" <>
-        "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
+      InvalidSlotAddress err address -> fromLines
+        [ "Invalid slot address: " <> address
+        , "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
+        , namingConventions
+        ]
+      InvalidAutomatonAddress err address -> fromLines
+        [ "Invalid automaton address: " <> address
+        , "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
+        , namingConventions
+        ]
