@@ -1,83 +1,73 @@
 let lib = ./lib/index.dhall
-
 let types = ./src/types.dhall
-
 let utils = ./src/utils.dhall
 
-let Assertion = types.Assertion
-
 let AbsolutePosition = types.AbsolutePosition
-
+let Assertion = types.Assertion
 let Bar = types.Bar
-
 let BarSettings = types.BarSettings
-
 let Button = types.Button
-
-let Event = types.Event
-
-let Hook = types.Hook
-
+let Button = types.Button
+let Carrier = types.Carrier
 let Check = types.Check
-
 let Color = types.Color
-
 let Configuration = types.Configuration
-
+let Event = types.Event
+let Hook = types.Hook
 let Image = types.Image
-
 let Marquee = types.Marquee
-
-let Button = types.Button
-
-let Plugin = types.Plugin
-
 let Padding = types.Padding
-
+let Plugin = types.Plugin
 let Position = types.Position
-
 let Slider = types.Slider
-
 let Slot = types.Slot
-
 let Source = types.Source
-
 let StateMap = types.StateMap
-
 let StateTransitionTable = types.StateTransitionTable
-
 let VerticalDirection = types.VerticalDirection
 
 let mkConfigs = utils.mkConfigs
-
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
 
 let defaultBar
 	: Bar
 	=   λ(Bar : Type)
-	  → λ(text : Text → Bar)
-	  → λ(raw : Text → Bar)
-	  → λ(join : List Bar → Bar)
-	  → λ(fg : Color → Bar → Bar)
-	  → λ(bg : Color → Bar → Bar)
-	  → λ(i : Image → Bar)
-	  → λ(r : Natural → Natural → Bar)
-	  → λ(ro : Natural → Natural → Bar)
-	  → λ(c : Natural → Bar)
-	  → λ(co : Natural → Bar)
-	  → λ(p : Position → Bar → Bar)
-	  → λ(pa : AbsolutePosition → Bar → Bar)
-	  → λ(ca : Button → Text → Bar → Bar)
-	  → λ(ib : Bar → Bar)
-	  → λ(slider : Slider → List Bar → Bar)
-	  → λ(marquee : Marquee → Bar → Bar)
-	  → λ(padding : Natural → Padding → Bar → Bar)
-	  → λ(source : Source → Bar)
-	  → λ(plugin : Plugin → Bar)
-	  → λ(listener : Slot → Bar → Bar)
-	  → λ(automaton : Text → StateTransitionTable → StateMap Bar → Bar)
-	  → λ(check : List Assertion → Bar)
-	  → let separateBy =
+	  → λ(carrier : Carrier Bar)
+	  → -- Text:
+		let text : Text → Bar = carrier.text
+		let raw : Text → Bar = carrier.raw
+
+		-- Used to combine multiple Bars into one.
+		let join : List Bar → Bar = carrier.join
+
+		-- Primitives of Dzen markup language.
+		let fg : Color → Bar → Bar = carrier.fg
+		let bg : Color → Bar → Bar = carrier.bg
+		let i : Image → Bar = carrier.i
+		let r : Natural → Natural → Bar = carrier.r
+		let ro : Natural → Natural → Bar = carrier.ro
+		let c : Natural → Bar = carrier.c
+		let co : Natural → Bar = carrier.co
+		let p : Position → Bar → Bar = carrier.p
+		let pa : AbsolutePosition → Bar → Bar = carrier.pa
+		let ca : Button → Text → Bar → Bar = carrier.ca
+		let ib : Bar → Bar = carrier.ib
+
+		-- Animations
+		let slider : Slider → List Bar → Bar = carrier.slider
+		let marquee : Marquee → Bar → Bar = carrier.marquee
+
+		-- Other
+		let padding : Natural → Padding → Bar → Bar = carrier.padding
+		let source : Source → Bar = carrier.source
+		let plugin : Plugin → Bar = carrier.plugin
+		let listener : Slot → Bar → Bar = carrier.listener
+		let automaton
+			: Text → StateTransitionTable → StateMap Bar → Bar
+			= carrier.automaton
+		let check : List Assertion → Bar = carrier.check
+
+		let separateBy =
 				λ(sep : Bar)
 			  → λ(list : List Bar)
 			  → join (lib.List/intersperse Bar sep list)

@@ -251,46 +251,42 @@ It's best to read the [Dhall wiki](https://github.com/dhall-lang/dhall-lang/wiki
 
 ### [Bars](dhall/src/Bar.dhall)
 
-The most important concept is `Bar`. Essentially, `Bar` is a tree containing text, images, shapes, etc. in its leaves.
+The most important concept is `Bar`. Essentially, `Bar` is a tree containing text, images, shapes, etc. in its leaves. [Implementation details](#implementation-detail) are not very important for the user. [Default config file](dhall/config.dhall) contains some functions exposed for working with `Bar`s (you should ignore the `carrier` thingy).
 
-The definition of `Bar` is the following:
+Below you can see a hyperlinked list of these functions:
 
 <big><pre>
-let Bar =
-  ∀(Bar : Type)
 -- [Text primitives](#text-primitives):
-→ ∀(text : Text → Bar)
-→ ∀(raw : Text → Bar)
+let text : Text → Bar
+let raw : Text → Bar
 
--- Used to combine multiple Bars into one:
-→ ∀([join](#join) : List Bar → Bar)
+-- Used to combine multiple Bars into one.
+let [join](#join) : List Bar → Bar
 
 -- [Primitives of Dzen markup language](#primitives):
-→ ∀([fg](#coloring) : Color → Bar → Bar)
-→ ∀([bg](#coloring) : Color → Bar → Bar)
-→ ∀([i](#drawing-images) : Image → Bar)
-→ ∀([r](#drawing-shapes) : Natural → Natural → Bar)
-→ ∀([ro](#drawing-shapes) : Natural → Natural → Bar)
-→ ∀([c](#drawing-shapes) : Natural → Bar)
-→ ∀([co](#drawing-shapes) : Natural → Bar)
-→ ∀([p](#positioning) : Position → Bar → Bar)
-→ ∀([pa](#positioning) : AbsolutePosition → Bar → Bar)
-→ ∀([ca](#clickable-areas) : Button → Text → Bar → Bar)
-→ ∀([ib](#ignoring-background-color) : Bar → Bar)
+let [fg](#coloring) : Color → Bar → Bar
+let [bg](#coloring) : Color → Bar → Bar
+let [i](#drawing-images) : Image → Bar
+let [r](#drawing-shapes) : Natural → Natural → Bar
+let [ro](#drawing-shapes) : Natural → Natural → Bar
+let [c](#drawing-shapes) : Natural → Bar
+let [co](#drawing-shapes) : Natural → Bar
+let [p](#positioning) : Position → Bar → Bar
+let [pa](#positioning) : AbsolutePosition → Bar → Bar
+let [ca](#clickable-areas) : Button → Text → Bar → Bar
+let [ib](#ignoring-background-color) : Bar → Bar
 
 -- [Animations](#animations)
-→ ∀([slider](#sliders) : Slider → List Bar → Bar)
-→ ∀([marquee](#marquees) : Marquee → Bar → Bar)
+let [slider](#sliders) : Slider → List Bar → Bar
+let [marquee](#marquees) : Marquee → Bar → Bar
 
 -- Other
-→ ∀([padding](#paddings) : Natural → Padding → Bar → Bar)
-→ ∀([source](#sources) : Source → Bar)
-→ ∀([plugin](#plugins) : Plugin → Bar)
-→ ∀([listener](#listeners) : Slot → Bar → Bar)
-→ ∀([automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar)
-→ ∀([check](#checks) : List [Assertion](#assertions) → Bar)
-→ Bar
-in Bar
+let [padding](#paddings) : Natural → Padding → Bar → Bar
+let [source](#sources) : Source → Bar
+let [plugin](#plugins) : Plugin → Bar
+let [listener](#listeners) : Slot → Bar → Bar
+let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
+let [check](#checks) : List [Assertion](#assertions) → Bar
 </pre></big>
 
 ### Text primitives

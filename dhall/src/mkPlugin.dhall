@@ -8,6 +8,8 @@ let Bar = ./Bar.dhall
 
 let Button = ./Button.dhall
 
+let Carrier = ./Carrier.dhall
+
 let Color = ./Color.dhall
 
 let Hook = ./Hook.dhall
@@ -49,35 +51,44 @@ let enclose =
 	  → λ(child : Plugin)
 	  → [ Token.Open openingTag ] # child # [ Token.Close ]
 
-let mkPlugin
-	: Bar → Plugin
-	=   λ(constructor : Bar)
-	  → constructor
-		(List Token)
-		(λ(text : Text) → [ Token.Txt text ])
-		(λ(raw : Text) → [ Token.Raw raw ])
-		(λ(children : List Plugin) → concat Token children)
-		(   λ(color : Color)
+let carrierListToken
+	: Carrier (List Token)
+	= { text =
+		  λ(text : Text) → [ Token.Txt text ]
+	  , raw =
+		  λ(raw : Text) → [ Token.Raw raw ]
+	  , join =
+		  λ(children : List Plugin) → concat Token children
+	  , fg =
+			λ(color : Color)
 		  → λ(child : Plugin)
 		  → enclose (OpeningTag.FG color) child
-		)
-		(   λ(color : Color)
+	  , bg =
+			λ(color : Color)
 		  → λ(child : Plugin)
 		  → enclose (OpeningTag.BG color) child
-		)
-		(λ(image : Image) → [ Token.I image ])
-		(λ(w : Natural) → λ(h : Natural) → [ Token.R { w = w, h = h } ])
-		(λ(w : Natural) → λ(h : Natural) → [ Token.RO { w = w, h = h } ])
-		(λ(radius : Natural) → [ Token.C radius ])
-		(λ(radius : Natural) → [ Token.CO radius ])
-		(λ(position : Position) → enclose (OpeningTag.P position))
-		(λ(position : AbsolutePosition) → enclose (OpeningTag.PA position))
-		(   λ(button : Button)
+	  , i =
+		  λ(image : Image) → [ Token.I image ]
+	  , r =
+		  λ(w : Natural) → λ(h : Natural) → [ Token.R { w = w, h = h } ]
+	  , ro =
+		  λ(w : Natural) → λ(h : Natural) → [ Token.RO { w = w, h = h } ]
+	  , c =
+		  λ(radius : Natural) → [ Token.C radius ]
+	  , co =
+		  λ(radius : Natural) → [ Token.CO radius ]
+	  , p =
+		  λ(position : Position) → enclose (OpeningTag.P position)
+	  , pa =
+		  λ(position : AbsolutePosition) → enclose (OpeningTag.PA position)
+	  , ca =
+			λ(button : Button)
 		  → λ(command : Text)
 		  → enclose (OpeningTag.CA { button = button, command = command })
-		)
-		(enclose OpeningTag.IB)
-		(   λ(slider : Slider)
+	  , ib =
+		  enclose OpeningTag.IB
+	  , slider =
+			λ(slider : Slider)
 		  → λ(children : List Plugin)
 		  → enclose
 			(OpeningTag.Slider slider)
@@ -85,19 +96,22 @@ let mkPlugin
 			  Token
 			  (List/intersperse Plugin [ Token.Separator ] children)
 			)
-		)
-		(   λ(marquee : Marquee)
+	  , marquee =
+			λ(marquee : Marquee)
 		  → λ(child : Plugin)
 		  → enclose (OpeningTag.Marquee marquee) child
-		)
-		(   λ(width : Natural)
+	  , padding =
+			λ(width : Natural)
 		  → λ(padding : Padding)
 		  → enclose (OpeningTag.Padding { width = width, padding = padding })
-		)
-		(λ(source : Source) → [ Token.Source source ])
-		(λ(p : Plugin) → p)
-		(λ(slot : Slot) → enclose (OpeningTag.Listener slot))
-		(   λ(id : Text)
+	  , source =
+		  λ(source : Source) → [ Token.Source source ]
+	  , plugin =
+		  λ(p : Plugin) → p
+	  , listener =
+		  λ(slot : Slot) → enclose (OpeningTag.Listener slot)
+	  , automaton =
+			λ(id : Text)
 		  → λ(stt : StateTransitionTable)
 		  → λ(stateMap : StateMap Plugin)
 		  → enclose
@@ -110,7 +124,12 @@ let mkPlugin
 			  )
 			  stateMap
 			)
-		)
-		(List/map Assertion Token Token.Assertion)
+	  , check =
+		  List/map Assertion Token Token.Assertion
+	  }
+
+let mkPlugin
+	: Bar → Plugin
+	= λ(constructor : Bar) → constructor (List Token) carrierListToken
 
 in  mkPlugin

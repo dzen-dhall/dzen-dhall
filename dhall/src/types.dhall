@@ -5,6 +5,8 @@
 	./Configuration.dhall
 , Bar =
 	./Bar.dhall
+, Carrier =
+	./Carrier.dhall
 , Check =
 	./Check.dhall
 , Plugin =

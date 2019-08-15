@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d43d2e46388a27b0ef341a1d4d74784d9781d74c9225c19a24b626622fe8b167
+-- hash: 3556996a2c436a7d870890c2755caf92472bf4024e6f7d7f98ed28976c84699e
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -31,6 +31,7 @@ data-files:
     dhall/src/Bar.dhall
     dhall/src/BarSettings.dhall
     dhall/src/Button.dhall
+    dhall/src/Carrier.dhall
     dhall/src/Check.dhall
     dhall/src/ClosingTag.dhall
     dhall/src/Color.dhall
