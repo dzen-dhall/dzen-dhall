@@ -40,8 +40,11 @@ let memoryUsage
 -- ^ `let` keyword introduces new binding
 	: Bar
 	-- ^ Colon means "has type". `memoryUsage` is a `Bar`
-	= bash
-	  -- ^ Call to a function named `bash` with two arguments:
+	= bashWithBinaries
+	  -- ^ Call to a function named `bashWithBinaries` with three arguments:
+	  [ "free", "grep", "echo", "awk" ]
+	  -- ^ Binaries required to run the script (used to exit early if some of them
+	  -- are not present).
 	  5000
 	  -- ^ Update interval in milliseconds
 	  ''
@@ -50,11 +53,13 @@ let memoryUsage
 	  UsedMem=`echo "$TMP" | awk '{ print $3; }'`
 	  echo "$((UsedMem * 100 / TotalMem))"
 	  ''
+	  -- ^ The script itself
 
 -- A bar that shows how much swap is used:
 let swapUsage
 	: Bar
-	= bash
+	= bashWithBinaries
+	  [ "free", "grep", "echo", "awk" ]
 	  5000
 	  ''
 	  TMP=`free -b | grep 'Swap'`
@@ -64,7 +69,9 @@ let swapUsage
 	  ''
 
 -- A bar that shows current date and time:
-let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
+let clocks
+	: Bar
+	= bashWithBinaries [ "date" ] 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
 in  separate
     -- ^ a function that inserts a |-separator between nearby elements of a list
@@ -281,6 +288,7 @@ let Bar =
 → ∀([plugin](#plugins) : Plugin → Bar)
 → ∀([listener](#listeners) : Slot → Bar → Bar)
 → ∀([automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar)
+→ ∀([check](#checks) : List [Assertion](#assertions) → Bar)
 → Bar
 in Bar
 </pre></big>
@@ -551,6 +559,25 @@ let myHook : Hook =
   , allowedExitCodes = Some [ 0 ]
   }
 ```
+
+### Checks
+
+Startup-time checks allow to assert that certain condition is true.
+
+#### Assertions
+
+It is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
+
+```dhall
+let Check = < BinaryInPath : Text | SuccessfulExit : Text >
+
+let Assertion : Type = { message : Text, check : Check }
+
+in  Assertion
+
+```
+
+A `message` will be printed to the console on assertion failure. Assertions, when used wisely, greatly reduce debugging time.
 
 ## Naming conventions
 

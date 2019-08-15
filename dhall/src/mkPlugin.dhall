@@ -1,43 +1,48 @@
 {- `Bar` to `Plugin` conversion. `Plugin` = `List Token`. -}
-let Bar = ./Bar.dhall
-
-let Plugin = ./Plugin.dhall
-
-let Token = ./Token.dhall
-
-let Source = ./Source.dhall
-
-let OpeningTag = ./OpeningTag.dhall
-
-let Marquee = ./Marquee.dhall
-
-let Slider = ./Slider.dhall
-
-let StateTransitionTable = ./StateTransitionTable.dhall
-
-let StateMap = ./StateMap.dhall
-
-let Slot = ./Slot.dhall
-
-let Color = ./Color.dhall
-
-let Image = ./Image.dhall
-
-let Position = ./Position.dhall
 
 let AbsolutePosition = ./AbsolutePosition.dhall
 
+let Assertion = ./Assertion.dhall
+
+let Bar = ./Bar.dhall
+
 let Button = ./Button.dhall
+
+let Color = ./Color.dhall
+
+let Hook = ./Hook.dhall
+
+let Image = ./Image.dhall
+
+let Marquee = ./Marquee.dhall
+
+let OpeningTag = ./OpeningTag.dhall
 
 let Padding = ./Padding.dhall
 
-let Hook = ./Hook.dhall
+let Plugin = ./Plugin.dhall
+
+let Position = ./Position.dhall
+
+let Slider = ./Slider.dhall
+
+let Slot = ./Slot.dhall
+
+let Source = ./Source.dhall
+
+let StateMap = ./StateMap.dhall
+
+let StateTransitionTable = ./StateTransitionTable.dhall
+
+let Token = ./Token.dhall
 
 let concat = ./../lib/List/concat.dhall
 
 let List/intersperse = ./../lib/List/intersperse.dhall
 
 let List/concatMap = ./../lib/List/concatMap.dhall
+
+let List/map = ./../lib/List/map.dhall
 
 let enclose =
 		λ(openingTag : OpeningTag)
@@ -106,5 +111,6 @@ let mkPlugin
 			  stateMap
 			)
 		)
+		(List/map Assertion Token Token.Assertion)
 
 in  mkPlugin

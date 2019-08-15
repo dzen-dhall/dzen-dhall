@@ -7,6 +7,7 @@ For example, ./mkPlugin.dhall converts `Bar` to `Plugin`, which is a synonym for
 -}
 
 let AbsolutePosition = ./AbsolutePosition.dhall
+let Assertion = ./Assertion.dhall
 let Button = ./Button.dhall
 let Color = ./Color.dhall
 let Hook = ./Hook.dhall
@@ -53,5 +54,6 @@ let Bar =
 	→ ∀(plugin : Plugin → Bar)
 	→ ∀(listener : Slot → Bar → Bar)
 	→ ∀(automaton : Text → StateTransitionTable → StateMap Bar → Bar)
+	→ ∀(check : List Assertion → Bar)
 	→ Bar
 in Bar

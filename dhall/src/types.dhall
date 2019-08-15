@@ -1,8 +1,12 @@
 {- Collect all types -}
-{ Configuration =
+{ Assertion =
+	./Assertion.dhall
+, Configuration =
 	./Configuration.dhall
 , Bar =
 	./Bar.dhall
+, Check =
+	./Check.dhall
 , Plugin =
 	./Plugin.dhall
 , BarSettings =

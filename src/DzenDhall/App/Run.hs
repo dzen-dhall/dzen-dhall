@@ -8,7 +8,7 @@ import           DzenDhall.Data
 import           DzenDhall.Event
 import           DzenDhall.Extra
 import           DzenDhall.Runtime
-import           DzenDhall.Validation
+import qualified DzenDhall.Validation
 import qualified DzenDhall.Parser as Parser
 
 import           Control.Concurrent
@@ -21,11 +21,12 @@ useConfigurations :: App Common ()
 useConfigurations = do
   runtime <- App.getRuntime
   forM_ (view rtConfigurations runtime) $ \cfg -> do
-    let barTokens = cfg ^. cfgBarTokens
-    let errors = validate barTokens
+
+    (errors, barTokens) <- liftIO $
+      DzenDhall.Validation.run $ cfg ^. cfgBarTokens
 
     unless (null errors) $
-      App.exit 3 $ report errors
+      App.exit 3 $ DzenDhall.Validation.report errors
 
     case Parser.runBarParser barTokens of
       Left err -> App.exit 3 $ fromLines

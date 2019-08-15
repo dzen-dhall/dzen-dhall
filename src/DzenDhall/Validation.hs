@@ -5,10 +5,15 @@ import           DzenDhall.Config
 import           DzenDhall.Event
 import           DzenDhall.Extra
 
-import qualified Text.Megaparsec
-import qualified Data.Text
+import           Data.Maybe
 import           Data.Text (Text)
 import           Data.Void
+import           Lens.Micro
+import           System.Directory (findExecutable)
+import           System.Exit
+import           System.Process
+import qualified Data.Text
+import qualified Text.Megaparsec
 
 
 type ParseError = Text.Megaparsec.ParseErrorBundle String Void
@@ -17,6 +22,19 @@ type ParseError = Text.Megaparsec.ParseErrorBundle String Void
 data Error
   = InvalidSlotAddress ParseError Text
   | InvalidAutomatonAddress ParseError Text
+  | BinaryNotInPath Text Text
+  | AssertionFailure Text Text
+
+
+run :: [Token] -> IO ([Error], [Token])
+run tokens = do
+  let errors = validate tokens
+  assertionErrors <- checkAssertions tokens
+  pure $ (errors <> assertionErrors, filterOutAssertions tokens)
+    where
+      filterOutAssertions = filter $ \case
+        TokAssertion _ -> False
+        _              -> True
 
 
 validate :: [Token] -> [Error]
@@ -35,6 +53,22 @@ validate = reverse . go []
         Nothing -> acc
         Just err -> cont err what : acc
 
+checkAssertions :: [Token] -> IO [Error]
+checkAssertions [] = pure []
+checkAssertions (TokAssertion assertion : xs) = do
+  newErrors <-
+    case assertion ^. assCheck of
+      BinaryInPath binary -> do
+        mbPath <- findExecutable (Data.Text.unpack binary)
+        pure [ BinaryNotInPath binary (assertion ^. assMessage) | isNothing mbPath ]
+      SuccessfulExit code -> do
+        let process = System.Process.shell (Data.Text.unpack code)
+        (exitCode, _, _) <- System.Process.readCreateProcessWithExitCode process ""
+        pure [ AssertionFailure code (assertion ^. assMessage) | exitCode /= ExitSuccess ]
+
+  (newErrors ++) <$> checkAssertions xs
+
+checkAssertions (_ : xs) = checkAssertions xs
 
 -- | Check if the input is parseable by the parser.
 getError :: Text.Megaparsec.Parsec Void String Text -> String -> Maybe (Text.Megaparsec.ParseErrorBundle String Void)
@@ -58,8 +92,35 @@ report errors = mappend header $ foldMap ((<> "\n\n") . reportError) errors
         , "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
         , namingConventions
         ]
+
       InvalidAutomatonAddress err address -> fromLines
         [ "Invalid automaton address: " <> address
         , "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
         , namingConventions
+        ]
+
+      BinaryNotInPath binary message -> fromLines $
+        [ "One of required binaries was not found in $PATH: " <> binary
+        ] <>
+        [ fromLines
+          [ ""
+          , "Message:"
+          , ""
+          , message
+          ]
+        | not (Data.Text.null message)
+        ]
+
+      AssertionFailure code message -> fromLines $
+        [ "One of assertions failed:"
+        , ""
+        , code
+        ] <>
+        [ fromLines
+          [ ""
+          , "Message:"
+          , ""
+          , message
+          ]
+        | not (Data.Text.null message)
         ]

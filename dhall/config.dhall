@@ -4,6 +4,8 @@ let types = ./src/types.dhall
 
 let utils = ./src/utils.dhall
 
+let Assertion = types.Assertion
+
 let AbsolutePosition = types.AbsolutePosition
 
 let Bar = types.Bar
@@ -15,6 +17,8 @@ let Button = types.Button
 let Event = types.Event
 
 let Hook = types.Hook
+
+let Check = types.Check
 
 let Color = types.Color
 
@@ -72,6 +76,7 @@ let defaultBar
 	  → λ(plugin : Plugin → Bar)
 	  → λ(listener : Slot → Bar → Bar)
 	  → λ(automaton : Text → StateTransitionTable → StateMap Bar → Bar)
+	  → λ(check : List Assertion → Bar)
 	  → let separateBy =
 				λ(sep : Bar)
 			  → λ(list : List Bar)
@@ -94,9 +99,28 @@ let defaultBar
 					{ joinLines = False, escapeMarkup = True }
 				}
 
+		let bashWithBinaries
+			: List Text → Natural → Text → Bar
+			=   λ(binaries : List Text)
+			  → λ(interval : Natural)
+			  → λ(input : Text)
+			  → join
+				[ check
+				  ( lib.List/map
+					Text
+					Assertion
+					(   λ(binary : Text)
+					  → { message = "", check = Check.BinaryInPath binary }
+					)
+					binaries
+				  )
+				, bash interval input
+				]
+
 		let memoryUsage
 			: Bar
-			= bash
+			= bashWithBinaries
+			  [ "free", "grep", "echo", "awk" ]
 			  5000
 			  ''
 			  TMP=`free -b | grep 'Mem'`
@@ -107,7 +131,8 @@ let defaultBar
 
 		let swapUsage
 			: Bar
-			= bash
+			= bashWithBinaries
+			  [ "free", "grep", "echo", "awk" ]
 			  5000
 			  ''
 			  TMP=`free -b | grep 'Swap'`
@@ -116,7 +141,9 @@ let defaultBar
 			  echo "$((UsedSwap * 100 / TotalSwap))"
 			  ''
 
-		let clocks : Bar = bash 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
+		let clocks
+			: Bar
+			= bashWithBinaries [ "date" ] 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
 		in  separate
 			[ join [ text "Mem: ", memoryUsage, text "%" ]
