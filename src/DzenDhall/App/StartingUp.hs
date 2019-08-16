@@ -93,16 +93,32 @@ mkBarRuntime cfg = do
 
 
 -- | During initialization, IORefs for source outputs and caches are created.
--- Also, new thread for each source is created. This thread then updates the outputs.
+-- Also, new threads for each unique source is created. These threads then
+-- update the outputs.
 initialize
   :: Bar Marshalled
   -> App StartingUp (Bar Initialized)
-initialize (BarSource source@Source{escapeMode}) = liftIO $ do
+initialize (BarSource source@Source{escapeMode}) = do
 
-  outputRef <- newIORef ""
-  cacheRef  <- newIORef Nothing
+  state <- get
 
-  void $ forkIO (mkThread source outputRef cacheRef)
+  -- We don't want to spawn separate threads for identical `Source`s within
+  -- the same scope.
+  -- A HashMap is used to cache all references to sources and prevent
+  -- duplication when possible.
+  -- Note that identical sources from distinct scopes are intentionally allowed:
+  -- we don't want separate scopes to affect each other's behavior.
+
+  let mbCached = H.lookup (state ^. ssScopeName, source) (state ^. ssSourceCache)
+
+      createRefs :: App StartingUp (IORef Text, Cache)
+      createRefs = liftIO $ do
+        outputRef <- newIORef ""
+        cacheRef  <- newIORef Nothing
+        void $ forkIO (mkThread source outputRef cacheRef)
+        pure (outputRef, cacheRef)
+
+  (outputRef, cacheRef) <- maybe createRefs pure mbCached
 
   pure $ BarSource $ SourceHandle outputRef cacheRef escapeMode
 
@@ -118,41 +134,48 @@ initialize (BarSlider slider children) = do
   BarSlider slider' <$> mapM initialize children
 
 initialize (BarAutomaton address stt stateMap) = do
+  state <- get
 
-  -- This binding determines what state to enter first
-  let initialState = ""
+  let scope = state ^. ssScopeName
 
-  scope <- (^. ssScopeName) <$> get
+      mbCached = H.lookup (scope, address) (state ^. ssAutomataCache)
 
-  let addScope = (<> ("@" <> scope))
+      newBarRef = do
+        let initialState = ""
 
-  -- Add current scope to all addresses in state transition table
-  let stt' = STT
-           . H.fromList
-           . map (first (_1 %~ addScope))
-           . H.toList
-           . unSTT
-           $ stt
+        let addScope = (<> ("@" <> state ^. ssScopeName))
 
-  -- Create a reference to the current state
-  stateRef :: IORef Text <- liftIO $ newIORef initialState
+        -- Add current scope to all addresses in state transition table
+        let stt' = STT
+                 . H.fromList
+                 . map (first (_1 %~ addScope))
+                 . H.toList
+                 . unSTT
+                 $ stt
 
-  -- Initialize all children
-  stateMap' :: H.HashMap Text (Bar Initialized) <- mapM initialize stateMap
+        -- Create a reference to the current state
+        stateRef :: IORef Text <- liftIO $ newIORef initialState
 
-  -- Create a reference to the current Bar (so that collectSources will not need to
-  -- look up the correct Bar in stateMap').
-  barRef :: IORef (Bar Initialized) <- liftIO $
-    newIORef $ fromMaybe mempty (H.lookup initialState stateMap')
+        -- Initialize all children
+        stateMap' :: H.HashMap Text (Bar Initialized) <- mapM initialize stateMap
 
-  let subscription = [ AutomatonSubscription stt' stateMap' stateRef barRef ]
+        -- Create a reference to the current Bar (so that collectSources will not need to
+        -- look up the correct Bar in stateMap').
+        barRef :: IORef (Bar Initialized) <- liftIO $
+          newIORef $ fromMaybe mempty (H.lookup initialState stateMap')
 
-  -- Absolute slot addresses (incl. scope)
-  let slots :: [Text] = nubOrd $ (^. _1) <$> H.keys (unSTT stt')
+        let subscription = [ AutomatonSubscription stt' stateMap' stateRef barRef ]
 
-  -- Add subscription for each slot
-  modify $ ssAutomataHandles %~
-    (\handleMap -> foldr (\slot -> H.insertWith (++) slot subscription) handleMap slots)
+        -- Absolute slot addresses (incl. scope)
+        let slots :: [Text] = nubOrd $ (^. _1) <$> H.keys (unSTT stt')
+
+        -- Add a subscription for each slot
+        modify $ ssAutomataHandles %~
+          (\handleMap -> foldr (\slot -> H.insertWith (++) slot subscription) handleMap slots)
+
+        pure barRef
+
+  barRef <- maybe newBarRef pure mbCached
 
   pure $ BarAutomaton address () barRef
 

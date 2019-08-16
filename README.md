@@ -310,7 +310,7 @@ Background and foreground colors can be set using `bg` and `fg`. A color can be 
 
 #### Relative positioning
 
-Relative positioning (`p`) allows to shift by some number of pixels in any direction, reset vertical position, lock or unlock horizontal position, and "move" to any of the four edges of the screen:
+Relative positioning (`p`) allows to shift by some number of pixels in any direction, reset vertical position, lock or unlock horizontal position, and "move" to one of the four edges of the screen:
 
 ```dhall
 let Position : Type =
@@ -365,7 +365,7 @@ let Button : Type = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft
 
 #### Ignoring background color
 
-`ib` can be used to completely disable background coloring for a region of output. It cannot be enabled again from within a child block.
+`ib` can be used to completely disable background coloring for a region of output. Background coloring can't be enabled again from within a child `Bar`.
 
 For example, this:
 
@@ -412,7 +412,7 @@ slider
   -- ^ How many frames to spend on switching.
   , height =
     20
-  -- ^ How many pixels up or down move the output.
+  -- ^ How many pixels up or down to move the output.
   }
 , fadeOut =
   { direction =
@@ -749,7 +749,7 @@ Dhall does not support recursive ADTs (which are obviously required to construct
 
 We use this method in a slightly modified variant: [`Carrier`](dhall/src/Carrier.dhall) type is introduced to hide all the constructors in a huge record.
 
-Essentially, [our definitions of `Bar`](dhall/src/Bar.dhall) is equivalent to something like the following, which is a direct Boehm-Berarducci encoding:
+Essentially, [our definition of `Bar`](dhall/src/Bar.dhall) is equivalent to something like the following, which is a direct Boehm-Berarducci encoding:
 
 ```dhall
 let Bar =

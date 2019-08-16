@@ -4,14 +4,14 @@
 {-# LANGUAGE TypeFamilies #-}
 module DzenDhall.Data where
 
-import qualified Data.HashMap.Strict as H
 import           Data.IORef
 import           Data.Text (Text)
 import           Data.Vector
+import           Data.Void
 import           DzenDhall.Config
 import           GHC.Generics
 import           Lens.Micro.TH
-import           Data.Void
+import qualified Data.HashMap.Strict as H
 
 type Cache = IORef (Maybe Text)
 

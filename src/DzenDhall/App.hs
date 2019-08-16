@@ -81,7 +81,7 @@ getCounter = do
 liftStartingUp :: App StartingUp a -> BarSettings -> App Common a
 liftStartingUp (App app) bs = App . lift $ State.evalStateT app initialStartupState
   where
-    initialStartupState = StartupState mempty "scope" bs 0
+    initialStartupState = StartupState mempty "scope" bs 0 mempty mempty
 
 runAppForked :: App Forked () -> BarRuntime -> App Common ()
 runAppForked app st = do

@@ -369,6 +369,8 @@ data EscapeMode = EscapeMode
   }
   deriving (Show, Eq, Generic)
 
+instance Hashable EscapeMode
+
 escapeModeType :: Type EscapeMode
 escapeModeType = record $
   EscapeMode <$> field "joinLines"    bool
@@ -382,6 +384,8 @@ data Source
   , input          :: Maybe Text
   , escapeMode     :: EscapeMode
   } deriving (Show, Eq, Generic)
+
+instance Hashable Source
 
 sourceSettingsType :: Type Source
 sourceSettingsType = record $

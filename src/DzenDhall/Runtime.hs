@@ -1,21 +1,24 @@
 {-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Runtime where
 
-import DzenDhall.Arguments
-import DzenDhall.Event
-import DzenDhall.Config hiding (Hook)
-import Paths_dzen_dhall
+import           DzenDhall.Arguments
+import           DzenDhall.Event
+import           DzenDhall.Data
+import           DzenDhall.Config hiding (Hook)
+import           Paths_dzen_dhall
 
-import Control.Monad
-import Data.Maybe
-import Dhall hiding (maybe)
-import Lens.Micro
-import Lens.Micro.TH
-import System.Directory
-import System.Exit (ExitCode(..), exitWith)
-import System.FilePath ((</>))
-import System.Posix.Files
-import System.IO
+import           Control.Monad
+import           Data.Maybe
+import           Data.IORef
+import           Dhall hiding (maybe)
+import           Lens.Micro
+import           Lens.Micro.TH
+import           System.Directory
+import           System.Exit (ExitCode(..), exitWith)
+import           System.FilePath ((</>))
+import           System.Posix.Files
+import           System.IO
+import qualified Data.HashMap.Strict as H
 
 apiVersion :: Int
 apiVersion = 1
@@ -39,6 +42,8 @@ data StartupState
   , _ssCounter :: Int
   -- ^ Counter that is incremented each time it is requested (used as a source
   -- of unique identifiers). See also: 'DzenDhall.App.getCounter'
+  , _ssSourceCache :: H.HashMap (Text, Source) (IORef Text, Cache)
+  , _ssAutomataCache :: H.HashMap (Text, Text) (IORef (Bar Initialized))
   }
 
 makeLenses ''StartupState
