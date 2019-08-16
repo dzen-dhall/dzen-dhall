@@ -18,6 +18,7 @@ import           Lens.Micro
 import           Control.Concurrent
 import           Control.Monad
 import           System.Exit
+import           System.Random
 
 -- * App execution stages
 --
@@ -81,7 +82,7 @@ getCounter = do
 liftStartingUp :: App StartingUp a -> BarSettings -> App Common a
 liftStartingUp (App app) bs = App . lift $ State.evalStateT app initialStartupState
   where
-    initialStartupState = StartupState mempty "scope" bs 0 mempty mempty
+    initialStartupState = StartupState mempty "scope" bs 0 mempty mempty []
 
 runAppForked :: App Forked () -> BarRuntime -> App Common ()
 runAppForked app st = do
@@ -96,3 +97,7 @@ exit exitCode message = liftIO $ do
 
 waitForever :: App stage a
 waitForever = liftIO $ forever $ threadDelay maxBound
+
+randomSuffix :: App stage String
+randomSuffix =
+  liftIO $ take 10 . randomRs ('a','z') <$> newStdGen

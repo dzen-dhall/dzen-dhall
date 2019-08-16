@@ -13,6 +13,7 @@ import qualified DzenDhall.Animation.Marquee as Marquee
 import qualified DzenDhall.Animation.Slider as Slider
 
 import           Control.Arrow
+import           Control.Applicative
 import           Control.Concurrent
 import           Control.Exception hiding (handle)
 import           Control.Monad
@@ -24,10 +25,10 @@ import           GHC.IO.Handle
 import           Lens.Micro
 import           Lens.Micro.Extras
 import           System.Directory
+import           System.Environment
 import           System.FilePath ((</>))
 import           System.Posix.Files
 import           System.Process
-import           System.Random
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text
 import qualified Data.Text.IO
@@ -39,11 +40,17 @@ startUp
   -> Bar Marshalled
   -> App StartingUp (Bar Initialized, AutomataHandles, BarRuntime)
 startUp cfg bar = do
-  bar' <- initialize bar
-  startupState <- get
-  let handles = startupState ^. ssAutomataHandles
-  barRuntime <- mkBarRuntime cfg
-  pure (bar', handles, barRuntime)
+  barRuntime  <- mkBarRuntime cfg
+  bar'        <- initialize bar
+  state       <- get
+
+  environment <- liftIO getEnvironment
+
+  forM_ (state ^. ssSourceQueue) $
+    \(source, outputRef, cacheRef, scope) -> do
+      mkThread environment barRuntime source outputRef cacheRef scope
+
+  pure (bar', state ^. ssAutomataHandles, barRuntime)
 
 
 mkBarRuntime
@@ -59,13 +66,29 @@ mkBarRuntime cfg = do
       fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
       flags       = fontFlags <> extraFlags
 
-  tmpDir <- liftIO $
+  tmpFilePrefix <- fmap (</> "dzen-dhall-rt-") $ liftIO $
     getTemporaryDirectory `catch` \(_e :: IOException) -> getCurrentDirectory
-  randomSuffix <- liftIO $
-    take 10 . randomRs ('a','z') <$> newStdGen
-  let namedPipe = tmpDir </> "dzen-dhall-rt-" <> randomSuffix
 
-  liftIO $ createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
+  namedPipe <- (tmpFilePrefix <>) <$> randomSuffix
+  liftIO $
+    createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
+
+  emitterScript <- (tmpFilePrefix <>) <$> randomSuffix
+  liftIO $ do
+    Data.Text.IO.writeFile emitterScript $ fromLines
+      [ "#!/usr/bin/env bash"
+      , "SCOPE=\"$1\""
+      , "SLOT=\"$2\""
+      , "EVENT=\"$3\""
+      , "echo event:\"$EVENT\",slot:\"$SLOT\"\"@\"\"$SCOPE\" >> " <>
+        Data.Text.pack namedPipe
+      ]
+
+    setFileMode emitterScript $
+      ownerExecuteMode `unionFileModes`
+      groupExecuteMode `unionFileModes`
+      ownerReadMode    `unionFileModes`
+      groupReadMode
 
   handle <- case runtime ^. rtArguments ^. stdoutFlag of
 
@@ -89,7 +112,7 @@ mkBarRuntime cfg = do
           "Couldn't open IO handles for dzen binary " <>
           showPack dzenBinary
 
-  pure $ BarRuntime cfg 0 namedPipe handle
+  pure $ BarRuntime cfg 0 namedPipe emitterScript handle
 
 
 -- | During initialization, IORefs for source outputs and caches are created.
@@ -112,10 +135,11 @@ initialize (BarSource source@Source{escapeMode}) = do
   let mbCached = H.lookup (state ^. ssScopeName, source) (state ^. ssSourceCache)
 
       createRefs :: App StartingUp (IORef Text, Cache)
-      createRefs = liftIO $ do
-        outputRef <- newIORef ""
-        cacheRef  <- newIORef Nothing
-        void $ forkIO (mkThread source outputRef cacheRef)
+      createRefs = do
+        (outputRef, cacheRef) <- liftIO $
+          liftA2 (,) (newIORef "") (newIORef Nothing)
+        modify $ ssSourceQueue <>~
+          [(source, outputRef, cacheRef, state ^. ssScopeName)]
         pure (outputRef, cacheRef)
 
   (outputRef, cacheRef) <- maybe createRefs pure mbCached
@@ -208,28 +232,40 @@ initialize (BarText text) =
 
 -- | Run source process either once or forever, depending on source settings.
 mkThread
-  :: Source
+  :: [(String, String)]
+  -> BarRuntime
+  -> Source
   -> IORef Text
   -> Cache
-  -> IO ()
-mkThread Source { command = [] } outputRef cacheRef = do
+  -> Text
+  -> App StartingUp ()
+mkThread _ _ Source { command = [] } outputRef cacheRef scope = do
   let message = "dzen-dhall error: no command specified"
-  writeIORef cacheRef $ Just message
-  writeIORef outputRef message
+  liftIO $ do
+    writeIORef cacheRef $ Just message
+    writeIORef outputRef message
 mkThread
+  environment
+  barRuntime
   Source { updateInterval
          , command = (binary : args)
          , input }
   outputRef
-  cacheRef = do
+  cacheRef
+  scope = do
 
-  let sourceProcess =
+  let emitter =
+        barRuntime ^. brEmitterScript <> " " <> Data.Text.unpack scope
+      sourceProcess =
         (proc binary args) { std_out = CreatePipe
                            , std_in  = CreatePipe
                            , std_err = CreatePipe
+                           , env = Just $
+                             [ ("EMIT", emitter) ] <>
+                             environment
                            }
 
-  case updateInterval of
+  void $ liftIO $ forkIO $ case updateInterval of
 
     -- If update interval is specified, loop forever.
     Just interval -> do

@@ -128,7 +128,6 @@ data Hook
   = Hook
   { _hookCommand          :: [Text]
   , _hookInput            :: Maybe Text
-  , _hookAllowedExitCodes :: Maybe [Int]
   }
   deriving (Show, Eq, Generic)
 
@@ -138,7 +137,6 @@ hookType :: Type Hook
 hookType = record $
   Hook <$> field "command"          (list strictText)
        <*> field "input"            (Dhall.maybe strictText)
-       <*> field "allowedExitCodes" (Dhall.maybe (list (fromIntegral <$> natural)))
 
 newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, Event, Text) Text }
   deriving (Show, Eq, Generic)

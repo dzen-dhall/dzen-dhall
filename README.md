@@ -638,14 +638,12 @@ let stateMap
 Slots are used to route events throughout the interface: you can think of slots as of adresses from which events can be sent. Each slot is essentially a piece of `Text`:
 
 ```dhall
-let Slot : Type = Text in Slot
+let Slot : Type = Text
 ```
 
 ### [Hooks](dhall/src/Hook.dhall)
 
-Hooks allow to execute arbitrary commands before state transitions of automata. They can also be used to prevent state transitions from happening - the
-`requiredExitCodes : Optional (List Natural)`
-field allows to specify a list of allowed exit codes for the command. If `allowedExitCodes` is set `None : Optional (List Natural)`, hook will always succeed. If it is `Some ([] : List Natural)`, it will always fail.
+Hooks allow to execute arbitrary commands before state transitions of automata. When a hook exits with non-zero code, it prevents its corresponding state transition from happening. So, generally, hooks should only contain commands that exit fast.
 
 ```dhall
 let Hook
@@ -654,11 +652,7 @@ let Hook
 		  List Text
 	  , input :
 		  Optional Text
-	  , allowedExitCodes :
-		  Optional (List Natural)
 	  }
-
-in  Hook
 ```
 
 For example, The following hook will succeed only if a certain file exists:

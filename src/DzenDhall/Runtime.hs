@@ -44,6 +44,11 @@ data StartupState
   -- of unique identifiers). See also: 'DzenDhall.App.getCounter'
   , _ssSourceCache :: H.HashMap (Text, Source) (IORef Text, Cache)
   , _ssAutomataCache :: H.HashMap (Text, Text) (IORef (Bar Initialized))
+  , _ssSourceQueue :: [(Source, IORef Text, Cache, Text)]
+  -- ^ A queue containing ready-to-be-initialized `Source`s and their handles &
+  -- scope names.
+  -- This queue is needed because we want to create a `BarRuntime` before
+  -- actually running the source processes (they depend on `brEmitterScript` value).
   }
 
 makeLenses ''StartupState
@@ -53,6 +58,8 @@ data BarRuntime = BarRuntime
   , _brFrameCounter :: Int
   , _brNamedPipe :: String
   -- ^ Named pipe to use as a communication channel for listening to mouse events
+  , _brEmitterScript :: String
+  -- ^ A script that can be used to emit events
   , _brHandle :: Handle
   -- ^ A handle to write to. The value is either stdin of a @dzen2@ process or
   -- 'System.IO.stdout', if @--stdout@ flag is passed.
