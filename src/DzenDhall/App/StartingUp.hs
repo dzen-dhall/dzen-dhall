@@ -97,8 +97,7 @@ mkBarRuntime cfg = do
 initialize
   :: Bar Marshalled
   -> App StartingUp (Bar Initialized)
-initialize (BarSource source@Source{escapeMode})
-  = liftIO $ do
+initialize (BarSource source@Source{escapeMode}) = liftIO $ do
 
   outputRef <- newIORef ""
   cacheRef  <- newIORef Nothing

@@ -129,7 +129,7 @@ To create default configuration, run
 dzen-dhall init
 ```
 
-dzen-dhall will put some files to `~/.config/dzen-dhall/`
+`dzen-dhall` will put some files to `~/.config/dzen-dhall/`
 
 Files in `src/` and `lib/` subdirectories are set read-only by default - the user should not edit them, because they contain the implementation. They are still exposed to make it easier to debug the configuration.
 
@@ -173,7 +173,7 @@ The following components are required:
 - a [state map](#state-maps) - a mapping from automaton states to `Bar`s.
 - an automaton ID - just a string, that can be used from [sources](#sources) to query your automaton state.
 
-For example, the following piece of code defines a `Bar` that switches between two states.
+For example, this piece of code defines a `Bar` that switches between two states:
 
 ```dhall
 let mySwitcher : Bar =
@@ -216,26 +216,14 @@ let mySwitcher : Bar =
 	  in  listener mySlot (automaton myID stt stateMap)
 ```
 
-A [listener](#listeners) awaits for mouse events and sends them to the slot. Two state transitions are bound to the left-click event on the same slot. The default state of the automaton is `""` (by convention).
+A [listener](#listeners) awaits for mouse events and sends them to the slot. Two state transitions are bound on the same slot to the left-click event. The initial state of the automaton is `""` (by convention).
 
 </p>
 </details>
 <details><summary><strong>I don't need my bar to be stateful</strong></summary>
 <p>
 
-Use this `Bar` constructor:
-
-```dhall
-∀(ca : Button → Text → Bar → Bar)
-```
-
-Its semantics resemble that of the `^ca()` dzen2 markup command.
-
-Example:
-
-```dhall
-(ca Button.Left "notify-send hello!" (text "Click me!"))
-```
+Use [clickable areas](#clickable-areas).
 
 </p>
 </details>
@@ -245,7 +233,7 @@ Example:
 
 ## Concepts
 
-This chapter describes dzen-dhall DSL in depth. You can safely skip most of it if you are only interested in consuming already made plugins.
+This chapter describes `dzen-dhall` DSL in depth. You can safely skip most of it if you are only interested in consuming already made plugins.
 
 It's best to read the [Dhall wiki](https://github.com/dhall-lang/dhall-lang/wiki) to become familiar with Dhall syntax before reading this chapter.
 
@@ -271,8 +259,8 @@ let [r](#drawing-shapes) : Natural → Natural → Bar
 let [ro](#drawing-shapes) : Natural → Natural → Bar
 let [c](#drawing-shapes) : Natural → Bar
 let [co](#drawing-shapes) : Natural → Bar
-let [p](#positioning) : Position → Bar → Bar
-let [pa](#positioning) : AbsolutePosition → Bar → Bar
+let [p](#relative-positioning) : Position → Bar → Bar
+let [pa](#absolute-positioning) : AbsolutePosition → Bar → Bar
 let [ca](#clickable-areas) : Button → Text → Bar → Bar
 let [ib](#ignoring-background-color) : Bar → Bar
 
@@ -286,47 +274,125 @@ let [source](#sources) : Source → Bar
 let [plugin](#plugins) : Plugin → Bar
 let [listener](#listeners) : Slot → Bar → Bar
 let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
-let [check](#checks) : List [Assertion](#assertions) → Bar
+let [check](#assertions) : List [Assertion](#assertions) → Bar
 </pre></big>
 
 ### Text primitives
 
 `text` is used to create `Bar`s containing static, escaped pieces of text. `raw`, on the contrary, does not escape the given text, so that if it does contain markup, it will be interpreted by dzen2.
 
+### Primitives
+
+Various primitives of dzen2 markup language (`^fg()`, `^bg()`, `^i()`, etc.) are represented by corresponding `Bar` constructors (`fg`, `bg`, `i`, etc.). See [dzen2 README](https://github.com/robm/dzen) for details on them.
 
 #### Coloring
 
-TODO
+Background and foreground colors can be set using `bg` and `fg`. A color can be one of the following:
+
+- [X11 color name](https://en.wikipedia.org/wiki/X11_color_names);
+- `#XXX`-formatted hex number;
+- `#XXXXXX`-formatted hex number.
+
+`fg` can also be used to set colors of [XBM bitmaps](#drawing-images).
 
 #### Drawing images
 
-TODO
+[XBM images](https://www.fileformat.info/format/xbm/egff.htm) are supported. [GIMP](https://www.gimp.org/) can be used to edit them.
 
 #### Drawing shapes
 
-TODO
+| Function | Meaning           |
+|----------|-------------------|
+| `r`      | Rectangle         |
+| `ro`     | Rectangle outline |
+| `c`      | Circle            |
+| `co`     | Circle outline    |
 
-#### Positioning
+#### Relative positioning
 
-TODO
+Relative positioning (`p`) allows to shift by some number of pixels in any direction, reset vertical position, lock or unlock horizontal position, and "move" to any of the four edges of the screen:
+
+```dhall
+let Position : Type =
+< XY : { x : Integer, y : Integer }
+| _RESET_Y
+| _LOCK_X
+| _UNLOCK_X
+| _LEFT
+| _RIGHT
+| _TOP
+| _CENTER
+| _BOTTOM  >
+```
+
+For example, `(p (Position.XY { x = +10, y = -5 }) (text "Relative position"))`.
+
+It is not recommended to use this function in conjunction with [animations](#animations).
+
+#### Absolute positioning
+
+With `ap` function, it is possible to specify absolute position of a bar, relative to the top-left edge of the screen.
+
+`AbsolutePosition` is defined as:
+
+```dhall
+let AbsolutePosition : Type = { x : Integer, y : Integer }
+```
+
+Example:
+
+```dhall
+(pa { x = +0, y = +0 } (text "Absolute position"))
+```
+
+It is not recommended to use this function in conjunction with [animations](#animations).
 
 #### Clickable areas
 
-TODO
+Example:
+
+```dhall
+(ca Button.Left "notify-send hello!" (text "Click me!"))
+```
+
+##### Buttons
+
+`Button` is defined as:
+
+```dhall
+let Button : Type = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | ScrollRight >
+```
 
 #### Ignoring background color
 
-TODO
+`ib` can be used to completely disable background coloring for a region of output. It cannot be enabled again from within a child block.
+
+For example, this:
+
+```dhall
+bg
+("#F00")
+( join
+[ text "..."
+, ib
+  ( join
+	[ text "background color is "
+	, bg ("#0F0") (text "completely")
+	, text "ignored"
+	]
+  )
+, text "..."
+]
+)
+```
+
+results in the following output:
+
+![Ignore background preview](img/ib.png)
 
 ### Join
 
 `join` is used to concatenate multiple bars together.
-
-TODO
-
-### Primitives
-
-Various primitives of dzen2 markup language are represented by the corresponding constructors (`fg`, `bg`, `i`, etc.). See [dzen2 README](https://github.com/robm/dzen) for details on them.
 
 ### Animations
 
@@ -449,7 +515,7 @@ let emitter : Source =
 </p>
 </details>
 
-To emit an [event](#events), `EMIT` environment variable can be used. It contains a path of an executable, which can be used to tell dzen-dhall that some event occured.
+To emit an [event](#events), `EMIT` environment variable can be used. It contains a path of an executable, which can be used to tell `dzen-dhall` that some event has occured.
 
 <details><summary><strong>SHOW EXAMPLE</strong></summary>
 <p>
@@ -492,7 +558,7 @@ A bar with more than one state can be defined by its state transition function (
 
 ### [State Transition Table](dhall/src/StateTransitionTable.dhall)
 
-State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, dzen-dhall tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in a table, dzen-dhall executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
+State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, `dzen-dhall` tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in a table, dzen-dhall executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
 
 ```dhall
 let StateTransitionTable
@@ -604,9 +670,9 @@ let myHook : Hook =
   }
 ```
 
-### Checks
+### Assertions
 
-Startup-time checks allow to assert that some condition is true before proceeding to the execution, i.e. it is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
+Startup-time assertions allow to make sure that some condition is true before proceeding to the execution, i.e. it is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
 
 ```dhall
 let Check = < BinaryInPath : Text | SuccessfulExit : Text >
@@ -614,7 +680,6 @@ let Check = < BinaryInPath : Text | SuccessfulExit : Text >
 let Assertion : Type = { message : Text, check : Check }
 
 in  Assertion
-
 ```
 
 A `message` will be printed to the console on assertion failure. Assertions, when used wisely, greatly reduce debugging time.
@@ -635,7 +700,7 @@ check
 
 ## Naming conventions
 
-These conventions are enforced by dzen-dhall as an attempt to lower cognitive noise for users and plugin maintainers.
+These conventions are enforced by `dzen-dhall` as an attempt to lower cognitive noise for users and plugin maintainers.
 
 - [Slot](#slots) names should contain only capital letters, numbers and `_`: `SLOT_1`, `MY_SLOT`, etc.
 - [Event](#events) names should be written camel-cased, first letter capitalized: `TimeHasCome`, `ButtonClicked`, etc.
@@ -660,7 +725,7 @@ After a few guesses, you should be able to get rid of jittering.
 
 Another possible source of this problem is non-monospace font being used. Non-monospace fonts are not supported and will never be.
 
-### Writing shell scripts in Dhall
+### Embedding shell scripts in Dhall
 
 The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file.
 
@@ -699,4 +764,4 @@ let Bar =
 
 During the stage of [config](dhall/config.dhall) processing, before mashalling the configuration structure into Haskell, `Bar`s are converted to a non-recursive data called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s. These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
 
-After that, dzen-dhall spawns some threads for each output source (like shell script or binary) and processes the outputs as specified in the configuration.
+After that, `dzen-dhall` spawns some threads for each output source (like shell script or binary) and processes the outputs as specified in the configuration.

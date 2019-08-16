@@ -27,9 +27,9 @@ import qualified Data.Text
 --
 -- @
 -- runRender $
---   ASTProp (FG (ColorName "red"))
+--   ASTProp (FG $ Color "red")
 --     (ASTs (ASTs (ASTText "a")
---                 (ASTProp (FG (ColorName "green"))
+--                 (ASTProp (FG $ Color "green")
 --                   (ASTText "b")))
 --           (ASTText "c"))
 -- @
@@ -63,8 +63,7 @@ instance Renderable IgnoreBackground where
 
 instance Renderable Color where
   render = write . \case
-    ColorHex  r -> r
-    ColorName r -> r
+    Color color -> color
 
 instance Renderable Button where
   render = write . \case

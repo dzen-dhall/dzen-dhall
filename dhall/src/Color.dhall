@@ -1,1 +1,1 @@
-< hex : Text | name : Text >
+Text

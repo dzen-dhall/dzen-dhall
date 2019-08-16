@@ -17,7 +17,7 @@ getTests = testSpec "DzenDhall.AST.Render" $ do
   describe "DzenDhall.AST.Render.runRender" $ do
     it "renders nested colors correctly #0" $ do
       let tree =
-            asts [ ASTProp (FG (ColorName "black")) $
+            asts [ ASTProp (FG (Color "black")) $
                    ASTText "text"
                  , ASTText "..."
                  ]
@@ -25,18 +25,18 @@ getTests = testSpec "DzenDhall.AST.Render" $ do
 
     it "renders nested colors correctly #1" $ do
       let tree =
-            ASTProp (FG (ColorName "black")) $
-            ASTProp (FG (ColorName "white")) $
+            ASTProp (FG (Color "black")) $
+            ASTProp (FG (Color "white")) $
             ASTText "text"
       runRender tree `shouldBe` "^fg(black)^fg(white)text^fg(black)^fg()"
 
     it "renders nested colors correctly #2" $ do
       let tree =
-            ASTProp (FG (ColorName "black")) $
-            asts [ ASTProp (FG (ColorName "white")) $
+            ASTProp (FG (Color "black")) $
+            asts [ ASTProp (FG (Color "white")) $
                    ASTText "text1"
                  , ASTText "text1.1"
-                 , ASTProp (FG (ColorName "red")) $
+                 , ASTProp (FG (Color "red")) $
                    ASTText "text2"
                  , ASTText "text3"
                  ]
@@ -45,9 +45,9 @@ getTests = testSpec "DzenDhall.AST.Render" $ do
 
     it "renders nested colors correctly #3" $ do
       let tree =
-            ASTProp (FG (ColorName "red"))
+            ASTProp (FG (Color "red"))
             (ASTs (ASTs (ASTText "a")
-                    (ASTProp (FG (ColorName "green"))
+                    (ASTProp (FG (Color "green"))
                      (ASTText "b")))
              (ASTText "c"))
       runRender tree `shouldBe` "^fg(red)a^fg(green)b^fg(red)c^fg()"

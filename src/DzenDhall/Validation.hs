@@ -13,17 +13,20 @@ import           System.Directory (findExecutable)
 import           System.Exit
 import           System.Process
 import qualified Data.Text
-import qualified Text.Megaparsec
+import           Text.Megaparsec hiding (Token, tokens)
+import           Text.Megaparsec.Char
+import           Control.Monad
 
 
-type ParseError = Text.Megaparsec.ParseErrorBundle String Void
+type ParseErrors = Text.Megaparsec.ParseErrorBundle String Void
 
 
 data Error
-  = InvalidSlotAddress ParseError Text
-  | InvalidAutomatonAddress ParseError Text
+  = InvalidSlotAddress ParseErrors Text
+  | InvalidAutomatonAddress ParseErrors Text
   | BinaryNotInPath Text Text
   | AssertionFailure Text Text
+  | InvalidColor ParseErrors Text
 
 
 run :: [Token] -> IO ([Error], [Token])
@@ -45,6 +48,10 @@ validate = reverse . go []
       go (proceed InvalidAutomatonAddress automatonAddressParser address acc) rest
     go acc (TokOpen (OListener slot) : rest) =
       go (proceed InvalidSlotAddress slotNameParser slot acc) rest
+    go acc (TokOpen (OFG (Color color)) : rest) =
+      go (proceed InvalidColor colorParser color acc) rest
+    go acc (TokOpen (OBG (Color color)) : rest) =
+      go (proceed InvalidColor colorParser color acc) rest
     go acc (_ : rest) =
       go acc rest
 
@@ -52,6 +59,32 @@ validate = reverse . go []
       case getError parser (Data.Text.unpack what) of
         Nothing -> acc
         Just err -> cont err what : acc
+
+    colorParser =
+      hex3 <|> hex6 <|> colorName
+      where
+        hex3 = do
+          void $ char '#'
+          void hexDigitChar
+          void hexDigitChar
+          void hexDigitChar
+          pure ""
+
+        hex6 = do
+          void $ char '#'
+          void hexDigitChar
+          void hexDigitChar
+          void hexDigitChar
+          void hexDigitChar
+          void hexDigitChar
+          void hexDigitChar
+          pure ""
+
+        colorName = do
+          void letterChar
+          void $ many (alphaNumChar <|> spaceChar)
+          pure ""
+
 
 checkAssertions :: [Token] -> IO [Error]
 checkAssertions [] = pure []
@@ -123,4 +156,9 @@ report errors = mappend header $ foldMap ((<> "\n\n") . reportError) errors
           , message
           ]
         | not (Data.Text.null message)
+        ]
+
+      InvalidColor err name -> fromLines
+        [ "Invalid color value encountered: " <> name
+        , "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
         ]

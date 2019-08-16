@@ -163,15 +163,11 @@ stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
       , event <- events
       , from <- froms ]
 
-data Color
-  = ColorHex Text
-  | ColorName Text
+newtype Color = Color Text
   deriving (Show, Eq, Generic)
 
 colorType :: Type Color
-colorType = union
-  $  (ColorHex  <$> constructor "hex" strictText)
-  <> (ColorName <$> constructor "name" strictText)
+colorType = Color <$> strictText
 
 data AbsolutePosition
   = AbsolutePosition { _apX :: Int, _apY :: Int }
