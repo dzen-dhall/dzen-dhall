@@ -31,11 +31,13 @@ in  < Marquee :
 	| CA :
 		{ button : Button, command : Text }
 	| IB
-	| Padding : { width : Natural, padding: Padding }
+	| Padding :
+		{ width : Natural, padding : Padding }
 	| Automaton :
 		{ stt : StateTransitionTable, id : Text }
 	| StateMapKey :
 		Text
 	| Listener :
 		Text
+	| Scope
 	>

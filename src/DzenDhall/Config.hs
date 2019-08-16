@@ -256,6 +256,7 @@ data OpeningTag
   | OAutomaton   Text StateTransitionTable
   | OStateMapKey Text
   | OListener    Text
+  | OScope
   deriving (Show, Eq, Generic)
 
 openingTagType :: Type OpeningTag
@@ -280,6 +281,7 @@ openingTagType = union
      )
   <> (OStateMapKey <$> constructor "StateMapKey" strictText)
   <> (OListener    <$> constructor "Listener"    strictText)
+  <> (OScope       <$  constructor "Scope"       unit)
 
 data BarSettings
   = BarSettings

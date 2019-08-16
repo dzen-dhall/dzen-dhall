@@ -126,6 +126,8 @@ let carrierListToken
 			)
 	  , check =
 		  List/map Assertion Token Token.Assertion
+	  , scope =
+		  enclose OpeningTag.Scope
 	  }
 
 let mkPlugin

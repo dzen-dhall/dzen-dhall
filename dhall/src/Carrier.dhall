@@ -75,6 +75,8 @@ let Carrier
 			Text → StateTransitionTable → StateMap Bar → Bar
 		, check :
 			List Assertion → Bar
+		, scope :
+			Bar → Bar
 		}
 
 in  Carrier

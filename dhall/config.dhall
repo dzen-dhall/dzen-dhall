@@ -66,6 +66,7 @@ let defaultBar
 			: Text → StateTransitionTable → StateMap Bar → Bar
 			= carrier.automaton
 		let check : List Assertion → Bar = carrier.check
+		let scope : Bar → Bar = carrier.scope
 
 		let separateBy =
 				λ(sep : Bar)

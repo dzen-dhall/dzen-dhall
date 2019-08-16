@@ -275,6 +275,7 @@ let [plugin](#plugins) : Plugin → Bar
 let [listener](#listeners) : Slot → Bar → Bar
 let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
 let [check](#assertions) : List [Assertion](#assertions) → Bar
+let [scope](#scopes) : Bar → Bar
 </pre></big>
 
 ### Text primitives
@@ -548,7 +549,7 @@ let Event = < Mouse : Button | Custom : Text >
 
 ### Scopes
 
-Scopes are used for encapsulation, to ensure that slots, automata and listeners from different plugins are unable to communicate with each other. You should always enclose your plugins in a separate scope.
+Scopes are used for encapsulation, to ensure that slots, automata and listeners from different plugins are unable to communicate with each other. You should always enclose your plugins in a separate scope. Parent scopes are completely isolated from child scopes and vice versa.
 
 ### Automata
 
