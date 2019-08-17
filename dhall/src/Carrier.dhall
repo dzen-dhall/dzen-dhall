@@ -1,10 +1,10 @@
 let AbsolutePosition = ./AbsolutePosition.dhall
 
-let Assertion = ./Assertion.dhall
-
 let Button = ./Button.dhall
 
 let Color = ./Color.dhall
+
+let Check = ./Check.dhall
 
 let Direction = ./Direction.dhall
 
@@ -78,7 +78,7 @@ let Carrier
 		, automaton :
 			Text → StateTransitionTable → StateMap Bar → Bar
 		, check :
-			List Assertion → Bar
+			List Check → Bar
 		, scope :
 			Bar → Bar
 		}

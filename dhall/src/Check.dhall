@@ -1,1 +1,5 @@
-let Check = < BinaryInPath : Text | SuccessfulExit : Text > in Check
+let Assertion = ./Assertion.dhall
+
+let Check : Type = { message : Text, assertion : Assertion }
+
+in  Check

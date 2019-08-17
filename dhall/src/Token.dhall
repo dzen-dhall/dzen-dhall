@@ -12,6 +12,6 @@
 | RO : { w : Natural, h: Natural }
 | C : Natural
 | CO : Natural
-| Assertion : ./Assertion.dhall
+| Assertion : ./Check.dhall
 | Close
 >

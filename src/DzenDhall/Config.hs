@@ -402,7 +402,7 @@ data Source
   { updateInterval :: Maybe Int
   -- ^ In microseconds
   , command        :: [String]
-  , input          :: Maybe Text
+  , input          :: Text
   , escapeMode     :: EscapeMode
   } deriving (Show, Eq, Generic)
 
@@ -412,7 +412,7 @@ sourceSettingsType :: Type Source
 sourceSettingsType = record $
   Source <$> field "updateInterval" (Dhall.maybe $ (* 1000) . fromIntegral <$> natural)
          <*> field "command"        (list string)
-         <*> field "input"          (Dhall.maybe strictText)
+         <*> field "input"          strictText
          <*> field "escapeMode"     escapeModeType
 
 data Configuration = Configuration
@@ -433,10 +433,9 @@ data PluginMeta = PluginMeta
   , _pmAuthor           :: Text
   , _pmEmail            :: Maybe Text
   , _pmHomePage         :: Maybe Text
-  , _pmUpstreamURL      :: Maybe Text
+  , _pmUpstream         :: Maybe Text
   , _pmDescription      :: Text
   , _pmUsage            :: Text
-  , _pmRequiredBinaries :: [Text]
   , _pmApiVersion       :: Int
   }
   deriving (Show, Eq)
@@ -449,8 +448,7 @@ pluginMetaType = record $
              <*> field "author"           strictText
              <*> field "email"            (Dhall.maybe strictText)
              <*> field "homepage"         (Dhall.maybe strictText)
-             <*> field "upstreamURL"      (Dhall.maybe strictText)
+             <*> field "upstream"         (Dhall.maybe strictText)
              <*> field "description"      strictText
              <*> field "usage"            strictText
-             <*> field "requiredBinaries" (list strictText)
              <*> field "apiVersion"       (fromIntegral <$> natural)

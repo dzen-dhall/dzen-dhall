@@ -2,13 +2,13 @@
 
 let AbsolutePosition = ./AbsolutePosition.dhall
 
-let Assertion = ./Assertion.dhall
-
 let Bar = ./Bar.dhall
 
 let Button = ./Button.dhall
 
 let Carrier = ./Carrier.dhall
+
+let Check = ./Check.dhall
 
 let Color = ./Color.dhall
 
@@ -109,8 +109,7 @@ let carrierListToken
 	  , trim =
 			λ(width : Natural)
 		  → λ(direction : Direction)
-		  → enclose
-			(OpeningTag.Trim { width = width, direction = direction })
+		  → enclose (OpeningTag.Trim { width = width, direction = direction })
 	  , source =
 		  λ(source : Source) → [ Token.Source source ]
 	  , plugin =
@@ -132,7 +131,7 @@ let carrierListToken
 			  stateMap
 			)
 	  , check =
-		  List/map Assertion Token Token.Assertion
+		  List/map Check Token Token.Assertion
 	  , scope =
 		  enclose OpeningTag.Scope
 	  }

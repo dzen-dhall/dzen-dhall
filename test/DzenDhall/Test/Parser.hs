@@ -38,7 +38,7 @@ getTests = pure $
     , TokOpen (OMarquee marquee)
     , TokSource (Source { updateInterval = Nothing
                                 , command = []
-                                , input = Nothing
+                                , input = ""
                                 , escapeMode = EscapeMode True True
                                 })
     , TokClose
@@ -52,7 +52,7 @@ getTests = pure $
                 , BarMarquee marquee $ Bars
                   [ BarSource (Source { updateInterval = Nothing
                                               , command = []
-                                              , input = Nothing
+                                              , input = ""
                                               , escapeMode = EscapeMode True True
                                               })
                   ]

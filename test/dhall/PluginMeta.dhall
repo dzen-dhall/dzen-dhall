@@ -9,14 +9,12 @@ let pluginMeta =
 		  Some "3"
 	  , homepage =
 		  Some "4"
-	  , upstreamURL =
+	  , upstream =
 		  Some "5"
 	  , description =
 		  "6"
 	  , usage =
 		  "7"
-	  , requiredBinaries =
-		  [ "bash" ]
 	  , apiVersion =
 		  8
 	  }

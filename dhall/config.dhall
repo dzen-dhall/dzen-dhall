@@ -67,7 +67,7 @@ let defaultBar
 		let automaton
 			: Text → StateTransitionTable → StateMap Bar → Bar
 			= carrier.automaton
-		let check : List Assertion → Bar = carrier.check
+		let check : List Check → Bar = carrier.check
 		let scope : Bar → Bar = carrier.scope
 
 		let separateBy =
@@ -84,8 +84,7 @@ let defaultBar
 			  → source
 				{ command =
 					[ "bash" ]
-				, input =
-					Some input
+				, input = input
 				, updateInterval =
 					Some interval
 				, escapeMode =
@@ -101,9 +100,9 @@ let defaultBar
 				[ check
 				  ( lib.List/map
 					Text
-					Assertion
+					Check
 					(   λ(binary : Text)
-					  → { message = "", check = Check.BinaryInPath binary }
+					  → { message = "", check = Assertion.BinaryInPath binary }
 					)
 					binaries
 				  )

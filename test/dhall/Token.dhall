@@ -17,7 +17,7 @@ in  [ Token.Open
 		  , command =
 			  [ "bash" ]
 		  , input =
-			  Some "echo 1"
+			  "echo 1"
 		  , escapeMode =
 			  { joinLines = True, escapeMarkup = True }
 		  }

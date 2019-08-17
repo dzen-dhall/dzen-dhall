@@ -275,7 +275,7 @@ let [source](#sources) : Source → Bar
 let [plugin](#plugins) : Plugin → Bar
 let [listener](#listeners) : Slot → Bar → Bar
 let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
-let [check](#assertions) : List [Assertion](#assertions) → Bar
+let [check](#assertions) : List [Check](#assertions) → Bar
 let [scope](#scopes) : Bar → Bar
 </pre></big>
 
@@ -719,11 +719,9 @@ Hooks can also [emit events](#events).
 Startup-time assertions allow to make sure that some condition is true before proceeding to the execution, i.e. it is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
 
 ```dhall
-let Check = < BinaryInPath : Text | SuccessfulExit : Text >
+let Assertion = < BinaryInPath : Text | SuccessfulExit : Text > in Assertion
 
-let Assertion : Type = { message : Text, check : Check }
-
-in  Assertion
+let Check : Type = { message : Text, assertion : Assertion }
 ```
 
 A `message` will be printed to the console on assertion failure. Assertions, when used wisely, greatly reduce debugging time.
@@ -732,14 +730,14 @@ For example, this assertion fails if there's no `something` binary in `$PATH`:
 
 ```dhall
 check
-[ { message = "Did you miss something?", check = Check.BinaryInPath "something" } ]
+[ { message = "Did you miss something?", assertion = Assertion.BinaryInPath "something" } ]
 ```
 
 And this assertion fails on weekends:
 
 ```dhall
 check
-[ { message = "Not going to work!", check = Check.SuccessfulExit "[[ \$(date +%u) -lt 6 ]]" } ]
+[ { message = "Not going to work!", assertion = Assertion.SuccessfulExit "[[ \$(date +%u) -lt 6 ]]" } ]
 ```
 
 ## Naming conventions
@@ -802,7 +800,7 @@ let Bar =
     → ∀(raw : Text → Bar)
     → ∀(join : List Bar → Bar)
     -- ... some constructors omitted
-    → ∀(check : List Assertion → Bar)
+    → ∀(check : List Check → Bar)
     → Bar
 ```
 

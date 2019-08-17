@@ -1,4 +1,4 @@
 { updateInterval : Optional Natural
 , command : List Text
-, input : Optional Text
+, input : Text
 , escapeMode : ./EscapeMode.dhall }

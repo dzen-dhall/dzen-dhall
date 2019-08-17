@@ -7,14 +7,12 @@ let PluginMeta =
 		  Optional Text
 	  , homepage :
 		  Optional Text
-	  , upstreamURL :
+	  , upstream :
 		  Optional Text
 	  , description :
 		  Text
 	  , usage :
 		  Text
-	  , requiredBinaries :
-		  List Text
 	  , apiVersion :
 		  Natural
 	  }

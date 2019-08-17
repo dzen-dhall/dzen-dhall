@@ -1,7 +1,6 @@
 module DzenDhall.App.StartingUp where
 
 import           DzenDhall.AST
-import           DzenDhall.AST as AST
 import           DzenDhall.App as App
 import           DzenDhall.Arguments
 import           DzenDhall.Config
@@ -293,9 +292,9 @@ runSourceProcess
   :: CreateProcess
   -> IORef Text
   -> Cache
-  -> Maybe Text
+  -> Text
   -> IO ()
-runSourceProcess cp outputRef cacheRef mbInput = do
+runSourceProcess cp outputRef cacheRef input = do
   (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, ph) <- createProcess cp
 
   case (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl) of
@@ -305,10 +304,8 @@ runSourceProcess cp outputRef cacheRef mbInput = do
       hSetBuffering stdin  LineBuffering
       hSetBuffering stdout LineBuffering
 
-      -- If the input is specified, write it to the stdin handle
-      whenJust mbInput $ \text -> do
-        Data.Text.IO.hPutStrLn stdin text
-        hClose stdin
+      Data.Text.IO.hPutStrLn stdin input
+      hClose stdin
 
       output <- Data.Text.IO.hGetContents stdout
 
