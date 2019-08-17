@@ -5,6 +5,7 @@ import           DzenDhall.Config
 import           DzenDhall.Event
 import           DzenDhall.Extra
 
+import           Control.Monad
 import           Data.Maybe
 import           Data.Text (Text)
 import           Data.Void
@@ -12,10 +13,10 @@ import           Lens.Micro
 import           System.Directory (findExecutable)
 import           System.Exit
 import           System.Process
-import qualified Data.Text
 import           Text.Megaparsec hiding (Token, tokens)
 import           Text.Megaparsec.Char
-import           Control.Monad
+import qualified Data.HashMap.Strict as H
+import qualified Data.Text
 
 
 type ParseErrors = Text.Megaparsec.ParseErrorBundle String Void
@@ -27,6 +28,7 @@ data Error
   | BinaryNotInPath Text Text
   | AssertionFailure Text Text
   | InvalidColor ParseErrors Text
+  | InvalidHook
 
 
 run :: [Token] -> IO ([Error], [Token])
@@ -44,8 +46,13 @@ validate :: [Token] -> [Error]
 validate = reverse . go []
   where
     go acc [] = acc
-    go acc (TokOpen (OAutomaton address _) : rest) =
-      go (proceed InvalidAutomatonAddress automatonAddressParser address acc) rest
+    go acc (TokOpen (OAutomaton address stt) : rest) =
+      let sttErrors =
+            (concat $ H.elems (unSTT stt) <&> (^. _2)) >>=
+            \(hook :: Hook) -> [ InvalidHook | null (hook ^. hookCommand)  ]
+      in
+        go (proceed InvalidAutomatonAddress automatonAddressParser address
+            (sttErrors <> acc)) rest
     go acc (TokOpen (OListener slot) : rest) =
       go (proceed InvalidSlotAddress slotNameParser slot acc) rest
     go acc (TokOpen (OFG (Color color)) : rest) =
@@ -162,3 +169,6 @@ report errors = mappend header $ foldMap ((<> "\n\n") . reportError) errors
         [ "Invalid color value encountered: " <> name
         , "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
         ]
+
+      InvalidHook ->
+        "Detected a hook with empty command"

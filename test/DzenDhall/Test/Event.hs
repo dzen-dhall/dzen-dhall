@@ -5,6 +5,7 @@ import Test.Tasty.HUnit
 
 import DzenDhall.Config
 import DzenDhall.Event
+import DzenDhall.Runtime.Data
 
 mkTest :: TestName -> String -> Maybe RoutedEvent -> TestTree
 mkTest name input expected =
@@ -17,10 +18,10 @@ getTests = pure $
 
   [ mkTest "parsing #1"
     "event:1,slot:SLOT@scope" $
-    Just $ RoutedEvent (MouseEvent MouseLeft) "SLOT@scope"
+    Just $ RoutedEvent (MouseEvent MouseLeft) "SLOT" "scope"
   , mkTest "parsing #2"
     "event:2,slot:SLOT@another-scope" $
-    Just $ RoutedEvent (MouseEvent MouseMiddle) "SLOT@another-scope"
+    Just $ RoutedEvent (MouseEvent MouseMiddle) "SLOT" "another-scope"
   , mkTest "parsing #3"
     "event:,slot:name@scope" $
     Nothing
@@ -36,11 +37,11 @@ getTests = pure $
   , mkTest "parsing #7"
     "event:1,slot:some-name@scope" $
     Nothing
-  -- slot name must be [A-Z_]
+  -- slot name must start with [A-Z]
   , mkTest "parsing #8"
     "event:2,slot:slot@another-scope" $
     Nothing
   , mkTest "parsing #9"
-    "event:2,slot:Slot@another-scope" $
-    Nothing
+    "event:MyEvent,slot:SLOT@scope" $
+    Just $ RoutedEvent (CustomEvent "MyEvent") "SLOT" "scope"
   ]

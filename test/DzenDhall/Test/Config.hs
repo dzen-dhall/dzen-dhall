@@ -149,18 +149,18 @@ testStateTransitionTable dhallDir = do
   pure $ Test.Tasty.HUnit.testCase "test/dhall/StateTransitionTable.dhall marshalling" $
     input @?=
 
-    STT ( H.fromList [ (("a", MouseEvent MouseLeft,  ""), "1")
-                     , (("a", MouseEvent MouseRight, ""), "1")
-                     , (("b", MouseEvent MouseLeft,  ""), "1")
-                     , (("b", MouseEvent MouseRight, ""), "1")
-                     , (("a", MouseEvent MouseLeft,  "1"), "2")
-                     , (("a", MouseEvent MouseRight, "1"), "2")
-                     , (("b", MouseEvent MouseLeft,  "1"), "2")
-                     , (("b", MouseEvent MouseRight, "1"), "2")
-                     , (("a", MouseEvent MouseLeft,  "2"), "")
-                     , (("a", MouseEvent MouseRight, "2"), "")
-                     , (("b", MouseEvent MouseLeft,  "2"), "")
-                     , (("b", MouseEvent MouseRight, "2"), "")
+    STT ( H.fromList [ (("a", "", MouseEvent MouseLeft,  ""), ("1", []))
+                     , (("a", "", MouseEvent MouseRight, ""), ("1", []))
+                     , (("b", "", MouseEvent MouseLeft,  ""), ("1", []))
+                     , (("b", "", MouseEvent MouseRight, ""), ("1", []))
+                     , (("a", "", MouseEvent MouseLeft,  "1"), ("2", []))
+                     , (("a", "", MouseEvent MouseRight, "1"), ("2", []))
+                     , (("b", "", MouseEvent MouseLeft,  "1"), ("2", []))
+                     , (("b", "", MouseEvent MouseRight, "1"), ("2", []))
+                     , (("a", "", MouseEvent MouseLeft,  "2"), ("", []))
+                     , (("a", "", MouseEvent MouseRight, "2"), ("", []))
+                     , (("b", "", MouseEvent MouseLeft,  "2"), ("", []))
+                     , (("b", "", MouseEvent MouseRight, "2"), ("", []))
                      ]
         )
 

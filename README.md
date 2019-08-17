@@ -463,7 +463,7 @@ Sources serve two purposes:
 
 - Generating text output for [`Bar`s](#bars) (from command's stdout)
 
-- Emitting [events](#events)
+- [Emitting events](#events)
 
 ```dhall
 let Source : Type =
@@ -491,60 +491,86 @@ let clocks : Source =
 </p>
 </details>
 
-#### Events and sources
-
-Sources can be used to control automata.
-
-To query for current state of an automaton, it is sufficient to read the environment variable of the form `STATE_id`, where `id` part is the identifier of the [automaton](#automata).
-
-TODO
-
-<details><summary><strong>SHOW EXAMPLE</strong></summary>
-<p>
-
-```dhall
-let emitter : Source =
-  { updateInterval = Some 1000
-  , command = "bash"
-  , input = Some ''
-    echo "''$STATE_MY_AUTOMATON"
-    ''
-  , escapeMode = { joinLines = False, escapeMarkup = True }
-  }
-```
-
-</p>
-</details>
-
-To emit an [event](#events), `EMIT` environment variable can be used. It contains a path of an executable, which can be used to tell `dzen-dhall` that some event has occured.
-
-<details><summary><strong>SHOW EXAMPLE</strong></summary>
-<p>
-
-The following source emits an event every second:
-
-```dhall
-let emitter : Source =
-  { updateInterval = Some 1000
-  , command = "bash"
-  , input = Some ''
-    ''$EMIT MY_SLOT MyEvent
-    ''
-  , escapeMode = { joinLines = False, escapeMarkup = True }
-  }
-```
-
-</p>
-</details>
 
 ### [Events](dhall/src/Event.dhall)
 
-Events can be emitted by mouse interactions with [listeners](#listeners), by [hooks](#hooks) and by [sources](#sources). Listeners can only emit mouse events, hooks can emit any events, and sources can only emit `Custom` events.
+Events can be emitted by mouse interactions with [listeners](#listeners), by [hooks](#hooks) and by [sources](#sources).
 
 ```dhall
 let Button = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | ScrollRight >
 
 let Event = < Mouse : Button | Custom : Text >
+```
+
+Listeners can only emit mouse events, while [hooks](#hooks) and [sources](#sources) can emit both mouse and custom events. A special environment variable, `EMIT` can be used in shell scripts to emit events:
+
+<details><summary><strong>SHOW EXAMPLES</strong></summary>
+<p>
+
+```dhall
+let mySlot : Slot = "MY_SLOT"
+
+-- A hook that emits events when called:
+let myHook
+  : Hook
+  = { command =
+		[ "bash" ]
+	, input =
+		''
+		$EMIT MY_SLOT MouseLeft
+		''
+	}
+
+-- A source that emits a click event each 3 seconds:
+let mySource2 : Source =
+	{ updateInterval =
+		Some 3000
+	, command =
+		[ "bash" ]
+	, input =
+		Some
+		''
+		$EMIT ${mySlot} MouseLeft
+		''
+	, escapeMode =
+		{ joinLines = False, escapeMarkup = True }
+	}
+
+-- This can also be done by setting updateInterval to None
+-- and writing a `while` loop inside the script:
+let mySource1 : Source =
+	{ updateInterval =
+		None Natural
+	, command =
+		[ "bash" ]
+	, input =
+		Some
+		''
+		while true; do
+			  $EMIT ${mySlot} MouseLeft
+			  sleep 10;
+		done;
+		''
+	, escapeMode =
+		{ joinLines = False, escapeMarkup = True }
+	}
+```
+
+</p>
+</details>
+
+Note that it is necessary to insert `EMIT` variable **without** quotes in the shell script. It contains a path to the executable that handles event routing, and a hidden argument that indicates from which [scope](#scopes) the event came from. The user should only specify a slot address and an event name, which is either a mouse event or a custom event.
+
+When emitting mouse events, it is necessary to prepend `Mouse` to [button names](#events):
+
+```
+MouseLeft
+MouseMiddle
+MouseRight
+MouseScrollUp
+MouseScrollDown
+MouseScrollLeft
+MouseScrollRight
 ```
 
 ### Scopes
@@ -559,51 +585,48 @@ A bar with more than one state can be defined by its state transition function (
 
 ### [State Transition Table](dhall/src/StateTransitionTable.dhall)
 
-State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, `dzen-dhall` tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in a table, dzen-dhall executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
+State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, `dzen-dhall` tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in the table, dzen-dhall executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
 
 ```dhall
 let StateTransitionTable
-	: Type
-	= List
-	  { slots :
-		  List Slot
-	  , events :
-		  List Event
-	  , from :
-		  List State
-	  , to :
-		  State
-	  , hooks :
-		  List Hook
-	  }
+    : Type
+    = List
+      { slots :
+          List Slot
+      , events :
+          List Event
+      , from :
+          List State
+      , to :
+          State
+      , hooks :
+          List Hook
+      }
 ```
 
-For example, let's define a simple transition table with two states: "on" and "off".
+For example, let's define a simple transition table with two states: `"on"` and `""` (which is the default state of any automaton):
 
 ```dhall
 let stt = [ { slots: [ "slot1" ]
-            , events: [ Event.Left ]
-		    , from: [ "on" ]
-			, to: [ "off" ]
-			, hooks: [] : List Hook
-			}
-		  , { slots: [ "slot1" ]
-            , events: [ Event.Left ]
-		    , from: [ "off" ]
-			, to: [ "on" ]
-			, hooks: [] : List Hook
-			}
-		  ]
+            , events: [ Event.Mouse Button.Left ]
+            , from: [ "" ]
+            , to: [ "on" ]
+            , hooks: [] : List Hook
+            }
+          , { slots: [ "slot1" ]
+            , events: [ Event.Mouse Button.Left ]
+            , from: [ "on" ]
+            , to: [ "" ]
+            , hooks: [] : List Hook
+            }
+          ]
 ```
 
 This state transition table, when coupled with a [state map](#state-maps) to form an [automaton](#automata) and subscribed to some [listener](#listeners) that awaits for mouse events and sends them to the "slot1" slot, will result in a clickable area that switches between two states as the user clicks on a certain area.
 
 ### [State maps](dhall/src/StateMap.dhall)
 
-`StateMap`s are used to define a mapping from states to bars.
-
-<details><summary><strong>SHOW IMPLEMENTATION</strong></summary>
-<p>
+`StateMap`s are used to define mappings from states to bars.
 
 ```dhall
 let StateMap : Type → Type = λ(Bar : Type) → List { state : Text, bar : Bar }
@@ -611,10 +634,7 @@ let StateMap : Type → Type = λ(Bar : Type) → List { state : Text, bar : Bar
 in  StateMap
 ```
 
-Note that it is parametrized by `Bar` type.
-
-</p>
-</details>
+Note that this type is parametrized by `Bar` type, so it is a [type constructor](https://en.wikipedia.org/wiki/Type_constructor) with an argument.
 
 <details><summary><strong>SHOW EXAMPLE</strong></summary>
 <p>
@@ -628,18 +648,19 @@ let stateMap
 	, { state = "1", bar = text "world!" }
 	]
 ```
-
 </p>
 </details>
 
 
 ### [Slots](dhall/src/Slot.dhall)
 
-Slots are used to route events throughout the interface: you can think of slots as of adresses from which events can be sent. Each slot is essentially a piece of `Text`:
+Slots are used to route events throughout the interface: you can think of slots as of adresses to which events can be sent. Each slot is essentially a piece of `Text`:
 
 ```dhall
 let Slot : Type = Text
 ```
+
+[Automata](#automata) can listen for events on certain slots and react to them.
 
 ### [Hooks](dhall/src/Hook.dhall)
 
@@ -651,7 +672,7 @@ let Hook
 	= { command :
 		  List Text
 	  , input :
-		  Optional Text
+		  Text
 	  }
 ```
 
@@ -661,9 +682,10 @@ For example, The following hook will succeed only if a certain file exists:
 let myHook : Hook =
   { command = "bash"
   , input = "[ -f ~/some-file ]"
-  , allowedExitCodes = Some [ 0 ]
   }
 ```
+
+Hooks can also [emit events](#events).
 
 ### Assertions
 
@@ -726,9 +748,9 @@ The most straightforward way is to use [`./file.sh as Text` construct](https://g
 
 So, the following rules apply:
 
-1. Use `\` to escape `$` characters in a double-quoted string.
+1. Use `\` to escape `$` characters in a single-line (`"`-quoted) string.
 
-2. Use `''` to escape `$` characters in a multiline (`''`-quoted) string. (That is, `''` serves as both an escape sequence and a quote symbol).
+2. Use `''` to escape `${` `}` in a multiline (`''`-quoted) string. (That is, `''` serves as both an escape sequence and a quote symbol).
 
 For example, bash array expansion expression `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` (in a double-quoted string) or as `'' ''${arr[ ix ]} ''` in a multiline string.
 

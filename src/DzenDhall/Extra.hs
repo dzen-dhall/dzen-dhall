@@ -1,6 +1,8 @@
 module DzenDhall.Extra where
 
 import           Control.Monad
+import           Control.Monad.Trans.Maybe
+import           Control.Monad.Trans.Except
 import qualified Data.List
 import qualified Data.Text
 import           Data.Text (Text)
@@ -43,3 +45,10 @@ safeTail = fmap snd . Data.List.uncons
 
 fromLines :: [Text] -> Text
 fromLines = Data.Text.intercalate "\n"
+
+hush :: Either e a -> Maybe a
+hush (Left _) = Nothing
+hush (Right a) = Just a
+
+throwMaybe :: Monad m => MaybeT m a
+throwMaybe = exceptToMaybeT (throwE ())

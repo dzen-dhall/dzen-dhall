@@ -1,14 +1,12 @@
 module DzenDhall.App.StartingUp where
 
 import           DzenDhall.AST
-import           DzenDhall.AST.Render
 import           DzenDhall.App as App
 import           DzenDhall.Arguments
 import           DzenDhall.Config
 import           DzenDhall.Data
-import           DzenDhall.Event
 import           DzenDhall.Extra
-import           DzenDhall.Runtime
+import           DzenDhall.Runtime.Data
 import qualified DzenDhall.Animation.Marquee as Marquee
 import qualified DzenDhall.Animation.Slider as Slider
 
@@ -73,18 +71,22 @@ mkBarRuntime cfg = do
   liftIO $
     createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
 
-  emitterScript <- (tmpFilePrefix <>) <$> randomSuffix
-  liftIO $ do
-    Data.Text.IO.writeFile emitterScript $ fromLines
-      [ "#!/usr/bin/env bash"
-      , "SCOPE=\"$1\""
-      , "SLOT=\"$2\""
-      , "EVENT=\"$3\""
-      , "echo event:\"$EVENT\",slot:\"$SLOT\"\"@\"\"$SCOPE\" >> " <>
-        Data.Text.pack namedPipe
-      ]
+  emitterFile <- (tmpFilePrefix <>) <$> randomSuffix
 
-    setFileMode emitterScript $
+  liftIO $ do
+
+    let emitterScript = fromLines $
+          [ "#!/usr/bin/env bash"
+          , "SCOPE=\"$1\""
+          , "SLOT=\"$2\""
+          , "EVENT=\"$3\""
+          , "echo event:\"$EVENT\",slot:\"$SLOT\"\"@\"\"$SCOPE\" >> " <>
+            Data.Text.pack namedPipe
+          ]
+
+    Data.Text.IO.writeFile emitterFile emitterScript
+
+    setFileMode emitterFile $
       ownerExecuteMode `unionFileModes`
       groupExecuteMode `unionFileModes`
       ownerReadMode    `unionFileModes`
@@ -112,7 +114,7 @@ mkBarRuntime cfg = do
           "Couldn't open IO handles for dzen binary " <>
           showPack dzenBinary
 
-  pure $ BarRuntime cfg 0 namedPipe emitterScript handle
+  pure $ BarRuntime cfg 0 namedPipe emitterFile handle
 
 
 -- | During initialization, IORefs for source outputs and caches are created.
@@ -167,12 +169,10 @@ initialize (BarAutomaton address stt stateMap) = do
       newBarRef = do
         let initialState = ""
 
-        let addScope = (<> ("@" <> state ^. ssScopeName))
-
-        -- Add current scope to all addresses in state transition table
+        -- Add current scope to state transition table
         let stt' = STT
                  . H.fromList
-                 . map (first (_1 %~ addScope))
+                 . map (first (_scope .~ state ^. ssScopeName))
                  . H.toList
                  . unSTT
                  $ stt
@@ -195,7 +195,12 @@ initialize (BarAutomaton address stt stateMap) = do
 
         -- Add a subscription for each slot
         modify $ ssAutomataHandles %~
-          (\handleMap -> foldr (\slot -> H.insertWith (++) slot subscription) handleMap slots)
+          (\handleMap -> foldr (
+              \slot ->
+                H.insertWith (++) (slot, scope) subscription
+              )
+            handleMap slots
+          )
 
         pure barRef
 
@@ -239,7 +244,7 @@ mkThread
   -> Cache
   -> Text
   -> App StartingUp ()
-mkThread _ _ Source { command = [] } outputRef cacheRef scope = do
+mkThread _ _ Source { command = [] } outputRef cacheRef _scope = do
   let message = "dzen-dhall error: no command specified"
   liftIO $ do
     writeIORef cacheRef $ Just message
@@ -277,7 +282,7 @@ mkThread
 
     -- If update interval is not specified, run the source once.
     Nothing -> do
-      runSourceProcess (proc binary args) outputRef cacheRef input
+      runSourceProcess sourceProcess outputRef cacheRef input
 
 
 -- | Creates a process, subscribes to its stdout handle and updates the output ref.
@@ -363,7 +368,7 @@ collectSources fontWidth (BarListener slot child) = do
       attachClickHandler namedPipe button =
         let command =
               ( "echo event:"
-             <> runRender button
+             <> showPack button
              <> ",slot:"
              <> slot
              <> " >> "

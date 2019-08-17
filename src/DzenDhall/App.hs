@@ -2,7 +2,7 @@
 -- | An 'App' monad with its operations.
 module DzenDhall.App where
 
-import DzenDhall.Runtime
+import DzenDhall.Runtime.Data
 import DzenDhall.Config
 
 import           Control.Monad.Trans.Class

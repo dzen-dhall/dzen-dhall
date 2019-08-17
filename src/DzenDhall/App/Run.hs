@@ -7,11 +7,10 @@ import           DzenDhall.Config
 import           DzenDhall.Data
 import           DzenDhall.Event
 import           DzenDhall.Extra
-import           DzenDhall.Runtime
+import           DzenDhall.Runtime.Data
 import qualified DzenDhall.Validation
 import qualified DzenDhall.Parser as Parser
 
-import           Control.Concurrent
 import           Control.Monad
 import           Lens.Micro
 import           Lens.Micro.Extras
@@ -44,7 +43,6 @@ useConfigurations = do
          barRuntime :: BarRuntime) <-
           liftStartingUp (startUp cfg bar) barSettings
 
-        void $ liftIO $ forkIO $
-          launchEventListener (barRuntime ^. brNamedPipe) handles
+        runAppForked (launchEventListener handles) barRuntime
 
         runAppForked (updateForever bar') barRuntime

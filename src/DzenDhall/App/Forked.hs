@@ -5,7 +5,7 @@ import           DzenDhall.App as App
 import           DzenDhall.App.StartingUp
 import           DzenDhall.Config
 import           DzenDhall.Data
-import           DzenDhall.Runtime
+import           DzenDhall.Runtime.Data
 
 import           Control.Concurrent
 import           Control.Monad

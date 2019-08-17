@@ -1,5 +1,9 @@
 module DzenDhall.Plug where
 
+import           DzenDhall.App
+import           DzenDhall.Config
+import           DzenDhall.Runtime.Data
+
 import           Control.Applicative
 import           Control.Exception hiding (try)
 import           Control.Monad
@@ -8,15 +12,9 @@ import           Control.Monad.Trans.Except
 import           Data.HashSet (member)
 import           Data.Maybe
 import           Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as STE
 import           Data.Text.IO (putStrLn, writeFile)
 import           Dhall
 import           Dhall.Core
-import qualified Dhall.Parser as Dhall
-import           DzenDhall.App
-import           DzenDhall.Config
-import           DzenDhall.Runtime
 import           Lens.Micro
 import           Network.HTTP.Simple
 import           Network.URI
@@ -24,6 +22,9 @@ import           Prelude hiding (putStrLn, takeWhile, writeFile)
 import           System.Directory
 import           System.Exit
 import           System.FilePath ((</>))
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as STE
+import qualified Dhall.Parser as Dhall
 import qualified Text.Megaparsec
 import qualified Text.Megaparsec as MP
 import qualified Text.Parsec as P

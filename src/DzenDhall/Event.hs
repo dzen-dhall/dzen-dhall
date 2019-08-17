@@ -1,88 +1,126 @@
 module DzenDhall.Event where
 
+import           DzenDhall.App
 import           DzenDhall.Config
-import           DzenDhall.Data
 import           DzenDhall.Extra
+import           DzenDhall.Runtime.Data
+import qualified DzenDhall.App as App
 
 import           Control.Exception
+import           Control.Concurrent
 import           Control.Monad
-import qualified Data.HashMap.Strict as H
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Maybe
 import           Data.IORef
+import           Data.Maybe
 import           Data.Text (Text)
-import qualified Data.Text
+import           Data.Void
+import           Lens.Micro
 import           Pipes
-import qualified Pipes.Prelude as P
+import           System.Environment
 import           System.Exit
 import           System.IO
+import           System.Process
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
+import qualified Data.HashMap.Strict as H
+import qualified Data.Text
 import qualified Data.Text.IO
-import           Data.Void
+import qualified Pipes.Prelude as P
 
-
-type AutomatonState = Text
-
--- | 'StateTransitionTable' is needed to know *how* to update, 'IORef' 'Bar' is needed
--- to know *what* to update. Int parameter is a unique identifier for automata.
-data Subscription
-  = AutomatonSubscription
-    StateTransitionTable
-    (H.HashMap AutomatonState (Bar Initialized))
-    (IORef AutomatonState)
-    (IORef (Bar Initialized))
-
-type AutomataHandles = H.HashMap SlotAddr [Subscription]
-
-type SlotAddr = Text
-
-data RoutedEvent = RoutedEvent Event SlotAddr
-  deriving (Eq, Show)
 
 -- | Start reading lines from a named pipe used to route events.
 -- On each event, try to parse it, and find which event subscriptions does the event affect.
-launchEventListener :: String -> AutomataHandles -> IO ()
-launchEventListener namedPipe handles = runEffect $ do
-  fh <- lift $ handle handler $ do
-    fh <- openFile namedPipe ReadWriteMode
-    hSetBuffering fh LineBuffering
-    pure fh
+launchEventListener :: AutomataHandles -> App Forked ()
+launchEventListener handles = do
+  barRuntime <- get
 
-  for (P.fromHandle fh) $ \line -> do
-    lift $ do
-      case parseRoutedEvent line of
-        Just (RoutedEvent button slotAddr) ->
-          case H.lookup slotAddr handles of
-            Just subscriptions ->
-              processSubscriptions slotAddr button subscriptions
-            Nothing ->
-              Data.Text.IO.putStrLn $ "Failed to find subscriptions for slot address: " <> slotAddr
-
-        Nothing ->
-          putStrLn $ "Failed to parse routed event from string: " <> line
-
-  where
+  let
+    namedPipe = barRuntime ^. brNamedPipe
 
     handler (e :: IOError) = do
       putStrLn $ "Couldn't open named pipe " <> namedPipe <> ": " <> displayException e
       exitWith (ExitFailure 1)
 
-processSubscriptions :: SlotAddr -> Event -> [Subscription] -> IO ()
-processSubscriptions slotAddr button = mapM_ $ \case
+  App.liftIO $ runEffect $ do
+
+    fh <- lift $ handle handler $ do
+      fh <- openFile namedPipe ReadWriteMode
+      hSetBuffering fh LineBuffering
+      pure fh
+
+    for (P.fromHandle fh) $ \line -> do
+      lift $ do
+        putStrLn line
+        case parseRoutedEvent line of
+          Just (RoutedEvent event slot scope) ->
+            case H.lookup (slot, scope)  handles of
+              Just subscriptions ->
+                processSubscriptions barRuntime slot scope event subscriptions
+              Nothing ->
+                Data.Text.IO.putStrLn $
+                "Failed to find subscriptions for address: " <> slot <> "@" <> scope
+
+          Nothing ->
+            putStrLn $ "Failed to parse routed event from string: " <> line
+
+
+processSubscriptions :: BarRuntime -> Slot -> Scope -> Event -> [Subscription] -> IO ()
+processSubscriptions barRuntime slot scope event = mapM_ $ \case
 
   AutomatonSubscription stt stateMap stateRef barRef -> do
 
     currentState <- readIORef stateRef
 
     let
-      transitions = unSTT stt :: H.HashMap (SlotAddr, Event, Text) Text
-      mbNextState = H.lookup (slotAddr, button, currentState) transitions
+      transitions = unSTT stt :: H.HashMap (Slot, Scope, Event, Text) (Text, [Hook])
+      mbNext      = H.lookup (slot, scope, event, currentState) transitions
 
-    whenJust mbNextState $ \nextState -> do
+    whenJust mbNext $ \(nextState, hooks) -> do
       whenJust (H.lookup nextState stateMap) $ \nextBar -> do
-        writeIORef barRef nextBar
-        writeIORef stateRef nextState
+        void $ forkIO $ do
 
--- | E.g. @parseRoutedEvent "event:1,slot:name@some-scope" == Just (RoutedEvent (MouseEvent MouseLeft) "name@some-scope")@
+          environment <- getEnvironment
+          mbUnit <-
+            runMaybeT (runHooks environment barRuntime scope hooks)
+
+          when (isJust mbUnit) $ do
+            writeIORef barRef nextBar
+            writeIORef stateRef nextState
+
+
+runHooks
+  :: [(String, String)]
+  -> BarRuntime
+  -> Scope
+  -> [Hook]
+  -> MaybeT IO ()
+runHooks environment barRuntime scope hooks = do
+  forM_ hooks $ \hook -> do
+    let binary = Data.Text.unpack $
+          head $ hook ^. hookCommand
+          -- ^ this is safe, because we checked the list for emptiness
+          -- during validation.
+        args   = map Data.Text.unpack $
+          tail $ hook ^. hookCommand
+        input  = hook ^. hookInput
+        emitter =
+          barRuntime ^. brEmitterScript <> " " <> Data.Text.unpack scope
+        process =
+          (proc binary args) { std_out = CreatePipe
+                             , std_in  = CreatePipe
+                             , std_err = CreatePipe
+                             , env = Just $
+                               [ ("EMIT", emitter) ] <> environment
+                             }
+
+    (exitCode, _stdOut, _stdErr) <- lift $
+      readCreateProcessWithExitCode process (Data.Text.unpack input)
+    when (exitCode /= ExitSuccess) $
+      throwMaybe
+
+
+-- | E.g. @parseRoutedEvent "event:1,slot:name@some-scope" == Just (RoutedEvent (MouseEvent MouseLeft) "name" "some-scope")@
 parseRoutedEvent :: String -> Maybe RoutedEvent
 parseRoutedEvent = parseMaybe routedEventParser
 
@@ -91,24 +129,24 @@ type Parser = Parsec Void String
 routedEventParser :: Parser RoutedEvent
 routedEventParser = do
   void $ string "event:"
-  mb <- (MouseEvent  <$> buttonParser) <|>
-        (CustomEvent <$> customEventParser)
+  event <- (MouseEvent  <$> buttonParser) <|>
+           (CustomEvent <$> customEventParser)
   void $ char ','
   void $ string "slot:"
   slotName <- slotNameParser
-  void $ string "@"
+  void $ char '@'
   scope <- scopeParser
-  pure $ RoutedEvent mb (slotName <> "@" <> scope)
+  pure $ RoutedEvent event slotName scope
 
 buttonParser :: Parser Button
-buttonParser = do
-      MouseLeft        <$ char '1'
-  <|> MouseMiddle      <$ char '2'
-  <|> MouseRight       <$ char '3'
-  <|> MouseScrollUp    <$ char '4'
-  <|> MouseScrollDown  <$ char '5'
-  <|> MouseScrollLeft  <$ char '6'
-  <|> MouseScrollRight <$ char '7'
+buttonParser =
+      MouseLeft        <$ (string "MouseLeft" <|> string "1")
+  <|> MouseMiddle      <$ (string "MouseMiddle" <|> string "2")
+  <|> MouseRight       <$ (string "MouseRight" <|> string "3")
+  <|> MouseScrollUp    <$ (string "MouseScrollUp" <|> string "4")
+  <|> MouseScrollDown  <$ (string "MouseScrollDown" <|> string "5")
+  <|> MouseScrollLeft  <$ (string "MouseScrollLeft" <|> string "6")
+  <|> MouseScrollRight <$ (string "MouseScrollRight" <|> string "7")
 
 automatonAddressParser :: Parser Text
 automatonAddressParser = capitalized
@@ -117,11 +155,15 @@ slotNameParser :: Parser Text
 slotNameParser = capitalized
 
 customEventParser :: Parser Text
-customEventParser = capitalized
+customEventParser = camelCased
 
 capitalized :: Parser Text
 capitalized = Data.Text.pack <$>
   liftM2 (:) upperChar (many (upperChar <|> digitChar <|> char '_'))
+
+camelCased :: Parser Text
+camelCased = Data.Text.pack <$>
+  liftM2 (:) upperChar (many (alphaNumChar <|> char '_'))
 
 scopeParser :: Parser Text
 scopeParser = Data.Text.pack <$> some (alphaNumChar <|> char '-')

@@ -1,72 +1,19 @@
-{-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.Runtime where
 
 import           DzenDhall.Arguments
-import           DzenDhall.Event
-import           DzenDhall.Data
+import           DzenDhall.Runtime.Data
 import           DzenDhall.Config hiding (Hook)
 import           Paths_dzen_dhall
 
 import           Control.Monad
 import           Data.Maybe
-import           Data.IORef
 import           Dhall hiding (maybe)
 import           Lens.Micro
-import           Lens.Micro.TH
 import           System.Directory
 import           System.Exit (ExitCode(..), exitWith)
 import           System.FilePath ((</>))
 import           System.Posix.Files
-import           System.IO
-import qualified Data.HashMap.Strict as H
 
-apiVersion :: Int
-apiVersion = 1
-
-data Runtime = Runtime
-  { _rtConfigDir :: String
-  , _rtConfigurations :: [Configuration]
-  , _rtDzenBinary :: String
-  , _rtAPIVersion :: Int
-  , _rtArguments :: Arguments
-  }
-  deriving (Eq, Show)
-
-makeLenses ''Runtime
-
-data StartupState
-  = StartupState
-  { _ssAutomataHandles :: AutomataHandles
-  , _ssScopeName :: Text
-  , _ssBarSettings :: BarSettings
-  , _ssCounter :: Int
-  -- ^ Counter that is incremented each time it is requested (used as a source
-  -- of unique identifiers). See also: 'DzenDhall.App.getCounter'
-  , _ssSourceCache :: H.HashMap (Text, Source) (IORef Text, Cache)
-  , _ssAutomataCache :: H.HashMap (Text, Text) (IORef (Bar Initialized))
-  , _ssSourceQueue :: [(Source, IORef Text, Cache, Text)]
-  -- ^ A queue containing ready-to-be-initialized `Source`s and their handles &
-  -- scope names.
-  -- This queue is needed because we want to create a `BarRuntime` before
-  -- actually running the source processes (they depend on `brEmitterScript` value).
-  }
-
-makeLenses ''StartupState
-
-data BarRuntime = BarRuntime
-  { _brConfiguration :: Configuration
-  , _brFrameCounter :: Int
-  , _brNamedPipe :: String
-  -- ^ Named pipe to use as a communication channel for listening to mouse events
-  , _brEmitterScript :: String
-  -- ^ A script that can be used to emit events
-  , _brHandle :: Handle
-  -- ^ A handle to write to. The value is either stdin of a @dzen2@ process or
-  -- 'System.IO.stdout', if @--stdout@ flag is passed.
-  }
-  deriving (Eq, Show)
-
-makeLenses ''BarRuntime
 
 -- Read runtime from configuration file, if possible.
 readRuntime :: Arguments -> IO Runtime
@@ -137,9 +84,9 @@ initCommand args = do
   putStrLn $ "Success! You can now view your configuration at " <> configFile
   putStrLn $ "Run dzen-dhall again to see it in action."
 
-type Hook = FilePath -> IO ()
+type FileHook = FilePath -> IO ()
 
-copyDir :: Hook -> Hook -> FilePath -> FilePath -> IO ()
+copyDir :: FileHook -> FileHook -> FilePath -> FilePath -> IO ()
 copyDir fileCreationHook dirCreationHook = go
   where
     go src dst = do

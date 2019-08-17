@@ -3,7 +3,7 @@ let Hook
 	= { command :
 		  List Text
 	  , input :
-		  Optional Text
+		  Text
 	  }
 
 in  Hook

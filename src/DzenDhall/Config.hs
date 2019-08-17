@@ -7,6 +7,7 @@ import           Data.Hashable
 import           Data.Text (Text)
 import           Dhall
 import           Lens.Micro.TH
+import           Lens.Micro (Lens', _2)
 
 import           DzenDhall.Extra
 
@@ -127,7 +128,7 @@ sliderType = record $
 data Hook
   = Hook
   { _hookCommand          :: [Text]
-  , _hookInput            :: Maybe Text
+  , _hookInput            :: Text
   }
   deriving (Show, Eq, Generic)
 
@@ -136,15 +137,15 @@ makeLenses ''Hook
 hookType :: Type Hook
 hookType = record $
   Hook <$> field "command"          (list strictText)
-       <*> field "input"            (Dhall.maybe strictText)
+       <*> field "input"            strictText
 
-newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, Event, Text) Text }
+newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, Text, Event, Text) (Text, [Hook]) }
   deriving (Show, Eq, Generic)
 
 stateTransitionTableType :: Type StateTransitionTable
 stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
   ( record
-    ( pack4 <$> field "slots"  (list strictText)
+    ( pack5 <$> field "slots"  (list strictText)
             <*> field "events" (list eventType)
             <*> field "from"   (list strictText)
             <*> field "to"     strictText
@@ -152,14 +153,19 @@ stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
     )
   )
   where
-    pack4 slots events froms to hooks = (slots, events, froms, to)
+    pack5 slots events froms to hooks = (slots, events, froms, to, hooks)
 
-    collect (slots, events, froms, to) =
+    collect (slots, events, froms, to, hooks) =
 
-      [ ((slot, event, from), to)
+      [ ((slot, "", event, from), (to, hooks))
+      --        ^ scope is left uninitialized. It will be added later
       | slot <- slots
       , event <- events
-      , from <- froms ]
+      , from <- froms
+      ]
+
+_scope :: Lens' (Text, Text, Event, Text) Text
+_scope = _2
 
 newtype Color = Color Text
   deriving (Show, Eq, Generic)

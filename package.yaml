@@ -61,6 +61,7 @@ library:
   - DzenDhall.Parser
   - DzenDhall.Plug
   - DzenDhall.Runtime
+  - DzenDhall.Runtime.Data
   - DzenDhall.Validation
   - Paths_dzen_dhall
 
