@@ -25,12 +25,21 @@ marqueeType = record $
   Marquee <$> field "framesPerCharacter" (positive    . fromIntegral <$> natural)
           <*> field "width"              (nonNegative . fromIntegral <$> natural)
 
-data VDirection
+data Direction
+  = DLeft | DRight
+  deriving (Show, Eq, Generic)
+
+directionType :: Type Direction
+directionType = union
+  $  (DLeft  <$ constructor "Left"   unit)
+  <> (DRight <$ constructor "Right" unit)
+
+data VerticalDirection
   = VUp | VDown
   deriving (Show, Eq, Generic)
 
-directionType :: Type VDirection
-directionType = union
+verticalDirectionType :: Type VerticalDirection
+verticalDirectionType = union
   $  (VUp   <$ constructor "Up"   unit)
   <> (VDown <$ constructor "Down" unit)
 
@@ -94,7 +103,7 @@ eventType = union
 
 data Fade
   = Fade
-  { _fadeDirection   :: VDirection
+  { _fadeDirection   :: VerticalDirection
   , _fadeFrameCount  :: Int
   , _fadePixelHeight :: Int
   }
@@ -104,7 +113,7 @@ makeLenses ''Fade
 
 fadeType :: Type Fade
 fadeType = record $
-  Fade <$> field "direction"  directionType
+  Fade <$> field "direction"  verticalDirectionType
        <*> field "frameCount" (fromIntegral <$> natural)
        <*> field "height"     (fromIntegral <$> natural)
 
@@ -257,6 +266,7 @@ data OpeningTag
   | OCA          ClickableArea
   | OIB
   | OPadding     Int  Padding
+  | OTrim        Int  Direction
   | OAutomaton   Text StateTransitionTable
   | OStateMapKey Text
   | OListener    Text
@@ -276,6 +286,11 @@ openingTagType = union
   <> (uncurry OPadding   <$> constructor "Padding"
        ( record $ (,) <$> field "width"   (fromIntegral <$> natural)
                       <*> field "padding" paddingType
+       )
+     )
+  <> (uncurry OTrim   <$> constructor "Trim"
+       ( record $ (,) <$> field "width"     (fromIntegral <$> natural)
+                      <*> field "direction" directionType
        )
      )
   <> (uncurry OAutomaton <$> constructor "Automaton"

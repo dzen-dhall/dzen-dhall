@@ -26,7 +26,8 @@ makeLenses ''SourceHandle
 
 data Bar id
   = BarAutomaton Text (StateTransitionTableX id) (AutomataRefX id (Bar id))
-  | BarPadding Int Padding (Bar id)
+  | BarPad Int Padding (Bar id)
+  | BarTrim Int Direction (Bar id)
   | BarListener Text (Bar id)
   | BarMarquee Marquee (Bar id)
   | BarProp Property (Bar id)

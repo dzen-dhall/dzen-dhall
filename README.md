@@ -269,7 +269,8 @@ let [slider](#sliders) : Slider → List Bar → Bar
 let [marquee](#marquees) : Marquee → Bar → Bar
 
 -- Other
-let [padding](#paddings) : Natural → Padding → Bar → Bar
+let [pad](#padding-text) : Natural → Padding → Bar → Bar
+let [trim](#trimming-text) : Natural → Direction → Bar → Bar
 let [source](#sources) : Source → Bar
 let [plugin](#plugins) : Plugin → Bar
 let [listener](#listeners) : Slot → Bar → Bar
@@ -453,9 +454,35 @@ will be rendered as:
 
 ![Marquee preview](img/marquee.gif)
 
-### Paddings
+### Padding text
 
-TODO
+Paddings allow to make sure that the width of a piece of text is no less than some number of characters.
+
+```dhall
+let Padding : Type = < Left | Right | Sides >
+```
+
+Example:
+
+```dhall
+(pad 30 Padding.Sides (text "...")) : Bar
+```
+
+### Trimming text
+
+`trim` function allows to cut the text to desired width, removing excessive characters from either left or right.
+
+Trim direction is defined as follows:
+
+```dhall
+let Direction = < Left | Right >
+```
+
+Example:
+
+```dhall
+(trim 5 Direction.Right (text "Some long text..."))
+```
 
 ### Sources
 
@@ -607,13 +634,13 @@ let StateTransitionTable
 For example, let's define a simple transition table with two states: `"on"` and `""` (which is the default state of any automaton):
 
 ```dhall
-let stt = [ { slots: [ "slot1" ]
+let stt = [ { slots: [ "MY_SLOT" ]
             , events: [ Event.Mouse Button.Left ]
             , from: [ "" ]
             , to: [ "on" ]
             , hooks: [] : List Hook
             }
-          , { slots: [ "slot1" ]
+          , { slots: [ "MY_SLOT" ]
             , events: [ Event.Mouse Button.Left ]
             , from: [ "on" ]
             , to: [ "" ]
@@ -622,7 +649,7 @@ let stt = [ { slots: [ "slot1" ]
           ]
 ```
 
-This state transition table, when coupled with a [state map](#state-maps) to form an [automaton](#automata) and subscribed to some [listener](#listeners) that awaits for mouse events and sends them to the "slot1" slot, will result in a clickable area that switches between two states as the user clicks on a certain area.
+This state transition table, when coupled with a [state map](#state-maps) to form an [automaton](#automata) and subscribed to some [listener](#listeners) that awaits for mouse events and sends them to the "MY_SLOT" slot, will result in a clickable area that switches between two states as the user clicks on a some area.
 
 ### [State maps](dhall/src/StateMap.dhall)
 
@@ -660,7 +687,7 @@ Slots are used to route events throughout the interface: you can think of slots 
 let Slot : Type = Text
 ```
 
-[Automata](#automata) can listen for events on certain slots and react to them.
+[Automata](#automata) can listen for events on slots and react to them.
 
 ### [Hooks](dhall/src/Hook.dhall)
 

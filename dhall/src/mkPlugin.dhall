@@ -12,6 +12,8 @@ let Carrier = ./Carrier.dhall
 
 let Color = ./Color.dhall
 
+let Direction = ./Direction.dhall
+
 let Hook = ./Hook.dhall
 
 let Image = ./Image.dhall
@@ -100,10 +102,15 @@ let carrierListToken
 			λ(marquee : Marquee)
 		  → λ(child : Plugin)
 		  → enclose (OpeningTag.Marquee marquee) child
-	  , padding =
+	  , pad =
 			λ(width : Natural)
 		  → λ(padding : Padding)
 		  → enclose (OpeningTag.Padding { width = width, padding = padding })
+	  , trim =
+			λ(width : Natural)
+		  → λ(direction : Direction)
+		  → enclose
+			(OpeningTag.Trim { width = width, direction = direction })
 	  , source =
 		  λ(source : Source) → [ Token.Source source ]
 	  , plugin =

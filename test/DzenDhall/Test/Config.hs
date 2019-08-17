@@ -36,7 +36,7 @@ testOpeningTag dhallDir = do
            (list openingTagType) [litFile|test/dhall/OpeningTag.dhall|]
   pure $ Test.Tasty.HUnit.testCase "test/dhall/OpeningTag.dhall marshalling" $
     input @?=
-    [ OMarquee (Marquee 2 3), OFG (Color "red") ]
+    [ OMarquee (Marquee 2 3), OFG (Color "red"), OTrim 3 DRight ]
 
 testToken :: FilePath -> IO TestTree
 testToken dhallDir = do

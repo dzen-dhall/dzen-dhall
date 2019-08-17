@@ -6,6 +6,8 @@ let Button = ./Button.dhall
 
 let Color = ./Color.dhall
 
+let Direction = ./Direction.dhall
+
 let Hook = ./Hook.dhall
 
 let Image = ./Image.dhall
@@ -63,8 +65,10 @@ let Carrier
 			Slider → List Bar → Bar
 		, marquee :
 			Marquee → Bar → Bar
-		, padding :
+		, pad :
 			Natural → Padding → Bar → Bar
+		, trim :
+			Natural → Direction → Bar → Bar
 		, source :
 			Source → Bar
 		, plugin :

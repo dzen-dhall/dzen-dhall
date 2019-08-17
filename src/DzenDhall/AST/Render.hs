@@ -138,10 +138,9 @@ instance Renderable AST where
           P_BOTTOM   -> ("^p(_BOTTOM)",           "^p()")
   render (ASTShape shape) = render shape
   render (ASTPadding width padding ast) = do
-    write $ "^p(_LOCK_X)" <> mkPadding leftPadding
+    write $ mkPadding leftPadding
     render ast
-    write $ mkPadding rightPadding <> "^p(_UNLOCK_X)^ib(1)" <> mkPadding width
-    renew ibStack "ib"
+    write $ mkPadding rightPadding
     where
       mkPadding w = Data.Text.justifyRight w ' ' ""
       (leftPadding, rightPadding) = paddingWidths padding width

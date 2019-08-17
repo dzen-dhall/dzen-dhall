@@ -6,6 +6,8 @@ let StateTransitionTable = ./StateTransitionTable.dhall
 
 let Color = ./Color.dhall
 
+let Direction = ./Direction.dhall
+
 let Position = ./Position.dhall
 
 let Padding = ./Padding.dhall
@@ -33,6 +35,8 @@ in  < Marquee :
 	| IB
 	| Padding :
 		{ width : Natural, padding : Padding }
+	| Trim :
+		{ width : Natural, direction : Direction }
 	| Automaton :
 		{ stt : StateTransitionTable, id : Text }
 	| StateMapKey :

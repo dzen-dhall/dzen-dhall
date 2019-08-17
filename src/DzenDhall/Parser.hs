@@ -30,6 +30,7 @@ data Solid
   | SolidIB
   | SolidListener Text
   | SolidPadding Int Padding
+  | SolidTrim Int Direction
   | SolidScope
 
 runBarParser :: Tokens -> Either ParseError (Bar Marshalled)
@@ -73,7 +74,9 @@ wrapped = do
       SolidIB               -> BarProp     IB            child
       SolidListener slot    -> BarListener slot          child
       SolidPadding width padding
-                            -> BarPadding width padding  child
+                            -> BarPad width padding      child
+      SolidTrim width direction
+                            -> BarTrim width direction   child
       SolidScope            -> BarScope                  child
 
 automaton :: Parser (Bar Marshalled)
@@ -119,6 +122,8 @@ solid = withPreview $ \case
   TokOpen (OListener slot)   -> Just $ SolidListener slot
   TokOpen (OPadding width padding)
                              -> Just $ SolidPadding width padding
+  TokOpen (OTrim width direction)
+                             -> Just $ SolidTrim width direction
   TokOpen OScope             -> Just $ SolidScope
   _                          -> Nothing
 

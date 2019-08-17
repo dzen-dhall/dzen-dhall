@@ -1,6 +1,7 @@
 module DzenDhall.App.StartingUp where
 
 import           DzenDhall.AST
+import           DzenDhall.AST as AST
 import           DzenDhall.App as App
 import           DzenDhall.Arguments
 import           DzenDhall.Config
@@ -223,8 +224,10 @@ initialize (BarScope child) = do
 
 initialize (BarProp prop p) =
   BarProp prop <$> initialize p
-initialize (BarPadding width padding p) =
-  BarPadding width padding <$> initialize p
+initialize (BarPad width padding p) =
+  BarPad width padding <$> initialize p
+initialize (BarTrim width direction p) =
+  BarTrim width direction <$> initialize p
 initialize (Bars ps) =
   Bars <$> mapM initialize ps
 initialize (BarShape shape) =
@@ -380,8 +383,17 @@ collectSources fontWidth (BarListener slot child) = do
 collectSources fontWidth (BarScope child) = do
   collectSources fontWidth child
 
-collectSources fontWidth (BarPadding width padding child) = do
+collectSources fontWidth (BarPad width padding child) = do
   ASTPadding width padding <$> collectSources fontWidth child
+
+collectSources fontWidth (BarTrim width direction child) = do
+  ast <- collectSources fontWidth child
+  case direction of
+    DRight ->
+      pure $ fst $ split width ast
+    DLeft -> do
+      let actualWidth = astWidth ast
+      pure $ snd $ split (abs $ actualWidth - width) ast
 
 collectSources _         (BarShape shape) = do
   pure $ ASTShape shape

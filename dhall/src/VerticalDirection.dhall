@@ -1,1 +1,1 @@
-< Up | Down >
+let VerticalDirection = < Up | Down > in VerticalDirection

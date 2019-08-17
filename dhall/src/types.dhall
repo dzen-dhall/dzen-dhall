@@ -9,6 +9,8 @@
 	./Carrier.dhall
 , Check =
 	./Check.dhall
+, Direction =
+	./Direction.dhall
 , Plugin =
 	./Plugin.dhall
 , BarSettings =

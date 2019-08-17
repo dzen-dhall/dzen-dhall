@@ -12,6 +12,7 @@ let Carrier = types.Carrier
 let Check = types.Check
 let Color = types.Color
 let Configuration = types.Configuration
+let Direction = types.Direction
 let Event = types.Event
 let Hook = types.Hook
 let Image = types.Image
@@ -58,7 +59,8 @@ let defaultBar
 		let marquee : Marquee → Bar → Bar = carrier.marquee
 
 		-- Other
-		let padding : Natural → Padding → Bar → Bar = carrier.padding
+		let pad : Natural → Padding → Bar → Bar = carrier.pad
+		let trim : Natural → Direction → Bar → Bar = carrier.trim
 		let source : Source → Bar = carrier.source
 		let plugin : Plugin → Bar = carrier.plugin
 		let listener : Slot → Bar → Bar = carrier.listener

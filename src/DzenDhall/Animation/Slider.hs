@@ -85,6 +85,6 @@ renderFade fade relativeFrameNumber frameCount =
     dk * (height - height * relativeFrameNumber `div` frameCount)
 
 
-direction :: VDirection -> Int
+direction :: VerticalDirection -> Int
 direction VUp = -1
 direction _   = 1
