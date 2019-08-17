@@ -1,0 +1,85 @@
+# Borrowed this config from spacchetti/spago
+sudo: required
+
+language: generic
+
+cache:
+  directories:
+  - $HOME/.ghc
+  - $HOME/.cabal
+  - $HOME/.stack
+  - $TRAVIS_BUILD_DIR/.stack-work
+
+services:
+  - docker
+
+matrix:
+  include:
+  # Build on Linux with docker
+  - env: BUILD=stack ARGS="" PURS_OS="linux64" IMAGE_TAG=lts-12
+    compiler: ": #stack default"
+
+# Build only master and release tags
+branches:
+  only:
+  - master
+  - /^\d+\.\d+\.\d+(\.\d+)?$/
+
+
+before_install:
+  # Using compiler above sets CC to an invalid value, so unset it
+  - unset CC
+  # We want to always allow newer versions of packages when building on GHC HEAD
+  - CABALARGS=""
+  - if [ "x$GHCVER" = "xhead" ]; then CABALARGS=--allow-newer; fi
+
+  - |
+    echo "Running before_install"
+    docker pull "nilrecurring/haskell-lavello:${IMAGE_TAG}"
+    docker run --mount src="$(pwd)",target=/home/ubuntu/dzen-dhall,type=bind \
+      "nilrecurring/haskell-lavello:${IMAGE_TAG}" /bin/bash -c \
+      "sudo chown -R ubuntu dzen-dhall; cd dzen-dhall; stack build"
+
+install:
+  - |
+    echo "Running install"
+
+script:
+  - |
+    echo "Running tests"
+    export PATH="${PATH}:$(pwd)/artifacts"
+    docker run --mount src="$(pwd)",target=/home/ubuntu/dzen-dhall,type=bind \
+       "nilrecurring/haskell-lavello:${IMAGE_TAG}" /bin/bash -c \
+       'cd dzen-dhall && stack build --test --no-run-tests --copy-bins --local-bin-path ./artifacts'
+
+    # run the test suite executable
+    ./.stack-work/dist/*/*/build/tasty/tasty
+
+
+before_deploy:
+  - |
+    echo "Running before_deploy"
+
+    # We have to check on this condition so we run the before_deploy job only once
+    if ! [ "$BEFORE_DEPLOY_RUN" ]; then
+      export BEFORE_DEPLOY_RUN=1;
+
+      docker run --mount src="$(pwd)",target=/home/ubuntu/dzen-dhall,type=bind \
+        "nilrecurring/haskell-lavello:${IMAGE_TAG}" /bin/bash -c \
+        "cd dzen-dhall; stack build --copy-bins --local-bin-path ./artifacts"
+      cp artifacts/dzen-dhall dzen-dhall
+      tar -zcvf "${TRAVIS_OS_NAME}.tar.gz" dzen-dhall
+    fi
+
+deploy:
+  - provider: releases
+    api_key: $API_KEY
+    target_commitish: master
+    file:
+      - ../$TRAVIS_OS_NAME.tar.gz
+    skip_cleanup: true
+    on:
+      tags: true
+    script:
+      - echo 'done'
+    draft: true
