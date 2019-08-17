@@ -2,7 +2,7 @@ let BarSettings = ./src/BarSettings.dhall
 
 in    { monitor =
 		  1
-	  , extraFlags =
+	  , extraArgs =
 		  [ "-l", "10" ]
 	  , updateInterval =
 		  250

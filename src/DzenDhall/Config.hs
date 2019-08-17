@@ -306,8 +306,8 @@ data BarSettings
   = BarSettings
   { _bsMonitor :: Int
   -- ^ Xinerama monitor number
-  , _bsExtraFlags     :: [String]
-  -- ^ Extra flags to pass to dzen binary
+  , _bsExtraArgs     :: [String]
+  -- ^ Extra args to pass to dzen binary
   , _bsUpdateInterval :: Int
   -- ^ In microseconds
   , _bsFont           :: Maybe String
@@ -321,7 +321,7 @@ makeLenses ''BarSettings
 barSettingsType :: Type BarSettings
 barSettingsType = record $
   BarSettings <$> field "monitor"        (fromIntegral <$> natural)
-              <*> field "extraFlags"     (list string)
+              <*> field "extraArgs"      (list string)
               <*> field "updateInterval" ((* 1000) . fromIntegral <$> natural)
               <*> field "font"           (Dhall.maybe string)
               <*> field "fontWidth"      (fmap fromIntegral <$> Dhall.maybe natural)

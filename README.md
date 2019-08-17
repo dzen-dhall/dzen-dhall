@@ -769,6 +769,22 @@ After a few guesses, you should be able to get rid of jittering.
 
 Another possible source of this problem is non-monospace font being used. Non-monospace fonts are not supported and will never be.
 
+### Running multiple `dzen`s simultaneously
+
+It is possible to do so by adding another `Bar` (some code duplication is hardly avoidable) and adding another entry to the configuration list:
+
+```dhall
+mkConfigs
+	  [ { bar = defaultBar, settings = defaultBarSettings }
+	  , { bar =
+		    anotherBar
+		, settings =
+			-- `-xs` flag specifies monitor number:
+			defaultBarSettings ⫽ { extraArgs = [ "-xs", "1" ] }
+		}
+	  ]
+```
+
 ### Embedding shell scripts in Dhall
 
 The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file.

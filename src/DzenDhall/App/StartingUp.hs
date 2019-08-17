@@ -60,9 +60,9 @@ mkBarRuntime cfg = do
   let dzenBinary  = runtime ^. rtDzenBinary
       barSettings = cfg ^. cfgBarSettings
 
-      extraFlags  = barSettings ^. bsExtraFlags
-      fontFlags   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
-      flags       = fontFlags <> extraFlags
+      extraArgs  = barSettings ^. bsExtraArgs
+      fontArgs   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
+      args       = fontArgs <> extraArgs
 
   tmpFilePrefix <- fmap (</> "dzen-dhall-rt-") $ liftIO $
     getTemporaryDirectory `catch` \(_e :: IOException) -> getCurrentDirectory
@@ -99,7 +99,7 @@ mkBarRuntime cfg = do
     ToDzen -> do
       (mb_stdin, mb_stdout, _, _) <- liftIO $
         createProcess $
-          (proc (runtime ^. rtDzenBinary) flags)
+          (proc (runtime ^. rtDzenBinary) args)
             { std_out = CreatePipe
             , std_in  = CreatePipe }
 

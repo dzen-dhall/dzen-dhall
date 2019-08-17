@@ -100,7 +100,7 @@ testBarSettings :: FilePath -> IO TestTree
 testBarSettings =
   testFile barSettingsType "test/dhall/BarSettings.dhall"
     BarSettings { _bsMonitor = 1
-                , _bsExtraFlags = [ "-l", "10" ]
+                , _bsExtraArgs = [ "-l", "10" ]
                 , _bsUpdateInterval = 250000
                 , _bsFont = Nothing
                 , _bsFontWidth = Nothing
@@ -111,7 +111,7 @@ testConfiguration =
   testFile (list configurationType) "test/dhall/Configuration.dhall"
     [ Configuration { _cfgBarTokens = [ TokClose ]
                     , _cfgBarSettings = BarSettings { _bsMonitor = 1
-                                                    , _bsExtraFlags = [ "-l", "10" ]
+                                                    , _bsExtraArgs = [ "-l", "10" ]
                                                     , _bsUpdateInterval = 250000
                                                     , _bsFont = Nothing
                                                     , _bsFontWidth = Nothing

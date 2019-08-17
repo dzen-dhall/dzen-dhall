@@ -1,6 +1,6 @@
   { monitor =
 	  0
-  , extraFlags =
+  , extraArgs =
 	  [ "-ta", "l" ] : List Text
   , updateInterval =
 	  250

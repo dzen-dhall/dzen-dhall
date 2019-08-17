@@ -1,6 +1,6 @@
 { monitor :
 	Natural
-, extraFlags :
+, extraArgs :
 	List Text
 , updateInterval :
 	Natural
