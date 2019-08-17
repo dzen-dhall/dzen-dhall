@@ -1,5 +1,7 @@
 # dzen-dhall
 
+[![Build Status](https://travis-ci.com/dzen-dhall/dzen-dhall.svg?branch=master)](https://travis-ci.com/dzen-dhall/dzen-dhall/)
+
 [Dzen](https://github.com/robm/dzen) is a general purpose messaging, notification and menuing program for X11. It features rich in-text formating & control language, allowing to create GUIs by piping output of arbitrary executables to the `dzen2` binary. There are plenty of good usage examples on [r/unixporn](https://www.reddit.com/r/unixporn/search/?q=dzen&restrict_sr=1).
 
 Unfortunately, combining outputs of multiple executables before feeding them to `dzen2`, which is usually done by custom shell scripts, is a tedious and error-prone task. Consider the following problems:
