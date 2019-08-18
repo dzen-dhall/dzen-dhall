@@ -1,5 +1,4 @@
 sudo: true
-language: haskell
 
 cabal: "2.4"
 
@@ -16,41 +15,46 @@ matrix:
   include:
   - ghc: 8.6.4
     env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
+    language: haskell
+
+    install:
+      - |
+        curl -sSL https://get.haskellstack.org/ | sh
+
+        stack --version
+        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+
+    script:
+      - |
+        stack test --system-ghc
+
+    before_deploy:
+      - |
+        echo "Running before_deploy"
+
+        stack build --system-ghc --copy-bins --local-bin-path ./artifacts"
+        cp artifacts/dzen-dhall dzen-dhall
+        tar -zcvf "${TRAVIS_OS_NAME}.tar.gz" dzen-dhall
+
+    deploy:
+      - provider: releases
+        api_key: $API_KEY
+        target_commitish: master
+        file:
+          - ../$TRAVIS_OS_NAME.tar.gz
+        skip_cleanup: true
+        on:
+          tags: true
+        script:
+          - echo 'done'
+        draft: true
+
+  - language: nix
+
+    script: nix-build -A dzen-dhall default.nix
 
 # Build only master and release tags
 branches:
   only:
   - master
   - /^\d+\.\d+\.\d+(\.\d+)?$/
-
-install:
-  - |
-    curl -sSL https://get.haskellstack.org/ | sh
-
-    stack --version
-    stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
-
-script:
-  - |
-    stack test --system-ghc
-
-before_deploy:
-  - |
-    echo "Running before_deploy"
-
-    stack build --system-ghc --copy-bins --local-bin-path ./artifacts"
-    cp artifacts/dzen-dhall dzen-dhall
-    tar -zcvf "${TRAVIS_OS_NAME}.tar.gz" dzen-dhall
-
-deploy:
-  - provider: releases
-    api_key: $API_KEY
-    target_commitish: master
-    file:
-      - ../$TRAVIS_OS_NAME.tar.gz
-    skip_cleanup: true
-    on:
-      tags: true
-    script:
-      - echo 'done'
-    draft: true
