@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 33fe0a857a531c08ec62d4702de28f457d4c3645e891ff4f4e71b57e0d1a6803
+-- hash: 18e42c91162ea7e6b728c979bc475d45ef6c103a4deec03b255f568b4c1fd98b
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -150,10 +150,12 @@ test-suite tasty
   ghc-options: -Wall
   build-depends:
       HUnit
+    , QuickCheck
     , base
     , dhall
     , dzen-dhall
     , filepath
+    , generic-random
     , hspec
     , microlens
     , network-uri
@@ -162,6 +164,7 @@ test-suite tasty
     , tasty
     , tasty-hspec
     , tasty-hunit
+    , tasty-quickcheck
     , template-haskell
     , text
     , unordered-containers

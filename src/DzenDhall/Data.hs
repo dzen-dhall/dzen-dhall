@@ -71,7 +71,7 @@ data Property
   | CA ClickableArea
   | P Position
   | PA AbsolutePosition
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
 type Handler = Text
 type ImagePath = Text
@@ -82,4 +82,4 @@ data Shape
   | RO Int Int
   | C Int
   | CO Int
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)

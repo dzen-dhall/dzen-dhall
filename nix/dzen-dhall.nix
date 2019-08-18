@@ -1,9 +1,10 @@
 { mkDerivation, base, bytestring, containers, dhall, directory
-, filepath, hashable, hpack, hspec, http-conduit, HUnit, megaparsec
-, microlens, microlens-th, network-uri, optparse-applicative
-, parsec, parsers, pipes, process, random, stdenv, tasty
-, tasty-hspec, tasty-hunit, template-haskell, text, time
-, transformers, unix, unordered-containers, utf8-string, vector
+, filepath, generic-random, hashable, hpack, hspec, http-conduit
+, HUnit, megaparsec, microlens, microlens-th, network-uri
+, optparse-applicative, parsec, parsers, pipes, process, QuickCheck
+, random, stdenv, tasty, tasty-hspec, tasty-hunit, tasty-quickcheck
+, template-haskell, text, time, transformers, unix
+, unordered-containers, utf8-string, vector
 }:
 mkDerivation {
   pname = "dzen-dhall";
@@ -21,9 +22,10 @@ mkDerivation {
   libraryToolDepends = [ hpack ];
   executableHaskellDepends = [ base ];
   testHaskellDepends = [
-    base dhall filepath hspec HUnit microlens network-uri
-    optparse-applicative parsec tasty tasty-hspec tasty-hunit
-    template-haskell text unordered-containers vector
+    base dhall filepath generic-random hspec HUnit microlens
+    network-uri optparse-applicative parsec QuickCheck tasty
+    tasty-hspec tasty-hunit tasty-quickcheck template-haskell text
+    unordered-containers vector
   ];
   doHaddock = false;
   preConfigure = "hpack";

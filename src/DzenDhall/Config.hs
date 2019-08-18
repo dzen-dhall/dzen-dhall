@@ -441,7 +441,7 @@ data PluginMeta = PluginMeta
   , _pmUsage            :: Text
   , _pmApiVersion       :: Int
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
 makeLenses ''PluginMeta
 

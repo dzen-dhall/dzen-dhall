@@ -1,10 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 module DzenDhall.AST where
 
-import qualified Data.Text
-import           Data.Text (Text)
 import           DzenDhall.Config
 import           DzenDhall.Data
+
+import           Data.Text (Text)
+import qualified Data.Text
+import           GHC.Generics
 
 data AST =
   -- | Text.
@@ -17,7 +19,7 @@ data AST =
   ASTShape Shape |
   ASTPadding Int Padding AST |
   EmptyAST
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
 instance Semigroup AST where
   EmptyAST <> a = a

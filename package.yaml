@@ -98,6 +98,7 @@ tests:
     ghc-options: -Wall
     dependencies:
     - HUnit
+    - QuickCheck
     - base
     - dhall
     - dzen-dhall
@@ -114,3 +115,5 @@ tests:
     - text
     - unordered-containers
     - vector
+    - generic-random
+    - tasty-quickcheck
