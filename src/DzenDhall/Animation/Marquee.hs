@@ -44,7 +44,7 @@ calculatePxShift frameCounter fontWidth framesPerChar =
   let shift = frameCounter `mod` framesPerChar in
     fontWidth `div` 2 - ((fontWidth * shift) `div` framesPerChar)
 
--- | Add sub-character shift to AST and compensate it
+-- | Add sub-character shift to the AST and compensate it
 addPxShift
   :: Int
   -- ^ Shift in pixels

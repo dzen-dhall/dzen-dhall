@@ -38,8 +38,8 @@ run tokens = do
   pure $ (errors <> assertionErrors, filterOutAssertions tokens)
     where
       filterOutAssertions = filter $ \case
-        TokAssertion _ -> False
-        _              -> True
+        TokCheck _ -> False
+        _          -> True
 
 
 validate :: [Token] -> [Error]
@@ -95,16 +95,16 @@ validate = reverse . go []
 
 checkAssertions :: [Token] -> IO [Error]
 checkAssertions [] = pure []
-checkAssertions (TokAssertion assertion : xs) = do
+checkAssertions (TokCheck check : xs) = do
   newErrors <-
-    case assertion ^. assCheck of
+    case check ^. chAssertion of
       BinaryInPath binary -> do
         mbPath <- findExecutable (Data.Text.unpack binary)
-        pure [ BinaryNotInPath binary (assertion ^. assMessage) | isNothing mbPath ]
+        pure [ BinaryNotInPath binary (check ^. chMessage) | isNothing mbPath ]
       SuccessfulExit code -> do
         let process = System.Process.shell (Data.Text.unpack code)
         (exitCode, _, _) <- System.Process.readCreateProcessWithExitCode process ""
-        pure [ AssertionFailure code (assertion ^. assMessage) | exitCode /= ExitSuccess ]
+        pure [ AssertionFailure code (check ^. chMessage) | exitCode /= ExitSuccess ]
 
   (newErrors ++) <$> checkAssertions xs
 

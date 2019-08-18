@@ -702,15 +702,27 @@ For example, this assertion fails if there's no `something` binary in `$PATH`:
 
 ```dhall
 check
-[ { message = "Did you miss something?", assertion = Assertion.BinaryInPath "something" } ]
+[ { message =
+	"Did you miss something?"
+  , assertion =
+	Assertion.BinaryInPath "something"
+  }
+]
 ```
 
 And this assertion fails on weekends:
 
 ```dhall
 check
-[ { message = "Not going to work!", assertion = Assertion.SuccessfulExit "[[ \$(date +%u) -lt 6 ]]" } ]
+[ { message =
+	"Not going to work!"
+  , assertion =
+	Assertion.SuccessfulExit "[[ \$(date +%u) -lt 6 ]]"
+  }
+]
 ```
+
+[[view full example]](test/dhall/configs/assertions.dhall)
 
 ## Naming conventions
 

@@ -133,7 +133,7 @@ let carrierListToken
 			  stateMap
 			)
 	  , check =
-		  List/map Check Token Token.Assertion
+		  List/map Check Token Token.Check
 	  , scope =
 		  enclose OpeningTag.Scope
 	  }

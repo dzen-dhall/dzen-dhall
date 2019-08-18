@@ -15,24 +15,26 @@ import qualified Data.Text.IO
 getTests :: FilePath -> TestTree
 getTests dhallDir =
   testGroup "Config data marshalling"
-  [ testGroup "Data types"
-    [ testOpeningTag           dhallDir
-    , testToken                dhallDir
-    , testSource               dhallDir
-    , testMarquee              dhallDir
-    , testButton               dhallDir
-    , testPadding              dhallDir
-    , testEvent                dhallDir
-    , testBarSettings          dhallDir
-    , testConfiguration        dhallDir
-    , testStateTransitionTable dhallDir
-    , testPluginMeta           dhallDir
-    ]
+  [ testGroup "Data types" $
+    [ testOpeningTag
+    , testToken
+    , testCheck
+    , testSource
+    , testMarquee
+    , testButton
+    , testPadding
+    , testEvent
+    , testBarSettings
+    , testConfiguration
+    , testStateTransitionTable
+    , testPluginMeta
+    ] <&> ($ dhallDir)
 
-  , testGroup "Config examples"
-    [ testDefaultConfiguration      dhallDir
-    , testConfigurationWithAutomata dhallDir
-    ]
+  , testGroup "Config examples" $
+    [ dummy "dhall/config.dhall"
+    , dummy "test/dhall/configs/automata.dhall"
+    , dummy "test/dhall/configs/assertions.dhall"
+    ] <&> ($ dhallDir)
   ]
 
 testFile :: (Eq a, Show a) =>
@@ -103,6 +105,13 @@ testEvent =
     , MouseEvent MouseLeft
     ]
 
+testCheck :: FilePath -> TestTree
+testCheck =
+  testFile (list checkType) "test/dhall/Check.dhall"
+  [ Check "" $ SuccessfulExit ""
+  , Check "" $ BinaryInPath ""
+  ]
+
 testBarSettings :: FilePath -> TestTree
 testBarSettings =
   testFile barSettingsType "test/dhall/BarSettings.dhall"
@@ -159,9 +168,3 @@ dummy file dhallDir =
     void $ detailed $
       inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
       (list configurationType) program
-
-testDefaultConfiguration :: FilePath -> TestTree
-testDefaultConfiguration = dummy "dhall/config.dhall"
-
-testConfigurationWithAutomata :: FilePath -> TestTree
-testConfigurationWithAutomata = dummy "test/dhall/configs/automata.dhall"

@@ -106,7 +106,7 @@ splitAST n (ASTPadding width padding child) =
       spaces :: Int -> AST
       spaces 0 = EmptyAST
       spaces w = ASTText $ Data.Text.justifyRight w ' ' ""
-splitAST n res@(ASTShape _) =
+splitAST _n res@(ASTShape _) =
   EmptyR res 1 -- TODO
 
 paddingWidths :: Padding -> Int -> (Int, Int)

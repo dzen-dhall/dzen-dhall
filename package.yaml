@@ -1,10 +1,10 @@
 name:       dzen-dhall
 version:    '0.0.0.1'
 synopsis:   Configure dzen2 bars in Dhall language.
-maintainer: Klntsky <klntsky@gmail.com>
+maintainer: Kalnitsky Vladimir <klntsky@gmail.com>
 license:    BSD-3-Clause
 license-file: LICENSE
-author: Klntsky
+author: Kalnitsky Vladimir <klntsky@gmail.com>
 extra-source-files:
 - CHANGELOG.md
 - README.md
@@ -17,7 +17,7 @@ library:
   ghc-options: -Wall
 
   dependencies:
-  - base ^>=4.12.0.0
+  - base
   - bytestring
   - containers
   - dhall

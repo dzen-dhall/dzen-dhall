@@ -17,7 +17,7 @@
 	Natural
 | CO :
 	Natural
-| Assertion :
+| Check :
 	./Check.dhall
 | Close
 >

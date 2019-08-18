@@ -102,7 +102,7 @@ let defaultBar
 					Text
 					Check
 					(   λ(binary : Text)
-					  → { message = "", check = Assertion.BinaryInPath binary }
+					  → { message = "", assertion = Assertion.BinaryInPath binary }
 					)
 					binaries
 				  )

@@ -43,29 +43,28 @@ verticalDirectionType = union
   $  (VUp   <$ constructor "Up"   unit)
   <> (VDown <$ constructor "Down" unit)
 
-data AssertionCheck
+data Assertion
   = BinaryInPath Text
   | SuccessfulExit Text
   deriving (Show, Eq, Generic)
 
-assertionCheckType :: Type AssertionCheck
-assertionCheckType = union
+assertionType :: Type Assertion
+assertionType = union
   $  (BinaryInPath    <$> constructor "BinaryInPath" strictText)
   <> (SuccessfulExit  <$> constructor "SuccessfulExit"  strictText)
 
-data Assertion
-  = Assertion { _assMessage :: Text
-              , _assCheck :: AssertionCheck
-              }
+data Check
+  = Check { _chMessage :: Text
+          , _chAssertion :: Assertion
+          }
   deriving (Show, Eq, Generic)
 
-makeLenses ''Assertion
+makeLenses ''Check
 
-assertionType :: Type Assertion
-assertionType = record $
-  Assertion <$> field "message" strictText
-            <*> field "check"   assertionCheckType
-
+checkType :: Type Check
+checkType = record $
+  Check <$> field "message"   strictText
+        <*> field "assertion" assertionType
 
 data Button
   = MouseLeft
@@ -363,7 +362,7 @@ data Token
   | TokRO ShapeSize
   | TokC Int
   | TokCO Int
-  | TokAssertion Assertion
+  | TokCheck Check
   | TokClose
   deriving (Show, Eq, Generic)
 
@@ -379,7 +378,7 @@ tokenType = union
   <> (TokRO        <$> constructor "RO"        shapeSizeType)
   <> (TokC         <$> constructor "C"         (fromIntegral <$> natural))
   <> (TokCO        <$> constructor "CO"        (fromIntegral <$> natural))
-  <> (TokAssertion <$> constructor "Assertion" assertionType)
+  <> (TokCheck     <$> constructor "Check"     checkType)
   <> (TokClose     <$  constructor "Close"     unit)
 
 stateMapType :: Type (H.HashMap Text [Token])

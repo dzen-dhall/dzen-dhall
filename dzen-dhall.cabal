@@ -4,13 +4,13 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9015d6938190f3dd5cd9a0b96e5a5aa5614d80cc34d3fd3ce0f05ad0ced3cc55
+-- hash: 33fe0a857a531c08ec62d4702de28f457d4c3645e891ff4f4e71b57e0d1a6803
 
 name:           dzen-dhall
 version:        0.0.0.1
 synopsis:       Configure dzen2 bars in Dhall language.
-author:         Klntsky
-maintainer:     Klntsky <klntsky@gmail.com>
+author:         Kalnitsky Vladimir <klntsky@gmail.com>
+maintainer:     Kalnitsky Vladimir <klntsky@gmail.com>
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
@@ -91,7 +91,7 @@ library
   default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections
   ghc-options: -Wall
   build-depends:
-      base >=4.12.0.0 && <4.13
+      base
     , bytestring
     , containers
     , dhall
