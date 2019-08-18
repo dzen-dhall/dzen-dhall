@@ -14,6 +14,6 @@ let mkConfigs
 	= List/map
 	  RawConfigEntry
 	  ./Configuration.dhall
-	  (λ(raw : RawConfigEntry) → { bar = mkPlugin raw.bar, settings = raw.settings })
+	  (λ(entry : RawConfigEntry) → { bar = mkPlugin entry.bar, settings = entry.settings })
 
 in  mkConfigs

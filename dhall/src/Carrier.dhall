@@ -1,5 +1,7 @@
 let AbsolutePosition = ./AbsolutePosition.dhall
 
+let Address = ./Address.dhall
+
 let Button = ./Button.dhall
 
 let Color = ./Color.dhall
@@ -35,7 +37,7 @@ let Carrier
 	=   λ(Bar : Type)
 	  → { text :
 			Text → Bar
-		, raw :
+		, markup :
 			Text → Bar
 		, join :
 			List Bar → Bar
@@ -76,7 +78,7 @@ let Carrier
 		, listener :
 			Slot → Bar → Bar
 		, automaton :
-			Text → StateTransitionTable → StateMap Bar → Bar
+			Address → StateTransitionTable → StateMap Bar → Bar
 		, check :
 			List Check → Bar
 		, scope :

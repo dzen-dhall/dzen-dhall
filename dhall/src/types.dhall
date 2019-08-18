@@ -1,48 +1,56 @@
-{- Collect all types -}
-{ Assertion =
+{- All user-facing types. -}
+{ AbsolutePosition =
+	./AbsolutePosition.dhall
+, Address =
+	./Address.dhall
+, Assertion =
 	./Assertion.dhall
 , Configuration =
 	./Configuration.dhall
 , Bar =
 	./Bar.dhall
-, Carrier =
-	./Carrier.dhall
-, Check =
-	./Check.dhall
-, Direction =
-	./Direction.dhall
-, Plugin =
-	./Plugin.dhall
 , BarSettings =
 	./BarSettings.dhall
 , Button =
 	./Button.dhall
-, Hook =
-	./Hook.dhall
-, Source =
-	./Source.dhall
-, Marquee =
-	./Marquee.dhall
-, Slider =
-	./Slider.dhall
-, Event =
-	./Event.dhall
-, VerticalDirection =
-	./VerticalDirection.dhall
-, StateTransitionTable =
-	./StateTransitionTable.dhall
-, StateMap =
-	./StateMap.dhall
-, Slot =
-	./Slot.dhall
+, Carrier =
+	./Carrier.dhall
+, Check =
+	./Check.dhall
 , Color =
 	./Color.dhall
+, Direction =
+	./Direction.dhall
+, EscapeMode =
+	./EscapeMode.dhall
+, Event =
+	./Event.dhall
+, Hook =
+	./Hook.dhall
 , Image =
 	./Image.dhall
-, AbsolutePosition =
-	./AbsolutePosition.dhall
-, Position =
-	./Position.dhall
+, Marquee =
+	./Marquee.dhall
 , Padding =
 	./Padding.dhall
+, Plugin =
+	./Plugin.dhall
+, PluginMeta =
+	./PluginMeta.dhall
+, Position =
+	./Position.dhall
+, Slider =
+	./Slider.dhall
+, Slot =
+	./Slot.dhall
+, Source =
+	./Source.dhall
+, State =
+	./State.dhall
+, StateMap =
+	./StateMap.dhall
+, StateTransitionTable =
+	./StateTransitionTable.dhall
+, VerticalDirection =
+	./VerticalDirection.dhall
 }

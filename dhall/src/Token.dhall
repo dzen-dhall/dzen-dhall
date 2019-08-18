@@ -1,6 +1,6 @@
 < Open :
 	./OpeningTag.dhall
-| Raw :
+| Markup :
 	Text
 | Source :
 	./Source.dhall

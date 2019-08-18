@@ -1,6 +1,8 @@
-{- `Bar` to `Plugin` conversion. `Plugin` = `List Token`. -}
+{- `Bar` to `Plugin` conversion. -}
 
 let AbsolutePosition = ./AbsolutePosition.dhall
+
+let Address = ./Address.dhall
 
 let Bar = ./Bar.dhall
 
@@ -57,8 +59,8 @@ let carrierListToken
 	: Carrier (List Token)
 	= { text =
 		  λ(text : Text) → [ Token.Txt text ]
-	  , raw =
-		  λ(raw : Text) → [ Token.Raw raw ]
+	  , markup =
+		  λ(text : Text) → [ Token.Markup text ]
 	  , join =
 		  λ(children : List Plugin) → concat Token children
 	  , fg =
@@ -117,11 +119,11 @@ let carrierListToken
 	  , listener =
 		  λ(slot : Slot) → enclose (OpeningTag.Listener slot)
 	  , automaton =
-			λ(id : Text)
+			λ(address : Address)
 		  → λ(stt : StateTransitionTable)
 		  → λ(stateMap : StateMap Plugin)
 		  → enclose
-			(OpeningTag.Automaton { stt = stt, id = id })
+			(OpeningTag.Automaton { stt = stt, id = address })
 			( List/concatMap
 			  { state : Text, bar : Plugin }
 			  Token

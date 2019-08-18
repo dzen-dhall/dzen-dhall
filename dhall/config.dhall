@@ -3,6 +3,7 @@ let types = ./src/types.dhall
 let utils = ./src/utils.dhall
 
 let AbsolutePosition = types.AbsolutePosition
+let Address = types.Address
 let Assertion = types.Assertion
 let Bar = types.Bar
 let BarSettings = types.BarSettings
@@ -36,7 +37,7 @@ let defaultBar
 	  → λ(carrier : Carrier Bar)
 	  → -- Text:
 		let text : Text → Bar = carrier.text
-		let raw : Text → Bar = carrier.raw
+		let markup : Text → Bar = carrier.markup
 
 		-- Used to combine multiple Bars into one.
 		let join : List Bar → Bar = carrier.join
@@ -65,7 +66,7 @@ let defaultBar
 		let plugin : Plugin → Bar = carrier.plugin
 		let listener : Slot → Bar → Bar = carrier.listener
 		let automaton
-			: Text → StateTransitionTable → StateMap Bar → Bar
+			: Address → StateTransitionTable → StateMap Bar → Bar
 			= carrier.automaton
 		let check : List Check → Bar = carrier.check
 		let scope : Bar → Bar = carrier.scope

@@ -38,7 +38,7 @@ in  < Marquee :
 	| Trim :
 		{ width : Natural, direction : Direction }
 	| Automaton :
-		{ stt : StateTransitionTable, id : Text }
+		{ stt : StateTransitionTable, address : Text }
 	| StateMapKey :
 		Text
 	| Listener :
