@@ -41,7 +41,7 @@ bar = topLevel <* eof
 
 topLevel :: Parser (Bar Marshalled)
 topLevel = fmap Bars $ many $
-      BarRaw    <$> raw
+      BarMarkup <$> markup
   <|> BarText   <$> text
   <|> BarSource <$> source
   <|> BarShape  <$> shape
@@ -132,10 +132,10 @@ closing = withPreview $ \case
   TokClose -> Just ()
   _        -> Nothing
 
-raw :: Parser Text
-raw = withPreview $ \case
-  TokRaw txt -> Just txt
-  _          -> Nothing
+markup :: Parser Text
+markup = withPreview $ \case
+  TokMarkup txt -> Just txt
+  _             -> Nothing
 
 text :: Parser Text
 text = withPreview $ \case

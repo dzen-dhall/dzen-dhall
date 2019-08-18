@@ -8,7 +8,6 @@ let Assertion = types.Assertion
 let Bar = types.Bar
 let BarSettings = types.BarSettings
 let Button = types.Button
-let Button = types.Button
 let Carrier = types.Carrier
 let Check = types.Check
 let Color = types.Color

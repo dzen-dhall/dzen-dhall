@@ -92,7 +92,7 @@ buttonType = union
 data Event
   = MouseEvent Button
   | CustomEvent Text
-  deriving (Show, Eq, Ord, Generic)
+   deriving (Show, Eq, Ord, Generic)
 
 instance Hashable Event
 
@@ -283,21 +283,25 @@ openingTagType = union
   <> (OPA          <$> constructor "PA"          absolutePositionType)
   <> (OCA          <$> constructor "CA"          clickableAreaType)
   <> (OIB          <$  constructor "IB"          unit)
+
   <> (uncurry OPadding   <$> constructor "Padding"
        ( record $ (,) <$> field "width"   (fromIntegral <$> natural)
                       <*> field "padding" paddingType
        )
      )
-  <> (uncurry OTrim   <$> constructor "Trim"
+
+  <> (uncurry OTrim      <$> constructor "Trim"
        ( record $ (,) <$> field "width"     (fromIntegral <$> natural)
                       <*> field "direction" directionType
        )
      )
+
   <> (uncurry OAutomaton <$> constructor "Automaton"
-       ( record $ (,) <$> field "id"  strictText
-                      <*> field "stt" stateTransitionTableType
+       ( record $ (,) <$> field "address"  strictText
+                      <*> field "stt"      stateTransitionTableType
        )
      )
+
   <> (OStateMapKey <$> constructor "StateMapKey" strictText)
   <> (OListener    <$> constructor "Listener"    strictText)
   <> (OScope       <$  constructor "Scope"       unit)
@@ -350,7 +354,7 @@ shapeSizeType = record $
 
 data Token
   = TokOpen OpeningTag
-  | TokRaw Text
+  | TokMarkup Text
   | TokSource Source
   | TokTxt Text
   | TokSeparator
@@ -366,7 +370,7 @@ data Token
 tokenType :: Type Token
 tokenType = union
   $  (TokOpen      <$> constructor "Open"      openingTagType)
-  <> (TokRaw       <$> constructor "Raw"       strictText)
+  <> (TokMarkup    <$> constructor "Markup"    strictText)
   <> (TokSource    <$> constructor "Source"    sourceSettingsType)
   <> (TokTxt       <$> constructor "Txt"       strictText)
   <> (TokSeparator <$  constructor "Separator" unit)

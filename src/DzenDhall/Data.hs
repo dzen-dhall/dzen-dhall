@@ -31,7 +31,7 @@ data Bar id
   | BarListener Text (Bar id)
   | BarMarquee Marquee (Bar id)
   | BarProp Property (Bar id)
-  | BarRaw Text
+  | BarMarkup Text
   | BarScope (Bar id)
   | BarShape Shape
   | BarSlider Slider (Vector (Bar id))

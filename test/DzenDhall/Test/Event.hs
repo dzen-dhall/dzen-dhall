@@ -5,15 +5,14 @@ import Test.Tasty.HUnit
 
 import DzenDhall.Config
 import DzenDhall.Event
-import DzenDhall.Runtime.Data
 
 mkTest :: TestName -> String -> Maybe PipeCommand -> TestTree
 mkTest name input expected =
   Test.Tasty.HUnit.testCase name $
     DzenDhall.Event.parsePipeCommand input @?= expected
 
-getTests :: IO TestTree
-getTests = pure $
+getTests :: TestTree
+getTests =
   testGroup "PipeCommand parser"
 
   [ mkTest "parsing #1"

@@ -18,43 +18,43 @@ mkTest name tokenList expected =
 marquee :: Marquee
 marquee = Marquee 0 0
 
-getTests :: IO TestTree
-getTests = pure $
+getTests :: TestTree
+getTests =
   testGroup "Bar data parsing"
 
   [ mkTest
     "parsing #1"
     [ TokOpen (OMarquee marquee)
-    , TokRaw "txt"
+    , TokMarkup "txt"
     , TokClose
     ]
-    (Right $ Bars [ BarMarquee marquee $ Bars [ BarRaw "txt" ] ])
+    (Right $ Bars [ BarMarquee marquee $ Bars [ BarMarkup "txt" ] ])
 
   , mkTest
     "parsing #2"
     [ TokOpen (OFG $ Color "red")
-    , TokRaw "raw"
+    , TokMarkup "raw"
     , TokTxt "txt"
     , TokOpen (OMarquee marquee)
     , TokSource (Source { updateInterval = Nothing
-                                , command = []
-                                , input = ""
-                                , escapeMode = EscapeMode True True
-                                })
+                        , command = []
+                        , input = ""
+                        , escapeMode = EscapeMode True True
+                        })
     , TokClose
     , TokClose
     ]
 
     $ Right $
     Bars [ BarProp (FG $ Color "red") $
-           Bars [ BarRaw "raw"
+           Bars [ BarMarkup "raw"
                 , BarText "txt"
                 , BarMarquee marquee $ Bars
                   [ BarSource (Source { updateInterval = Nothing
-                                              , command = []
-                                              , input = ""
-                                              , escapeMode = EscapeMode True True
-                                              })
+                                      , command = []
+                                      , input = ""
+                                      , escapeMode = EscapeMode True True
+                                      })
                   ]
                 ]
          ]

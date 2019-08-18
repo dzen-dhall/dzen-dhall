@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 23bda9848811a3b634ffd374ac6dec72ed201ed8bbf1255f4eca0b9a14e0855c
+-- hash: 9015d6938190f3dd5cd9a0b96e5a5aa5614d80cc34d3fd3ce0f05ad0ced3cc55
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -27,6 +27,7 @@ data-files:
     dhall/lib/List/map.dhall
     dhall/lib/List/null.dhall
     dhall/src/AbsolutePosition.dhall
+    dhall/src/Address.dhall
     dhall/src/Assertion.dhall
     dhall/src/Bar.dhall
     dhall/src/BarSettings.dhall
@@ -42,7 +43,6 @@ data-files:
     dhall/src/Direction.dhall
     dhall/src/EscapeMode.dhall
     dhall/src/Event.dhall
-    dhall/src/Handler.dhall
     dhall/src/Hook.dhall
     dhall/src/Image.dhall
     dhall/src/Marquee.dhall

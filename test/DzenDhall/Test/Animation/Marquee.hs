@@ -14,8 +14,8 @@ mkTest name settings ast expected =
         actual = map (Marquee.run 10 settings ast) [0..pred frames]
     in actual @?= expected
 
-getTests :: IO TestTree
-getTests = pure $
+getTests :: TestTree
+getTests =
   testGroup "Marquee"
   [ let
       ast = ASTText "12345"

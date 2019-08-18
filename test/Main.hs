@@ -22,15 +22,14 @@ main = do
 
   dhallDir <- (</> "dhall") <$> getDataDir
 
-  allTests <- testGroup "DzenDhall" <$> sequence
-              [ DzenDhall.Test.Config.getTests dhallDir
-              , DzenDhall.Test.Parser.getTests
-              , DzenDhall.Test.AST.getTests
-              , DzenDhall.Test.AST.Render.getTests
-              , DzenDhall.Test.Arguments.getTests
-              , DzenDhall.Test.Animation.Marquee.getTests
-              , DzenDhall.Test.Plug.getTests
-              , DzenDhall.Test.Event.getTests
-              ]
-
-  Test.Tasty.defaultMain allTests
+  Test.Tasty.defaultMain $
+    testGroup "DzenDhall"
+    [ DzenDhall.Test.Config.getTests dhallDir
+    , DzenDhall.Test.Parser.getTests
+    , DzenDhall.Test.AST.getTests
+    , DzenDhall.Test.AST.Render.getTests
+    , DzenDhall.Test.Arguments.getTests
+    , DzenDhall.Test.Animation.Marquee.getTests
+    , DzenDhall.Test.Plug.getTests
+    , DzenDhall.Test.Event.getTests
+    ]

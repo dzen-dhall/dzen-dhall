@@ -239,8 +239,8 @@ initialize (Bars ps) =
   Bars <$> mapM initialize ps
 initialize (BarShape shape) =
   pure $ BarShape shape
-initialize (BarRaw text) =
-  pure $ BarRaw text
+initialize (BarMarkup text) =
+  pure $ BarMarkup text
 initialize (BarText text) =
   pure $ BarText text
 
@@ -409,7 +409,7 @@ collectSources fontWidth (Bars ps)
   = mconcat <$> mapM (collectSources fontWidth) ps
 collectSources _         (BarText text)
   = pure $ ASTText text
-collectSources _         (BarRaw text)
+collectSources _         (BarMarkup text)
   = pure $ ASTText text
 
 

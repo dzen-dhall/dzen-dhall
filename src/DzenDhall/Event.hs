@@ -1,6 +1,7 @@
 module DzenDhall.Event where
 
 import           DzenDhall.App
+import           DzenDhall.AST.Render (runRender)
 import           DzenDhall.Config
 import           DzenDhall.Extra
 import           DzenDhall.Runtime.Data
@@ -59,8 +60,8 @@ launchEventListener handles clickableAreas = do
       lift $ do
         case parsePipeCommand line of
           Just (RoutedEvent event slot scope) ->
-            case H.lookup (slot, scope)  handles of
-              Just subscriptions ->
+            case H.lookup (slot, scope) handles of
+              Just subscriptions -> do
                 processSubscriptions barRuntime slot scope event subscriptions
               Nothing ->
                 Data.Text.IO.putStrLn $
@@ -76,27 +77,41 @@ launchEventListener handles clickableAreas = do
 
 
 processSubscriptions :: BarRuntime -> Slot -> Scope -> Event -> [Subscription] -> IO ()
-processSubscriptions barRuntime slot scope event = mapM_ $ \case
+processSubscriptions barRuntime slot scope event subscriptions = do
 
-  AutomatonSubscription stt stateMap stateRef barRef -> do
+  environment <- getEnvironment
 
-    currentState <- readIORef stateRef
+  forM_ subscriptions $ \case
 
-    let
-      transitions = unSTT stt :: H.HashMap (Slot, Scope, Event, Text) (Text, [Hook])
-      mbNext      = H.lookup (slot, scope, event, currentState) transitions
+    AutomatonSubscription stt stateMap stateRef barRef -> do
 
-    whenJust mbNext $ \(nextState, hooks) -> do
-      whenJust (H.lookup nextState stateMap) $ \nextBar -> do
-        void $ forkIO $ do
+      currentState <- readIORef stateRef
 
-          environment <- getEnvironment
-          mbUnit <-
-            runMaybeT (runHooks environment barRuntime scope hooks)
+      let
+        transitions =
+          unSTT stt :: H.HashMap (Slot, Scope, Event, Text) (Text, [Hook])
+        mbNext =
+          H.lookup (slot, scope, event, currentState) transitions <|>
+          -- Match "any" event.
+          H.lookup (slot, scope, CustomEvent "*", currentState) transitions
+        -- An environment extended with EVENT variable containing the name of the
+        -- event.
+        environment' =
+          ("EVENT", Data.Text.unpack $ runRender event) : environment
 
-          when (isJust mbUnit) $ do
-            writeIORef barRef nextBar
-            writeIORef stateRef nextState
+      whenJust mbNext $ \(nextState, hooks) -> do
+        whenJust (H.lookup nextState stateMap) $ \nextBar -> do
+          -- Multiple state transitions are executed simultaneously.
+          -- This is fine, we don't want to eliminate race conditions.
+          -- Somethimes a transition is only added for its outside-world effects,
+          -- and we can't distinguish between such a transition and a normal one.
+          void $ forkIO $ do
+
+            mbUnit <- runMaybeT (runHooks environment' barRuntime scope hooks)
+
+            when (isJust mbUnit) $ do
+              writeIORef barRef nextBar
+              writeIORef stateRef nextState
 
 
 runHooks
@@ -156,12 +171,14 @@ routedEventParser = do
 
 buttonParser :: Parser Button
 buttonParser =
-      MouseLeft        <$ (string "MouseLeft" <|> string "1")
-  <|> MouseMiddle      <$ (string "MouseMiddle" <|> string "2")
-  <|> MouseRight       <$ (string "MouseRight" <|> string "3")
-  <|> MouseScrollUp    <$ (string "MouseScrollUp" <|> string "4")
-  <|> MouseScrollDown  <$ (string "MouseScrollDown" <|> string "5")
-  <|> MouseScrollLeft  <$ (string "MouseScrollLeft" <|> string "6")
+  -- Names are for the user, numbers are used to actually render buttons before
+  -- feeding the output to dzen.
+      MouseLeft        <$ (string "MouseLeft"        <|> string "1")
+  <|> MouseMiddle      <$ (string "MouseMiddle"      <|> string "2")
+  <|> MouseRight       <$ (string "MouseRight"       <|> string "3")
+  <|> MouseScrollUp    <$ (string "MouseScrollUp"    <|> string "4")
+  <|> MouseScrollDown  <$ (string "MouseScrollDown"  <|> string "5")
+  <|> MouseScrollLeft  <$ (string "MouseScrollLeft"  <|> string "6")
   <|> MouseScrollRight <$ (string "MouseScrollRight" <|> string "7")
 
 automatonAddressParser :: Parser Text

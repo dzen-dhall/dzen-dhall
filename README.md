@@ -30,7 +30,7 @@ To fill the *abstraction gap*, new DSL should be introduced. This language shoul
 
 ## The solution
 
-[Dhall](https://dhall-lang.org/) is a statically-typed [total](https://en.wikipedia.org/wiki/Total_functional_programming) functional programming language. Its unique properties make it a good choice for dealing with complex user-defined configurations. Static typing allows to catch typos and errors early, and totality guarantees that the configuration program will never hang. Unlike some other configuration languages, it requires very little learning (even for people with no background in functional programming).
+[Dhall](https://dhall-lang.org/) is a statically-typed [total](https://en.wikipedia.org/wiki/Total_functional_programming) functional programming language. Its unique properties make it a good choice for dealing with complex user-defined configurations: static typing allows to catch typos and errors early, and totality guarantees that a configuration program will never hang. Unlike some other configuration languages, it requires very little learning (even for people with no background in functional programming).
 
 This repository contains data type and function definitions in Dhall that form a DSL for defining almost arbitrary Dzen UIs, called "bars", and a Haskell program capable of reading bar definitions and producing input for `dzen2` binary based on them.
 
@@ -125,7 +125,7 @@ To use pinned version of nixpkgs, pass `--arg usePinned true`.
 
 ### Running
 
-To create default configuration, run
+To create a default configuration, run:
 
 ```
 dzen-dhall init
@@ -133,7 +133,7 @@ dzen-dhall init
 
 `dzen-dhall` will put some files to `~/.config/dzen-dhall/`
 
-Files in `src/` and `lib/` subdirectories are set read-only by default - the user should not edit them, because they contain the implementation. They are still exposed to make it easier to debug the configuration.
+Files in `src/` and `lib/` subdirectories are set read-only by default - the user should not edit them, because they contain the implementation. They are still exposed to simplify debugging.
 
 ## Installing plugins
 
@@ -155,22 +155,20 @@ This is a message the author left for you, to demonstrate how to actually use th
 
 After saving the file, run `dzen-dhall` again. You should be able to see the output of a newly installed plugin, or a descriptive error message if something went wrong during the previous step.
 
-## Concepts
+## Modifying configuration
 
-This chapter describes `dzen-dhall` DSL in depth. You can safely skip most of it if you are only interested in consuming already made plugins.
-
-It's best to read the [Dhall wiki](https://github.com/dhall-lang/dhall-lang/wiki) to become familiar with Dhall syntax before reading this chapter.
+This chapter describes `dzen-dhall` DSL in depth. It's best to read the [Dhall wiki](https://github.com/dhall-lang/dhall-lang/wiki) to become familiar with Dhall syntax before you proceed.
 
 ### [Bars](dhall/src/Bar.dhall)
 
-The most important concept is `Bar`. Essentially, `Bar` is a tree containing text, images, shapes, etc. in its leaves. [Implementation details](#implementation-detail) are not very important for the user. [Default config file](dhall/config.dhall) contains some functions exposed for working with `Bar`s (you should ignore the `carrier` thingy).
+The most important concept is `Bar`. Essentially, `Bar` is a tree data structure containing text, images, shapes, etc. in its leaves. [Default config file](dhall/config.dhall) exposes some functions for working with `Bar`s.
 
 Below you can see a hyperlinked list of these functions:
 
 <big><pre>
 -- [Text primitives](#text-primitives):
 let text : Text → Bar
-let raw : Text → Bar
+let markup : Text → Bar
 
 -- Used to combine multiple Bars into one.
 let [join](#join) : List Bar → Bar
@@ -205,11 +203,11 @@ let [scope](#scopes) : Bar → Bar
 
 ### Text primitives
 
-`text` is used to create `Bar`s containing static, escaped pieces of text. `raw`, on the contrary, does not escape the given text, so that if it does contain markup, it will be interpreted by dzen2.
+`text` is used to create `Bar`s containing static, escaped pieces of text. `markup`, on the contrary, does not escape the given text, so that if it does contain markup, it will be interpreted by dzen2.
 
 ### Primitives
 
-Various primitives of dzen2 markup language (`^fg()`, `^bg()`, `^i()`, etc.) are represented by corresponding `Bar` constructors (`fg`, `bg`, `i`, etc.). See [dzen2 README](https://github.com/robm/dzen) for details on them.
+Various primitives of dzen2 markup language (`^fg()`, `^bg()`, `^i()`, etc. - see [dzen2 README](https://github.com/robm/dzen) for details on them) are represented by corresponding `Bar` constructors (`fg`, `bg`, `i`, etc.).
 
 #### Coloring
 
@@ -223,7 +221,9 @@ Background and foreground colors can be set using `bg` and `fg`. A color can be 
 
 #### Drawing images
 
-[XBM images](https://www.fileformat.info/format/xbm/egff.htm) are supported. [GIMP](https://www.gimp.org/) can be used to edit them.
+[XBM bitmaps](https://www.fileformat.info/format/xbm/egff.htm) can be loaded using `ib` function.
+
+To edit/create XBM images, use [GIMP](https://www.gimp.org/).
 
 #### Drawing shapes
 
@@ -684,6 +684,8 @@ let myHook : Hook =
 
 Hooks can also [emit events](#events).
 
+A special environment variable, `EVENT`, contains the name of the event that triggered the hook. A common technique is to bind a single hook to multiple transitions and implement all the logic in the shell script.
+
 ### Assertions
 
 Startup-time assertions allow to make sure that some condition is true before proceeding to the execution, i.e. it is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
@@ -759,11 +761,11 @@ The most straightforward way is to use [`./file.sh as Text` construct](https://g
 
 So, the following rules apply:
 
-1. Use `\` to escape `$` characters in a single-line (`"`-quoted) string.
+1. Use `\` to escape `${` `}` in a single-line (`"`-quoted) string.
 
 2. Use `''` to escape `${` `}` in a multiline (`''`-quoted) string. (That is, `''` serves as both an escape sequence and a quote symbol).
 
-For example, bash array expansion expression `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` (in a double-quoted string) or as `'' ''${arr[ ix ]} ''` in a multiline string.
+For example, bash array expansion expression `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` in a double-quoted string or as `'' ''${arr[ ix ]} ''` in a multiline string.
 
 See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
 
@@ -783,7 +785,7 @@ Essentially, [our definition of `Bar`](dhall/src/Bar.dhall) is equivalent to som
 let Bar =
       ∀(Bar : Type)
     → ∀(text : Text → Bar)
-    → ∀(raw : Text → Bar)
+    → ∀(markup : Text → Bar)
     → ∀(join : List Bar → Bar)
     -- ... some constructors omitted
     → ∀(check : List Check → Bar)

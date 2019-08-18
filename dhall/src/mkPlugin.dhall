@@ -123,7 +123,7 @@ let carrierListToken
 		  → λ(stt : StateTransitionTable)
 		  → λ(stateMap : StateMap Plugin)
 		  → enclose
-			(OpeningTag.Automaton { stt = stt, id = address })
+			(OpeningTag.Automaton { stt = stt, address = address })
 			( List/concatMap
 			  { state : Text, bar : Plugin }
 			  Token

@@ -12,8 +12,8 @@ mkTest name tokenList expected =
   Test.Tasty.HUnit.testCase name $
     DzenDhall.Plug.runPluginParser tokenList @?= expected
 
-getTests :: IO TestTree
-getTests = pure $
+getTests :: TestTree
+getTests =
   testGroup "Plug parsing"
 
   [ mkTest "parse github username"

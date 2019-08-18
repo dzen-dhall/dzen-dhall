@@ -10,7 +10,7 @@ in  [ Token.Open
 	  ( OpeningTag.Marquee
 		({ framesPerCharacter = 2, width = 3 } : Marquee)
 	  )
-	, Token.Raw "raw"
+	, Token.Markup "raw"
 	, Token.Source
 	  (   { updateInterval =
 			  Some 1
