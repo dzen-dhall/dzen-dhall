@@ -16,9 +16,13 @@ import qualified Data.Text
 import qualified Data.Text.IO
 import           Lens.Micro
 import           Control.Concurrent
+import           Control.Exception
 import           Control.Monad
 import           System.Exit
 import           System.Random
+import           System.Directory
+import           System.FilePath ((</>))
+
 
 -- * App execution stages
 --
@@ -75,19 +79,27 @@ getRuntime = App $ lift Reader.ask
 
 getCounter :: App StartingUp Int
 getCounter = do
-  rt <- get
-  put $ rt & ssCounter +~ 1
-  pure $ rt ^. ssCounter
+  modify $ ssCounter +~ 1
+  get <&> (^. ssCounter)
 
 liftStartingUp :: App StartingUp a -> BarSettings -> App Common a
-liftStartingUp (App app) bs = App . lift $ State.evalStateT app initialStartupState
-  where
-    initialStartupState = StartupState mempty "scope" bs 0 mempty mempty []
+liftStartingUp (App app) barSettings = do
 
-runAppForked :: App Forked () -> BarRuntime -> App Common ()
-runAppForked app st = do
+  tmpFilePrefix <- fmap (</> "dzen-dhall-rt-") $ liftIO $
+    getTemporaryDirectory `catch` \(_e :: IOException) -> getCurrentDirectory
+
+  namedPipe   <- (tmpFilePrefix <>) <$> randomSuffix
+  emitterFile <- (tmpFilePrefix <>) <$> randomSuffix
+
+  let initialStartupState =
+        StartupState mempty "scope" barSettings 0 mempty mempty [] mempty namedPipe emitterFile
+
+  App . lift $ State.evalStateT app initialStartupState
+
+runAppForked :: BarRuntime -> App Forked () -> App Common ()
+runAppForked barRuntime app = do
   rt <- getRuntime
-  liftIO $ void $ forkIO $ runApp rt st app
+  liftIO $ void $ forkIO $ runApp rt barRuntime app
 
 exit :: Int -> Text -> App stage a
 exit exitCode message = liftIO $ do

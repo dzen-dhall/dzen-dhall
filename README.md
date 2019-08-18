@@ -155,84 +155,6 @@ This is a message the author left for you, to demonstrate how to actually use th
 
 After saving the file, run `dzen-dhall` again. You should be able to see the output of a newly installed plugin, or a descriptive error message if something went wrong during the previous step.
 
-## Creating plugins
-
-
-<details><summary><strong>I want to make my Bar react to events</strong></summary>
-<p>
-
-Do you want your bar to be stateful or not? Stateful bar can react to the same events differently, depending on it's internal state, that can only be changed as a result of some event (not necessarily triggered by the user). Stateful bars can react to events emitted by [sources](#sources) and [hooks](#hooks), while stateless ones can only react to user-triggered mouse events.
-
-<details><summary><strong>I want a stateful Bar</strong></summary>
-<p>
-
-To create a stateful `Bar`, you'll need to define an [automaton](#automata) and set up event routing for it.
-
-The following components are required:
-
-- a [slot](#slots) - an "address" that will be used to route events.
-- a [state transition table](#state-transition-table) - a table describing how the automaton should react to events.
-- a [state map](#state-maps) - a mapping from automaton states to `Bar`s.
-- an automaton ID - just a string, that can be used from [sources](#sources) to query your automaton state.
-
-For example, this piece of code defines a `Bar` that switches between two states:
-
-```dhall
-let mySwitcher : Bar =
-	  let mySlot = "MY_SLOT" : Slot
-
-	  let stt
-		  : StateTransitionTable
-		  = [ { slots =
-				  [ mySlot ]
-			  , hooks =
-				  [] : List Hook
-			  , events =
-				  [ Event.Mouse Button.Left ]
-			  , from =
-				  [ "" ]
-			  , to =
-				  "1"
-			  }
-			, { slots =
-				  [ mySlot ]
-			  , hooks =
-				  [] : List Hook
-			  , events =
-				  [ Event.Mouse Button.Left ]
-			  , from =
-				  [ "1" ]
-			  , to =
-				  ""
-			  }
-			]
-
-	  let stateMap
-		  : StateMap Bar
-		  = [ { state = "", bar = text "hello!" }
-			, { state = "1", bar = text "world!" }
-			]
-
-	  let myID = "MY_AUTOMATON"
-
-	  in  listener mySlot (automaton myID stt stateMap)
-```
-
-A [listener](#listeners) awaits for mouse events and sends them to the slot. Two state transitions are bound on the same slot to the left-click event. The initial state of the automaton is `""` (by convention).
-
-</p>
-</details>
-<details><summary><strong>I don't need my bar to be stateful</strong></summary>
-<p>
-
-Use [clickable areas](#clickable-areas).
-
-</p>
-</details>
-
-</p>
-</details>
-
 ## Concepts
 
 This chapter describes `dzen-dhall` DSL in depth. You can safely skip most of it if you are only interested in consuming already made plugins.
@@ -359,6 +281,12 @@ Example:
 (ca Button.Left "notify-send hello!" (text "Click me!"))
 ```
 
+`dzen2` does not allow a command in `^ca()` tag to contain closing parentheses, because `)` is used to indicate the end of the command. `dzen-dhall` bypasses this limitation:
+
+```dhall
+(ca Button.Left "notify-send '(even with parentheses)'" (text "Click me!"))
+```
+
 ##### Buttons
 
 `Button` is defined as:
@@ -406,7 +334,7 @@ Sliders change their outputs, variating between `Bar`s from a given list. Transi
 
 E.g.
 
-```
+```dhall
 slider
 { fadeIn =
   { direction =
@@ -446,7 +374,7 @@ This animation type is analogous to the [deprecated marquee HTML tag](https://de
 
 For example,
 
-```
+```dhall
 marquee
   { framesPerCharacter = 4, width = 32 }
   (text "The most annoying HTML code in the history of HTML codes.")
@@ -588,7 +516,7 @@ let mySource1 : Source =
 </p>
 </details>
 
-Note that it is necessary to insert `EMIT` variable **without** quotes in the shell script. It contains a path to the executable that handles event routing, and a hidden argument that indicates from which [scope](#scopes) the event came from. The user should only specify a slot address and an event name, which is either a mouse event or a custom event.
+Note that it is necessary to use `EMIT` variable **without** quotes. It contains a path to the executable that handles event routing, and a hidden argument that indicates from which [scope](#scopes) the event came from. The user should only specify a slot address and an event.
 
 When emitting mouse events, it is necessary to prepend `Mouse` to [button names](#events):
 
@@ -610,7 +538,53 @@ Scopes are used for encapsulation, to ensure that slots, automata and listeners 
 
 Each Bar is essentialy a finite-state automaton. States are tagged by `Text` labels, and transitions are triggered by [events](#events) (very much like in some functional reactive programming frameworks). In the trivial case, a bar has only one state: you can think of any static `Bar` as of automaton with a single state, the name of which is implicit.
 
-A bar with more than one state can be defined by its state transition function (encoded as a table), a mapping from state labels to `Bar`s, which defines its visual representation for different states, and an identifier used to query current state of the automaton from [sources](#sources).
+A bar with more than one state can be defined by its [state transition function](#state-transition-table), a [mapping from state labels to `Bar`s](#state-maps), which defines its visual representation for different states, and an identifier used to query current state of the automaton from [sources](#sources) ("address").
+
+For example, this piece of code defines a `Bar` that switches between two states:
+
+```dhall
+let mySwitcher : Bar =
+	  let mySlot = "MY_SLOT" : Slot
+      -- ^ used to route events from listener to state transition table
+
+	  let stt
+		  : StateTransitionTable
+		  = [ { slots =
+				  [ mySlot ]
+			  , hooks =
+				  [] : List Hook
+			  , events =
+				  [ Event.Mouse Button.Left ]
+			  , from =
+				  [ "" ]
+			  , to =
+				  "1"
+			  }
+			, { slots =
+				  [ mySlot ]
+			  , hooks =
+				  [] : List Hook
+			  , events =
+				  [ Event.Mouse Button.Left ]
+			  , from =
+				  [ "1" ]
+			  , to =
+				  ""
+			  }
+			]
+
+	  let stateMap
+		  : StateMap Bar
+		  = [ { state = "", bar = text "hello!" }
+			, { state = "1", bar = text "world!" }
+			]
+
+	  let myID = "MY_AUTOMATON"
+
+	  in  listener mySlot (automaton myID stt stateMap)
+```
+
+A [listener](#listeners) awaits for mouse events and sends them to the slot. Two state transitions are bound on the same slot to the left-click event. The initial state of the automaton is `""` (by convention).
 
 ### [State Transition Table](dhall/src/StateTransitionTable.dhall)
 
@@ -655,7 +629,7 @@ This state transition table, when coupled with a [state map](#state-maps) to for
 
 ### [State maps](dhall/src/StateMap.dhall)
 
-`StateMap`s are used to define mappings from states to bars.
+`StateMap`s are used to define mappings from states to bars, i.e. they determine what to show depending on the state.
 
 ```dhall
 let StateMap : Type → Type = λ(Bar : Type) → List { state : Text, bar : Bar }
@@ -663,10 +637,7 @@ let StateMap : Type → Type = λ(Bar : Type) → List { state : Text, bar : Bar
 in  StateMap
 ```
 
-Note that this type is parametrized by `Bar` type, so it is a [type constructor](https://en.wikipedia.org/wiki/Type_constructor) with an argument.
-
-<details><summary><strong>SHOW EXAMPLE</strong></summary>
-<p>
+Note that `StateMap` is parametrized by the `Bar` type.
 
 The following `StateMap` has two states. The default one (`""`) corresponds to the text `hello!`.
 
@@ -677,9 +648,6 @@ let stateMap
 	, { state = "1", bar = text "world!" }
 	]
 ```
-</p>
-</details>
-
 
 ### [Slots](dhall/src/Slot.dhall)
 
@@ -822,6 +790,6 @@ let Bar =
     → Bar
 ```
 
-During the stage of [config](dhall/config.dhall) processing, before mashalling the configuration structure into Haskell, `Bar`s are converted to a non-recursive data called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s. These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
+During the stage of [config](dhall/config.dhall) processing, `Bar`s are converted to a non-recursive data called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s. These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
 
 After that, `dzen-dhall` spawns some threads for each output source (like shell script or binary) and processes the outputs as specified in the configuration.

@@ -27,12 +27,18 @@ import qualified Data.HashMap.Strict as H
 import qualified Data.Text
 import qualified Data.Text.IO
 import qualified Pipes.Prelude as P
+import           Text.Read (readMaybe)
 
+
+data PipeCommand
+  = RoutedEvent Event Slot Scope
+  | Click Int
+  deriving (Eq, Show)
 
 -- | Start reading lines from a named pipe used to route events.
 -- On each event, try to parse it, and find which event subscriptions does the event affect.
-launchEventListener :: AutomataHandles -> App Forked ()
-launchEventListener handles = do
+launchEventListener :: AutomataHandles -> ClickableAreas -> App Forked ()
+launchEventListener handles clickableAreas = do
   barRuntime <- get
 
   let
@@ -51,8 +57,7 @@ launchEventListener handles = do
 
     for (P.fromHandle fh) $ \line -> do
       lift $ do
-        putStrLn line
-        case parseRoutedEvent line of
+        case parsePipeCommand line of
           Just (RoutedEvent event slot scope) ->
             case H.lookup (slot, scope)  handles of
               Just subscriptions ->
@@ -60,6 +65,11 @@ launchEventListener handles = do
               Nothing ->
                 Data.Text.IO.putStrLn $
                 "Failed to find subscriptions for address: " <> slot <> "@" <> scope
+          Just (Click identifier) -> do
+            whenJust (H.lookup identifier clickableAreas) $
+              \command -> do
+                void $ forkIO $ do
+                  void $ readCreateProcess (shell $ Data.Text.unpack command) ""
 
           Nothing ->
             putStrLn $ "Failed to parse routed event from string: " <> line
@@ -120,13 +130,19 @@ runHooks environment barRuntime scope hooks = do
       throwMaybe
 
 
--- | E.g. @parseRoutedEvent "event:1,slot:name@some-scope" == Just (RoutedEvent (MouseEvent MouseLeft) "name" "some-scope")@
-parseRoutedEvent :: String -> Maybe RoutedEvent
-parseRoutedEvent = parseMaybe routedEventParser
+parsePipeCommand :: String -> Maybe PipeCommand
+parsePipeCommand = parseMaybe (routedEventParser <|> clickParser)
 
 type Parser = Parsec Void String
 
-routedEventParser :: Parser RoutedEvent
+-- | E.g.
+--
+-- @
+-- parseMaybe routedEventParser
+--   "event:MouseLeft,slot:name@some-scope" ==
+--      Just (RoutedEvent (MouseEvent MouseLeft) "name" "some-scope")
+-- @
+routedEventParser :: Parser PipeCommand
 routedEventParser = do
   void $ string "event:"
   event <- (MouseEvent  <$> buttonParser) <|>
@@ -167,3 +183,9 @@ camelCased = Data.Text.pack <$>
 
 scopeParser :: Parser Text
 scopeParser = Data.Text.pack <$> some (alphaNumChar <|> char '-')
+
+clickParser :: Parser PipeCommand
+clickParser = do
+  void $ string "click:"
+  str <- some digitChar
+  pure $ Click (fromMaybe 0 $ readMaybe str)

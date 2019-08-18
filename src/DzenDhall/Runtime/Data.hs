@@ -29,9 +29,6 @@ type AutomatonState = Text
 type Slot = Text
 type Scope = Text
 
-data RoutedEvent = RoutedEvent Event Slot Scope
-  deriving (Eq, Show)
-
 -- | 'StateTransitionTable' is needed to know *how* to update,
 -- @'IORef' ('Bar' 'Initialized')@ is needed to know *what* to update.
 data Subscription
@@ -42,6 +39,11 @@ data Subscription
     (IORef (Bar Initialized))
 
 type AutomataHandles = H.HashMap (Slot, Scope) [Subscription]
+
+-- | A mapping from clickable area identifiers to script contents.
+-- We maintain this mapping to allow using scripts containing `)` in @^ca@.
+-- @dzen2@ doesn't allow this.
+type ClickableAreas = H.HashMap Int Text
 
 data StartupState
   = StartupState
@@ -58,6 +60,10 @@ data StartupState
   -- scope names.
   -- This queue is needed because we want to create a `BarRuntime` before
   -- actually running the source processes (they depend on `brEmitterScript` value).
+  , _ssClickableAreas :: ClickableAreas
+  -- ^ A mapping from clickable area identifiers to scripts
+  , _ssNamedPipe :: String
+  , _ssEmitterFile :: String
   }
 
 makeLenses ''StartupState

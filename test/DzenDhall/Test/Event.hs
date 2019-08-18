@@ -7,14 +7,14 @@ import DzenDhall.Config
 import DzenDhall.Event
 import DzenDhall.Runtime.Data
 
-mkTest :: TestName -> String -> Maybe RoutedEvent -> TestTree
+mkTest :: TestName -> String -> Maybe PipeCommand -> TestTree
 mkTest name input expected =
   Test.Tasty.HUnit.testCase name $
-    DzenDhall.Event.parseRoutedEvent input @?= expected
+    DzenDhall.Event.parsePipeCommand input @?= expected
 
 getTests :: IO TestTree
 getTests = pure $
-  testGroup "Event parser"
+  testGroup "PipeCommand parser"
 
   [ mkTest "parsing #1"
     "event:1,slot:SLOT@scope" $

@@ -13,7 +13,6 @@ import qualified DzenDhall.Animation.Slider as Slider
 import           Control.Arrow
 import           Control.Applicative
 import           Control.Concurrent
-import           Control.Exception hiding (handle)
 import           Control.Monad
 import           Data.Containers.ListUtils (nubOrd)
 import           Data.IORef
@@ -22,9 +21,7 @@ import           Data.Text (Text)
 import           GHC.IO.Handle
 import           Lens.Micro
 import           Lens.Micro.Extras
-import           System.Directory
 import           System.Environment
-import           System.FilePath ((</>))
 import           System.Posix.Files
 import           System.Process
 import qualified Data.HashMap.Strict as H
@@ -36,10 +33,11 @@ import qualified System.IO
 startUp
   :: Configuration
   -> Bar Marshalled
-  -> App StartingUp (Bar Initialized, AutomataHandles, BarRuntime)
+  -> App StartingUp (Bar Initialized, AutomataHandles, BarRuntime, ClickableAreas)
 startUp cfg bar = do
   barRuntime  <- mkBarRuntime cfg
   bar'        <- initialize bar
+
   state       <- get
 
   environment <- liftIO getEnvironment
@@ -48,7 +46,7 @@ startUp cfg bar = do
     \(source, outputRef, cacheRef, scope) -> do
       mkThread environment barRuntime source outputRef cacheRef scope
 
-  pure (bar', state ^. ssAutomataHandles, barRuntime)
+  pure (bar', state ^. ssAutomataHandles, barRuntime, state ^. ssClickableAreas)
 
 
 mkBarRuntime
@@ -56,6 +54,7 @@ mkBarRuntime
   -> App StartingUp BarRuntime
 mkBarRuntime cfg = do
   runtime <- getRuntime
+  state   <- get
 
   let dzenBinary  = runtime ^. rtDzenBinary
       barSettings = cfg ^. cfgBarSettings
@@ -64,23 +63,20 @@ mkBarRuntime cfg = do
       fontArgs   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
       args       = fontArgs <> extraArgs
 
-  tmpFilePrefix <- fmap (</> "dzen-dhall-rt-") $ liftIO $
-    getTemporaryDirectory `catch` \(_e :: IOException) -> getCurrentDirectory
+      namedPipe   = state ^. ssNamedPipe
+      emitterFile = state ^. ssEmitterFile
 
-  namedPipe <- (tmpFilePrefix <>) <$> randomSuffix
   liftIO $
     createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
 
-  emitterFile <- (tmpFilePrefix <>) <$> randomSuffix
-
   liftIO $ do
 
-    let emitterScript = fromLines $
+    let emitterScript = fromLines
           [ "#!/usr/bin/env bash"
           , "SCOPE=\"$1\""
           , "SLOT=\"$2\""
           , "EVENT=\"$3\""
-          , "echo event:\"$EVENT\",slot:\"$SLOT\"\"@\"\"$SCOPE\" >> " <>
+          , "echo event:\"$EVENT\",slot:\"$SLOT\"@\"$SCOPE\" >> " <>
             Data.Text.pack namedPipe
           ]
 
@@ -220,6 +216,18 @@ initialize (BarScope child) = do
   child' <- initialize child
   modify $ ssScopeName .~ oldScopeName
   pure child'
+
+initialize (BarProp (CA ca) child) = do
+
+  identifier <- getCounter
+  namedPipe <- get <&> (^. ssNamedPipe)
+
+  let command =
+        "echo click:" <> showPack identifier <> " >> " <> Data.Text.pack namedPipe
+
+  modify $ ssClickableAreas %~ H.insert identifier (ca ^. caCommand)
+
+  BarProp (CA (ca & caCommand .~ command)) <$> initialize child
 
 initialize (BarProp prop p) =
   BarProp prop <$> initialize p

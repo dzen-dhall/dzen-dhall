@@ -40,9 +40,10 @@ useConfigurations = do
 
         (bar' :: Bar Initialized,
          handles :: AutomataHandles,
-         barRuntime :: BarRuntime) <-
+         barRuntime :: BarRuntime,
+         clickableAreas) <-
           liftStartingUp (startUp cfg bar) barSettings
 
-        runAppForked (launchEventListener handles) barRuntime
+        runAppForked barRuntime (launchEventListener handles clickableAreas)
 
-        runAppForked (updateForever bar') barRuntime
+        runAppForked barRuntime (updateForever bar')
