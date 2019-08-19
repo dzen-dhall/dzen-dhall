@@ -34,7 +34,9 @@ readRuntime args = do
   putStrLn $ "Reading configuration from " <> configFile
 
   configurations :: [Configuration] <- do
-    detailed $ inputFile (list configurationType) configFile
+    (if args ^. explain == Explain
+     then detailed
+     else id) $ inputFile (list configurationType) configFile
 
   supportsANSI <- System.Console.ANSI.hSupportsANSI System.IO.stdout
 

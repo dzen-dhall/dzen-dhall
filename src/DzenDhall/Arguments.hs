@@ -15,12 +15,17 @@ data Command
   | Plug String
   deriving (Show, Eq)
 
+data Explain
+  = Explain | DontExplain
+  deriving (Show, Eq)
+
 data Arguments
   = Arguments
   { _mbConfigDir :: Maybe String
   , _mbDzenBinary :: Maybe String
   , _stdoutFlag :: StdoutFlag
   , _mbCommand  :: Maybe Command
+  , _explain :: Explain
   }
   deriving (Show, Eq)
 
@@ -62,6 +67,12 @@ argParser = Arguments
             )
         )
       )
+
+  <*> flag DontExplain Explain
+      ( long "explain"
+     <> help "Explain error messages in more detail."
+      )
+
 
 argumentsParser :: ParserInfo Arguments
 argumentsParser = info (argParser <**> helper)

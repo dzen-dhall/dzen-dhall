@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d5ce340e7a6de958f15db4104b592f53b1c8a6733d8661c556130fbbbcd5795a
+-- hash: 1cc5d7149b94be6b29261879910415c16c16a1bdb4acfb80522126d370e5e912
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -145,7 +145,6 @@ test-suite tasty
       DzenDhall.Test.Event
       DzenDhall.Test.Parser
       DzenDhall.Test.Plug
-      FileQuoter
       Paths_dzen_dhall
   hs-source-dirs:
       test

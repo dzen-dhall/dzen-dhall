@@ -4,6 +4,7 @@ module DzenDhall.App where
 
 import DzenDhall.Runtime.Data
 import DzenDhall.Config
+import DzenDhall.Arguments
 
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Reader as Reader
@@ -23,6 +24,7 @@ import           System.Exit
 import           System.Random
 import           System.Directory
 import           System.FilePath ((</>))
+import qualified Dhall
 
 
 -- * App execution stages
@@ -132,3 +134,10 @@ highlight text = do
       "\027[1;33m" <> text <> "\027[0m"
     else
       text
+
+explained :: IO a -> App stage a
+explained io = do
+  shouldExplain <- getRuntime <&> (\args -> args ^. rtArguments . explain)
+  liftIO $ case shouldExplain of
+             Explain -> Dhall.detailed io
+             DontExplain -> io

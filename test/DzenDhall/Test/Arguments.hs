@@ -17,6 +17,16 @@ getTests =
                        , _mbDzenBinary = Just "dzen"
                        , _stdoutFlag = ToDzen
                        , _mbCommand = Just Init
+                       , _explain = DontExplain
+                       }
+  , testCase "#2" $ do
+      runArgParser [ "--explain", "plug", "foo" ]
+        `shouldBe`
+        pure Arguments { _mbConfigDir = Nothing
+                       , _mbDzenBinary = Nothing
+                       , _stdoutFlag = ToDzen
+                       , _mbCommand = Just (Plug "foo")
+                       , _explain = Explain
                        }
   ]
 

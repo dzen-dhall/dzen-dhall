@@ -8,7 +8,6 @@ import           DzenDhall.Runtime.Data
 import           Control.Applicative
 import           Control.Exception hiding (try)
 import           Control.Monad
-import           Control.Monad.Trans.Class (lift)
 import           Control.Monad.Trans.Except
 import           Data.HashSet (member)
 import           Data.Maybe
@@ -267,20 +266,23 @@ readPluginMeta :: Text -> App Common (Either MetaValidationError PluginMeta)
 readPluginMeta contents = do
   dhallDir <- getRuntime <&> (^. rtConfigDir)
 
+  -- A dirty hack - we just access the `meta` field, discarding `main`
+  -- so that there is no need to deal with its type.
+  let metaBody      = "(" <> contents <> ").meta"
+      inputSettings =
+        defaultInputSettings &
+        rootDirectory .~ (dhallDir </> "plugins")
+
+
+  -- TODO: convert exception to `NoParse`
+  meta <- explained $ inputWithSettings inputSettings pluginMetaType metaBody
+
+  let name          = meta ^. pmName
+      parseResult   = MP.parseMaybe (Dhall.unParser simpleLabel) name
+
   liftIO $ runExceptT $ do
 
-    -- A dirty hack - we just access the `meta` field, discarding `main`
-    -- so that there is no need to deal with its type.
-    let metaBody      = "(" <> contents <> ").meta"
-        inputSettings =
-          defaultInputSettings &
-          rootDirectory .~ (dhallDir </> "plugins")
-
-    -- TODO: convert exception to `NoParse`
-    meta <- lift $ detailed $ inputWithSettings inputSettings pluginMetaType metaBody
-
-    let name          = meta ^. pmName
-        parseResult   = MP.parseMaybe (Dhall.unParser simpleLabel) name
+    -- TODO: add more validations
 
     unless (isJust parseResult) $ do
       throwE (InvalidPluginName name)

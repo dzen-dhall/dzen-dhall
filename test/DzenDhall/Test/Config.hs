@@ -165,6 +165,6 @@ dummy :: FilePath -> FilePath -> TestTree
 dummy file dhallDir =
   Test.Tasty.HUnit.testCase (file <> " marshalling") $ do
     program <- Data.Text.IO.readFile file
-    void $ detailed $
+    void $
       inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
       (list configurationType) program
