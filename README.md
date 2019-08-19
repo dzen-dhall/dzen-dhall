@@ -194,7 +194,7 @@ let [marquee](#marquees) : Marquee → Bar → Bar
 let [pad](#padding-text) : Natural → Padding → Bar → Bar
 let [trim](#trimming-text) : Natural → Direction → Bar → Bar
 let [source](#sources) : Source → Bar
-let [plugin](#plugins) : Plugin → Bar
+let [plug](#plugins) : Plugin → Bar
 let [listener](#listeners) : Slot → Bar → Bar
 let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
 let [check](#assertions) : List [Check](#assertions) → Bar

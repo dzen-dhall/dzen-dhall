@@ -11,6 +11,7 @@ import           Control.Monad.Trans.Reader (ReaderT)
 import qualified Control.Monad.Trans.State as State
 import           Control.Monad.Trans.State (StateT)
 import           Data.Void
+import           Data.Maybe
 import           Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.IO
@@ -113,3 +114,21 @@ waitForever = liftIO $ forever $ threadDelay maxBound
 randomSuffix :: App stage String
 randomSuffix =
   liftIO $ take 10 . randomRs ('a','z') <$> newStdGen
+
+checkBinary :: String -> App stage Bool
+checkBinary = fmap isJust . liftIO . findExecutable
+
+echoLines :: [Text] -> App stage ()
+echoLines = mapM_ echo
+
+echo :: Text -> App stage ()
+echo = liftIO . Data.Text.IO.putStrLn
+
+highlight :: Text -> App stage Text
+highlight text = do
+  supportsANSI <- getRuntime <&> (^. rtSupportsANSI)
+  pure $
+    if supportsANSI then
+      "\027[1;33m" <> text <> "\027[0m"
+    else
+      text

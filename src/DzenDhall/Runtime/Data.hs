@@ -20,6 +20,7 @@ data Runtime = Runtime
   , _rtDzenBinary :: String
   , _rtAPIVersion :: Int
   , _rtArguments :: Arguments
+  , _rtSupportsANSI :: Bool
   }
   deriving (Eq, Show)
 

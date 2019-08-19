@@ -64,7 +64,7 @@ matrix:
 
     before_cache:
     - mkdir -p $HOME/nix.store
-    - nix copy --to file://$HOME/nix.store -f default.nix buildInputs
+    - nix copy --to file://$HOME/nix.store -f default.nix dzen-dhall
 
     cache:
       directories:

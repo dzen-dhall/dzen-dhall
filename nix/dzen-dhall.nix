@@ -1,7 +1,8 @@
-{ mkDerivation, base, bytestring, containers, dhall, directory
-, filepath, generic-random, hashable, hpack, hspec, http-conduit
-, HUnit, megaparsec, microlens, microlens-th, network-uri
-, optparse-applicative, parsec, parsers, pipes, process, QuickCheck
+{ mkDerivation, ansi-terminal, base, bytestring, containers, dhall
+, directory, filepath, generic-random, hashable, hpack, hspec
+, http-conduit, HUnit, megaparsec, microlens, microlens-th
+, network-uri, optparse-applicative, parsec, parsers, pipes
+, prettyprinter, prettyprinter-ansi-terminal, process, QuickCheck
 , random, stdenv, tasty, tasty-hspec, tasty-hunit, tasty-quickcheck
 , template-haskell, text, time, transformers, unix
 , unordered-containers, utf8-string, vector
@@ -14,10 +15,11 @@ mkDerivation {
   isExecutable = true;
   enableSeparateDataOutput = true;
   libraryHaskellDepends = [
-    base bytestring containers dhall directory filepath hashable
-    http-conduit megaparsec microlens microlens-th network-uri
-    optparse-applicative parsec parsers pipes process random text time
-    transformers unix unordered-containers utf8-string vector
+    ansi-terminal base bytestring containers dhall directory filepath
+    hashable http-conduit megaparsec microlens microlens-th network-uri
+    optparse-applicative parsec parsers pipes prettyprinter
+    prettyprinter-ansi-terminal process random text time transformers
+    unix unordered-containers utf8-string vector
   ];
   libraryToolDepends = [ hpack ];
   executableHaskellDepends = [ base ];

@@ -17,6 +17,8 @@ library:
   ghc-options: -Wall
 
   dependencies:
+  - ansi-terminal
+  - prettyprinter-ansi-terminal
   - base
   - bytestring
   - containers
@@ -33,6 +35,7 @@ library:
   - parsec
   - parsers
   - pipes
+  - prettyprinter
   - process
   - random
   - text
@@ -79,6 +82,7 @@ library:
   - ScopedTypeVariables
   - StandaloneDeriving
   - TupleSections
+  - FlexibleInstances
 
 executables:
   dzen-dhall:

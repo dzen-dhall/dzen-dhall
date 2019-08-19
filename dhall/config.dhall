@@ -62,7 +62,7 @@ let defaultBar
 		let pad : Natural → Padding → Bar → Bar = carrier.pad
 		let trim : Natural → Direction → Bar → Bar = carrier.trim
 		let source : Source → Bar = carrier.source
-		let plugin : Plugin → Bar = carrier.plugin
+		let plug : Plugin → Bar = carrier.plug
 		let listener : Slot → Bar → Bar = carrier.listener
 		let automaton
 			: Address → StateTransitionTable → StateMap Bar → Bar

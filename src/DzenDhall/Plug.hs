@@ -2,6 +2,7 @@ module DzenDhall.Plug where
 
 import           DzenDhall.App
 import           DzenDhall.Config
+import           DzenDhall.Extra
 import           DzenDhall.Runtime.Data
 
 import           Control.Applicative
@@ -12,147 +13,228 @@ import           Control.Monad.Trans.Except
 import           Data.HashSet (member)
 import           Data.Maybe
 import           Data.Text (Text)
-import           Data.Text.IO (putStrLn, writeFile)
 import           Dhall
 import           Dhall.Core
 import           Lens.Micro
 import           Network.HTTP.Simple
 import           Network.URI
-import           Prelude hiding (putStrLn, takeWhile, writeFile)
+import           Prelude
 import           System.Directory
 import           System.Exit
 import           System.FilePath ((</>))
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as STE
-import qualified Dhall.Parser as Dhall
+import qualified Data.Text                                 as T
+import qualified Data.Text.Encoding                        as STE
+import qualified Data.Text.IO
+import qualified Data.Text.Prettyprint.Doc                 as Pretty
+import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Pretty.Terminal
+import qualified Dhall.Parser                              as Dhall
+import qualified Dhall.Pretty
+import qualified Dhall.Pretty                              as Pretty
+import qualified System.IO
 import qualified Text.Megaparsec
-import qualified Text.Megaparsec as MP
-import qualified Text.Parsec as P
+import qualified Text.Megaparsec                           as MP
+import qualified Text.Parsec                               as P
 import qualified Text.Parser.Combinators (try)
 
-data Plugin
+
+data PluginSourceSpec
   = FromGithub
   -- ^ Load from Github by username and repository
     { userName   :: String
     , repository :: String
+    , revision   :: String
     }
-
-  | FromOrg String
+  | FromOrg { name     :: String
+            , revision :: String
+            }
   -- ^ Load from @https://github.com/dzen-dhall/plugins@ by name.
-
   | FromURL URI
   -- ^ Load from URL
+  | FromFile FilePath
   deriving (Eq, Show)
 
 
 plugCommand :: String -> App Common ()
 plugCommand argument = do
 
-  runtime <- getRuntime
+  withEither (parseSourceSpec argument) invalidSourceSpec $ \sourceSpec -> do
+    runtime <- getRuntime
 
-  let version  = runtime ^. rtAPIVersion
-      dhallDir = runtime ^. rtConfigDir
+    let version  = runtime ^. rtAPIVersion
 
-  liftIO $ handle httpHandler $ do
+    rawContents <- liftIO $
+      handle httpHandler $ getPluginContents sourceSpec version
 
-    case runPluginParser argument of
+    withMaybe (tryDhallParse rawContents) (invalidFile rawContents) $ \expr -> do
 
-      Left err -> do
-        putStrLn "Error while parsing URL:"
-        print err
-        exitWith $ ExitFailure 1
+      eiMeta <- readPluginMeta rawContents
 
-      Right plugin -> do
-        let url = getPluginURL plugin version
+      withEither eiMeta handleMetaValidationError $ \meta -> do
 
-        putStrLn $ "Trying to load plugin from URL: " <> T.pack url <> "\n"
+        checkIfPluginFileExists (meta ^. pmName)
 
-        bodyText <- loadPluginContents url
+        suggestReviewing expr
 
-        when (isNothing $ tryDhallParse bodyText) $ do
-          putStrLn "Error: not a valid Dhall file!"
-          putStrLn bodyText
-          exitWith $ ExitFailure 2
+        askConfirmation
 
-        -- TODO: ask for confirmation
-        putStrLn "Please review the code:\n\n"
-        putStrLn bodyText
+        writePluginFile (meta ^. pmName) rawContents
 
-        eiMeta <- readPluginMeta dhallDir bodyText
+        printUsage meta
 
-        case eiMeta of
 
-          Left err -> do
-            putStrLn $ printMetaValidationError err
-            exitWith $ ExitFailure 2
+askConfirmation :: App Common ()
+askConfirmation = do
 
-          Right meta -> do
-            writePluginFile dhallDir (meta ^. pmName) bodyText
+  msg <- highlight "Are you sure you want to install this plugin? (Y/n)"
+  echo msg
 
-            let usage = "New plugin \"" <> meta ^. pmName
-                        <> "\" can now be used as follows:\n\n"
-                        <> meta ^. pmUsage
+  response <- liftIO getLine
+  unless (response `elem` ["Y", "y", "Yes", "yes", ""]) $
+    exit 1 "Aborting."
 
-            putStrLn usage
+suggestReviewing :: Expr Dhall.Src Import -> App Common ()
+suggestReviewing expr = do
+  msg1 <- highlight "Please review the plugin code:"
+  msg2 <- highlight "Please review the code above."
+
+  let expr' =
+        Dhall.Pretty.prettyCharacterSet Dhall.Pretty.Unicode expr
+
+  echoLines [ ""
+            , msg1
+            , ""
+            ]
+
+  supportsANSI <- getRuntime <&> (^. rtSupportsANSI)
+
+  liftIO $
+    if supportsANSI
+    then
+      Pretty.Terminal.renderIO
+      System.IO.stdout
+      (fmap Pretty.annToAnsiStyle (Pretty.layoutSmart Pretty.layoutOpts expr'))
+    else
+      Pretty.Terminal.renderIO
+      System.IO.stdout
+      (Pretty.layoutSmart Pretty.layoutOpts (Pretty.unAnnotate expr'))
+
+  echoLines [ ""
+            , ""
+            , msg2
+            , ""
+            ]
+
+printUsage :: PluginMeta -> App Common ()
+printUsage meta = do
+  msg <- highlight $
+         "New plugin \"" <> meta ^. pmName <> "\" can now be used as follows:"
+  echoLines [ msg
+            , ""
+            , ""
+            , meta ^. pmUsage
+            ]
+
+invalidSourceSpec :: P.ParseError -> App Common ()
+invalidSourceSpec err =
+  exit 1 $ fromLines
+  [ "Invalid plugin source specification:"
+  , ""
+  , showPack err
+  ]
+
+invalidFile :: Text -> App Common ()
+invalidFile rawContents =
+  exit 2 $ fromLines
+  [ "Error: not a valid Dhall file:"
+  , ""
+  , rawContents
+  ]
 
 
 httpHandler :: HttpException -> IO a
 httpHandler err = do
-  putStrLn "Exception occured while trying to load plugin source:"
+  Data.Text.IO.putStrLn "Exception occured while trying to load plugin source:"
   print err
   exitWith $ ExitFailure 1
 
 
-runPluginParser :: String -> Either P.ParseError Plugin
-runPluginParser = P.runParser pluginParser () "input"
-
-
-pluginParser :: P.Parsec String () Plugin
-pluginParser = ( P.try fromURL
-             <|> P.try fromGithub
-             <|> P.try fromOrg
-               ) <* P.eof
+parseSourceSpec :: String -> Either P.ParseError PluginSourceSpec
+parseSourceSpec = P.runParser pluginSourceSpecParser () "input"
   where
 
-    fromGithub :: P.Parsec String () Plugin
-    fromGithub = do
-      userName <- P.many1 P.alphaNum
-      void $ P.char '/'
-      repository <- P.many1 P.alphaNum
-      pure $ FromGithub {..}
+    pluginSourceSpecParser :: P.Parsec String () PluginSourceSpec
+    pluginSourceSpecParser = ( P.try fromURL
+                           <|> P.try fromGithub
+                           <|> P.try fromOrg
+                           <|> P.try fromFile
+                             ) <* P.eof
 
-    fromOrg :: P.Parsec String () Plugin
-    fromOrg = FromOrg <$> P.many1 P.alphaNum
-
-    fromURL :: P.Parsec String () Plugin
+    fromURL :: P.Parsec String () PluginSourceSpec
     fromURL = do
       anything <- P.many1 (P.satisfy (const True))
       case parseURI anything of
         Just uri -> pure $ FromURL uri
         Nothing -> P.unexpected "Not a URI"
 
+    fromGithub :: P.Parsec String () PluginSourceSpec
+    fromGithub = do
+      userName <- saneIdentifier
+      void $ P.char '/'
+      repository <- saneIdentifier
+      revision <- revisionParser
+      pure $ FromGithub {..}
 
--- | Construct plugin source URL by given Plugin and API version.
-getPluginURL :: Plugin -> Int -> String
-getPluginURL FromGithub{userName, repository} version =
-  "https://raw.githubusercontent.com/" <> userName <> "/" <> repository <> "/master/v" <> show version <> "/plugin.dhall"
-getPluginURL (FromOrg name) version =
-  "https://raw.githubusercontent.com/dzen-dhall/plugins/master/" <> name <> "/v" <> show version <> "/plugin.dhall"
-getPluginURL (FromURL url) _version =
-  uriToString id url ""
+    fromOrg :: P.Parsec String () PluginSourceSpec
+    fromOrg = do
+      name <- saneIdentifier
+      revision <- revisionParser
+      pure $ FromOrg {..}
+
+    fromFile :: P.Parsec String () PluginSourceSpec
+    fromFile = do
+      FromFile <$>
+        liftM2 (:) (P.char '.' <|> P.char '/') (P.many1 $ P.satisfy (const True))
+
+    revisionParser = P.option "master" $ do
+      void $ P.char '@'
+      P.many1 (P.alphaNum <|> P.char '-' <|> P.char '_' <|> P.char '.')
+
+    saneIdentifier = P.many1 (P.alphaNum <|> P.char '-' <|> P.char '_')
+
+getPluginContents :: PluginSourceSpec -> Int -> IO Text
+getPluginContents FromGithub{userName, repository, revision} version =
+  getPluginContentsFromURL $
+  "https://raw.githubusercontent.com/" <> userName
+  <> "/" <> repository
+  <> "/" <> revision
+  <> "/v" <> show version
+  <> "/plugin.dhall"
+
+getPluginContents (FromOrg { name, revision }) version =
+  getPluginContentsFromURL $
+  "https://raw.githubusercontent.com/dzen-dhall/plugins/" <> revision
+  <> "/" <> name
+  <> "/v" <> show version
+  <> "/plugin.dhall"
+
+getPluginContents (FromURL url) _version = do
+  getPluginContentsFromURL $ uriToString id url ""
+
+getPluginContents (FromFile filePath) _version =
+  Data.Text.IO.readFile filePath
 
 
 -- | Load plugin from URL and validate it by parsing.
-loadPluginContents :: String -> IO Text
-loadPluginContents url = do
+getPluginContentsFromURL :: String -> IO Text
+getPluginContentsFromURL url = do
 
   req <- parseRequest url `catch` httpHandler
   res <- httpBS req
 
   let body     = getResponseBody res
-      bodyText = STE.decodeUtf8 body
+      contents = STE.decodeUtf8 body
 
-  pure bodyText
+  pure contents
 
 
 -- | Try parsing a file.
@@ -162,56 +244,55 @@ tryDhallParse =
 
 
 data MetaValidationError
-  = InvalidAPIVersion { _mveExpected :: Int
-                      , _mveGot      :: Int
-                      }
-  | NoParse
+  = NoParse
   | InvalidPluginName Text
 
-printMetaValidationError :: MetaValidationError -> Text
-printMetaValidationError (InvalidAPIVersion expected got)
-  =  "This plugin is written with the use of incompatible API version: expected v"
-  <> T.pack (show expected)
-  <> ", got v"
-  <> T.pack (show got)
-printMetaValidationError NoParse
-  =  "No parse"
-printMetaValidationError (InvalidPluginName name)
-  =  "Plugin name should be a valid dhall identifier: " <> name
+
+instance Show MetaValidationError where
+  show NoParse =
+    "No parse. This plugin is either malformed or was written for another API version. (current API version: " <> show apiVersion <> ")"
+
+  show (InvalidPluginName pluginName) =
+    "Plugin name must be a valid Dhall identifier: " <> T.unpack pluginName
+
+
+handleMetaValidationError :: MetaValidationError -> App stage ()
+handleMetaValidationError err = do
+  exit 2 (showPack err)
+
 
 -- | Try to load plugin meta by inserting a plugin into the current environment
 -- (using 'inputWithSettings').
-readPluginMeta :: String -> Text -> IO (Either MetaValidationError PluginMeta)
-readPluginMeta dhallDir bodyText = runExceptT $ do
+readPluginMeta :: Text -> App Common (Either MetaValidationError PluginMeta)
+readPluginMeta contents = do
+  dhallDir <- getRuntime <&> (^. rtConfigDir)
 
-  -- A dirty hack - we just access the `meta` field, discarding `main`
-  -- so that there is no need to deal with its type.
-  let metaBody      = "(" <> bodyText <> ").meta"
-      inputSettings =
-        defaultInputSettings &
-        rootDirectory .~ (dhallDir </> "plugins")
+  liftIO $ runExceptT $ do
 
-  -- TODO: convert exception to `NoParse`
-  meta <- lift $ detailed $ inputWithSettings inputSettings pluginMetaType metaBody
+    -- A dirty hack - we just access the `meta` field, discarding `main`
+    -- so that there is no need to deal with its type.
+    let metaBody      = "(" <> contents <> ").meta"
+        inputSettings =
+          defaultInputSettings &
+          rootDirectory .~ (dhallDir </> "plugins")
 
-  let name          = meta ^. pmName
-      gotApiVersion = meta ^. pmApiVersion
-      parseResult   = MP.parseMaybe (Dhall.unParser simpleLabel) name
+    -- TODO: convert exception to `NoParse`
+    meta <- lift $ detailed $ inputWithSettings inputSettings pluginMetaType metaBody
 
-  unless (isJust parseResult) $ do
-    throwE (InvalidPluginName name)
+    let name          = meta ^. pmName
+        parseResult   = MP.parseMaybe (Dhall.unParser simpleLabel) name
 
-  unless (meta ^. pmApiVersion == apiVersion) $ do
-    throwE (InvalidAPIVersion apiVersion gotApiVersion)
+    unless (isJust parseResult) $ do
+      throwE (InvalidPluginName name)
 
-  pure meta
+    pure meta
 
 -- | Parser for valid variable names. Borrowed from `Dhall.Parser.Token`,
 -- slightly modified.
 simpleLabel :: Dhall.Parser Text
 simpleLabel = Text.Parser.Combinators.try $ do
     c    <- Dhall.Parser $ Text.Megaparsec.satisfy headCharacter
-    rest <- takeWhile tailCharacter
+    rest <- takeWhile' tailCharacter
     let text = T.cons c rest
     Control.Monad.guard (not $ member text reservedIdentifiers)
     return text
@@ -225,27 +306,37 @@ simpleLabel = Text.Parser.Combinators.try $ do
     digit :: Char -> Bool
     digit c = '\x30' <= c && c <= '\x39'
 
-    takeWhile :: (Char -> Bool) -> Dhall.Parser Text
-    takeWhile predicate = Dhall.Parser (Text.Megaparsec.takeWhileP Nothing predicate)
+    takeWhile' :: (Char -> Bool) -> Dhall.Parser Text
+    takeWhile' predicate = Dhall.Parser (Text.Megaparsec.takeWhileP Nothing predicate)
 
 
-writePluginFile :: FilePath -> Text -> Text -> IO ()
-writePluginFile dhallDir name bodyText = do
+checkIfPluginFileExists :: Text -> App Common ()
+checkIfPluginFileExists pluginName = do
+  (pluginsDir, pluginFile) <- getPluginPaths pluginName
+
+  dirExists <- liftIO $ doesDirectoryExist pluginsDir
+
+  unless dirExists $ do
+    exit 1 $
+      "Directory " <> T.pack pluginsDir <> " does not exist! Run `dzen-dhall init` first."
+
+  fileExists <- liftIO $ doesFileExist pluginFile
+
+  when fileExists $ do
+    exit 1 $
+      "File " <> T.pack pluginFile <> " already exists."
+
+writePluginFile :: Text -> Text -> App Common ()
+writePluginFile pluginName contents = do
+  pluginFile <- snd <$> getPluginPaths pluginName
+  liftIO $ Data.Text.IO.writeFile pluginFile contents
+
+-- | Given a plugin name, get the file of the plugin and locate the plugins directory.
+getPluginPaths :: Text -> App Common (String, String)
+getPluginPaths pluginName = do
+  dhallDir <- getRuntime <&> (^. rtConfigDir)
 
   let pluginsDir = dhallDir </> "plugins"
-      pluginFile = pluginsDir </> T.unpack name <> ".dhall"
+      pluginFile = pluginsDir </> T.unpack pluginName <> ".dhall"
 
-  dirExists <- doesDirectoryExist pluginsDir
-  unless dirExists $ do
-    putStrLn $
-      "Directory "
-      <> T.pack pluginsDir
-      <> " does not exist! Run `dzen-dhall init` first."
-    exitWith $ ExitFailure 1
-
-  fileExists <- doesFileExist pluginFile
-  when fileExists $ do
-    putStrLn $ "File " <> T.pack pluginFile <> " already exists."
-    exitWith $ ExitFailure 1
-
-  writeFile pluginFile bodyText
+  pure (pluginsDir, pluginFile)

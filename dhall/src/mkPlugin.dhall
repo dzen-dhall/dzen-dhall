@@ -114,7 +114,7 @@ let carrierListToken
 		  → enclose (OpeningTag.Trim { width = width, direction = direction })
 	  , source =
 		  λ(source : Source) → [ Token.Source source ]
-	  , plugin =
+	  , plug =
 		  λ(p : Plugin) → p
 	  , listener =
 		  λ(slot : Slot) → enclose (OpeningTag.Listener slot)

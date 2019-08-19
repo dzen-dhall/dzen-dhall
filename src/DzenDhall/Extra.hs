@@ -37,6 +37,12 @@ leftToJust :: Either a b -> Maybe a
 leftToJust (Left a) = Just a
 leftToJust _ = Nothing
 
+withMaybe :: Maybe a -> b -> (a -> b) -> b
+withMaybe mb b f = maybe b f mb
+
+withEither :: Either a b -> (a -> c) -> (b -> c) -> c
+withEither ei l r = either l r ei
+
 safeHead :: [a] -> Maybe a
 safeHead = fmap fst . Data.List.uncons
 

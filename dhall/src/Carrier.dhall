@@ -73,7 +73,7 @@ let Carrier
 			Natural → Direction → Bar → Bar
 		, source :
 			Source → Bar
-		, plugin :
+		, plug :
 			Plugin → Bar
 		, listener :
 			Slot → Bar → Bar

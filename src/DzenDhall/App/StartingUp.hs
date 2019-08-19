@@ -198,6 +198,9 @@ initialize (BarAutomaton address stt stateMap) = do
             handleMap slots
           )
 
+        -- Cache this automaton
+        modify $ ssAutomataCache %~ H.insert (scope, address) barRef
+
         pure barRef
 
   barRef <- maybe newBarRef pure mbCached

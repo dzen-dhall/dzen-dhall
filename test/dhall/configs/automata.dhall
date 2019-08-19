@@ -11,7 +11,6 @@ let Carrier = types.Carrier
 let Configuration = types.Configuration
 let Event = types.Event
 let Hook = types.Hook
-let Plugin = types.Plugin
 let Slot = types.Slot
 let StateMap = types.StateMap
 let StateTransitionTable = types.StateTransitionTable

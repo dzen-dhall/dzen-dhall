@@ -13,6 +13,8 @@ import           System.Directory
 import           System.Exit (ExitCode(..), exitWith)
 import           System.FilePath ((</>))
 import           System.Posix.Files
+import qualified System.Console.ANSI
+import qualified System.IO
 
 
 -- Read runtime from configuration file, if possible.
@@ -34,12 +36,16 @@ readRuntime args = do
   configurations :: [Configuration] <- do
     detailed $ inputFile (list configurationType) configFile
 
+  supportsANSI <- System.Console.ANSI.hSupportsANSI System.IO.stdout
+
   pure $ Runtime
     configDir
     configurations
     dzenBinary
     apiVersion
     args
+    supportsANSI
+
 
 -- | Create config directory and set file permissions.
 initCommand :: Arguments -> IO ()
