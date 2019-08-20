@@ -43,7 +43,7 @@ The essence of the DSL can be illustrated by the following excerpt from [the def
 ```dhall
 -- A bar that shows how much memory is used:
 let memoryUsage
--- ^ `let` keyword introduces new binding
+-- ^ `let` keyword introduces a new binding
 	: Bar
 	-- ^ Colon means "has type". `memoryUsage` is a `Bar`
 	= bashWithBinaries
@@ -590,7 +590,7 @@ A [listener](#listeners) awaits for mouse events and sends them to the slot. Two
 
 ### [State Transition Table](dhall/src/StateTransitionTable.dhall)
 
-State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, `dzen-dhall` tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in the table, dzen-dhall executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
+State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, `dzen-dhall` tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in the table, `dzen-dhall` executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
 
 ```dhall
 let StateTransitionTable
@@ -736,7 +736,11 @@ These conventions are enforced by `dzen-dhall` as an attempt to lower cognitive 
 
 ## Troubleshooting
 
-This section is dedicated to fixing problems with your dzen-dhall configurations.
+This section is dedicated to fixing problems with your `dzen-dhall` configurations.
+
+### Getting more info about errors
+
+Pass `--explain` flag to turn on verbose error reporting.
 
 ### Marquee jittering
 
@@ -785,7 +789,7 @@ See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/sta
 
 ## Implementation details
 
-Read this section if you want to understand how dzen-dhall works. It is not required neither to use the program, nor to create custom plugins.
+Read this section if you want to understand how `dzen-dhall` works. It is not required neither to use the program, nor to create custom plugins.
 
 ### Data encoding
 

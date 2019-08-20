@@ -330,16 +330,6 @@ barSettingsType = record $
               <*> field "fontWidth"      (fmap fromIntegral <$> Dhall.maybe natural)
 
 
-data Image
-  = IRelative Text
-  | IAbsolute Text
-  deriving (Show, Eq, Generic)
-
-imageType :: Type Image
-imageType = union
-  $  (IRelative <$> constructor "relative" strictText)
-  <> (IAbsolute <$> constructor "absolute" strictText)
-
 data ShapeSize
   = ShapeSize { _shapeSizeW :: Int, _shapeSizeH :: Int }
   deriving (Show, Eq, Generic)
@@ -371,7 +361,7 @@ data Token
   | TokTxt Text
   | TokSource Source
   | TokMarkup Text
-  | TokI Image
+  | TokI Text
   | TokR ShapeSize
   | TokRO ShapeSize
   | TokC Int
@@ -388,7 +378,7 @@ tokenType = union
   <> (TokTxt       <$> constructor "Txt"       strictText)
   <> (TokSource    <$> constructor "Source"    sourceSettingsType)
   <> (TokMarkup    <$> constructor "Markup"    strictText)
-  <> (TokI         <$> constructor "I"         imageType)
+  <> (TokI         <$> constructor "I"         strictText)
   <> (TokR         <$> constructor "R"         shapeSizeType)
   <> (TokRO        <$> constructor "RO"        shapeSizeType)
   <> (TokC         <$> constructor "C"         (fromIntegral <$> natural))

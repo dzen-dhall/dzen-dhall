@@ -27,10 +27,12 @@ data Runtime = Runtime
 makeLenses ''Runtime
 
 type AutomatonState = Text
-type Slot = Text
-type Scope = Text
-type VariableName = Text
-type Value = Text
+type Slot           = Text
+type Scope          = Text
+type VariableName   = Text
+type Value          = Text
+type ImageContents  = Text
+type ImageId        = Text
 
 -- | 'StateTransitionTable' is needed to know *how* to update,
 -- @'IORef' ('Bar' 'Initialized')@ is needed to know *what* to update.
@@ -50,27 +52,29 @@ type ClickableAreas = H.HashMap Int Text
 
 data StartupState
   = StartupState
-  { _ssAutomataHandles :: AutomataHandles
-  , _ssScopeName :: Scope
-  , _ssBarSettings :: BarSettings
-  , _ssCounter :: Int
+  { _ssAutomataHandles     :: AutomataHandles
+  , _ssScopeName           :: Scope
+  , _ssBarSettings         :: BarSettings
+  , _ssCounter             :: Int
   -- ^ Counter that is incremented each time it is requested (used as a source
   -- of unique identifiers). See also: 'DzenDhall.App.getCounter'
-  , _ssSourceCache :: H.HashMap (Text, Source) (IORef Text, Cache)
-  , _ssAutomataCache :: H.HashMap (Text, Text) (IORef (Bar Initialized))
-  , _ssSourceQueue :: [(Source, IORef Text, Cache, Text)]
+  , _ssSourceCache         :: H.HashMap (Text, Source) (IORef Text, Cache)
+  , _ssAutomataCache       :: H.HashMap (Text, Text) (IORef (Bar Initialized))
+  , _ssSourceQueue         :: [(Source, IORef Text, Cache, Text)]
   , _ssVariableDefinitions :: [(Scope, VariableName, Value)]
+  , _ssImages              :: H.HashMap ImageContents ImageId
   -- ^ A queue containing ready-to-be-initialized `Source`s and their handles &
   -- scope names.
   -- This queue is needed because we want to create a `BarRuntime` before
   -- actually running the source processes (they depend on `brEmitterScript` value).
-  , _ssClickableAreas :: ClickableAreas
+  , _ssClickableAreas      :: ClickableAreas
   -- ^ A mapping from clickable area identifiers to scripts
-  , _ssNamedPipe :: String
-  , _ssEmitterFile :: String
-  , _ssGetterFile :: String
-  , _ssSetterFile :: String
-  , _ssVariableFilePrefix :: String
+  , _ssNamedPipe           :: String
+  , _ssEmitterFile         :: String
+  , _ssGetterFile          :: String
+  , _ssSetterFile          :: String
+  , _ssVariableFilePrefix  :: String
+  , _ssImagePathPrefix     :: String
   }
 
 makeLenses ''StartupState

@@ -5,7 +5,6 @@ import           DzenDhall.AST.Render (runRender)
 import           DzenDhall.Config
 import           DzenDhall.Extra
 import           DzenDhall.Runtime.Data
-import qualified DzenDhall.App as App
 
 import           Control.Exception
 import           Control.Concurrent
@@ -17,7 +16,7 @@ import           Data.Maybe
 import           Data.Text (Text)
 import           Data.Void
 import           Lens.Micro
-import           Pipes
+import           Pipes hiding (liftIO)
 import           System.Environment
 import           System.Exit
 import           System.IO
@@ -33,7 +32,7 @@ import           Text.Read (readMaybe)
 
 data PipeCommand
   = RoutedEvent Event Slot Scope
-  | Click Int
+  | Click Scope Int
   deriving (Eq, Show)
 
 -- | Start reading lines from a named pipe used to route events.
@@ -49,7 +48,10 @@ launchEventListener handles clickableAreas = do
       putStrLn $ "Couldn't open named pipe " <> namedPipe <> ": " <> displayException e
       exitWith (ExitFailure 1)
 
-  App.liftIO $ runEffect $ do
+  environment <- liftIO getEnvironment
+
+
+  liftIO $ runEffect $ do
 
     fh <- lift $ handle handler $ do
       fh <- openFile namedPipe ReadWriteMode
@@ -66,11 +68,30 @@ launchEventListener handles clickableAreas = do
               Nothing ->
                 Data.Text.IO.putStrLn $
                 "Failed to find subscriptions for address: " <> slot <> "@" <> scope
-          Just (Click identifier) -> do
+
+          Just (Click scope identifier) -> do
             whenJust (H.lookup identifier clickableAreas) $
               \command -> do
                 void $ forkIO $ do
-                  void $ readCreateProcess (shell $ Data.Text.unpack command) ""
+
+                  let emitter =
+                        barRuntime ^. brEmitterScript <> " " <> Data.Text.unpack scope
+                      getter =
+                        barRuntime ^. brGetterScript  <> " " <> Data.Text.unpack scope
+                      setter =
+                        barRuntime ^. brSetterScript  <> " " <> Data.Text.unpack scope
+
+                  let process =
+                        (shell $ Data.Text.unpack command)
+                        { env = Just $
+                          [ ("EMIT", emitter)
+                          , ("GET",  getter)
+                          , ("SET",  setter)
+                          ] <>
+                          environment
+                        }
+
+                  void $ readCreateProcess process ""
 
           Nothing ->
             putStrLn $ "Failed to parse routed event from string: " <> line
@@ -214,5 +235,7 @@ scopeParser = Data.Text.pack <$> some (alphaNumChar <|> char '-')
 clickParser :: Parser PipeCommand
 clickParser = do
   void $ string "click:"
-  str <- some digitChar
-  pure $ Click (fromMaybe 0 $ readMaybe str)
+  identifier <- some digitChar
+  void $ string ",scope:"
+  scope <- scopeParser
+  pure $ Click scope $ fromMaybe 0 $ readMaybe identifier

@@ -99,6 +99,7 @@ liftStartingUp (App app) barSettings = do
   getterFile         <- (tmpFilePrefix <>) <$> randomSuffix
   setterFile         <- (tmpFilePrefix <>) <$> randomSuffix
   variableFilePrefix <- (tmpFilePrefix <>) <$> randomSuffix
+  imagePathPrefix    <- (tmpFilePrefix <>) <$> randomSuffix
 
   let initialStartupState =
         StartupState
@@ -109,12 +110,14 @@ liftStartingUp (App app) barSettings = do
         H.empty
         []
         []
+        H.empty
         mempty
         namedPipe
         emitterFile
         getterFile
         setterFile
         variableFilePrefix
+        imagePathPrefix
 
   App . lift $ State.evalStateT app initialStartupState
 

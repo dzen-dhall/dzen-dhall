@@ -43,4 +43,7 @@ getTests =
   , mkTest "parsing #9"
     "event:MyEvent,slot:SLOT@scope" $
     Just $ RoutedEvent (CustomEvent "MyEvent") "SLOT" "scope"
+  , mkTest "parsing #10"
+    "click:123,scope:scope-12" $
+    Just $ Click "scope-12" 123
   ]

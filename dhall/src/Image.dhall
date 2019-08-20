@@ -1,1 +1,1 @@
-< relative : Text | absolute : Text >
+let Image : Type = Text in Image

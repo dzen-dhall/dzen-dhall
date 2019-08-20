@@ -155,9 +155,7 @@ variable = withPreview $ \case
 
 shape :: Parser Shape
 shape = withPreview $ \case
-  TokI  image     -> Just $ I $ case image of
-    IRelative path -> path
-    IAbsolute path -> path
+  TokI  image     -> Just $ I image
   TokR  shapeSize -> Just $ R  (shapeSize ^. shapeSizeW) (shapeSize ^. shapeSizeH)
   TokRO shapeSize -> Just $ RO (shapeSize ^. shapeSizeW) (shapeSize ^. shapeSizeH)
   TokC  radius    -> Just $ C  radius

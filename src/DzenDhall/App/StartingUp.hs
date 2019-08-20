@@ -63,6 +63,10 @@ startUp cfg bar = do
           ownerWriteMode `unionFileModes`
           groupWriteMode
 
+  forM_ (H.toList $ state ^. ssImages) $
+    \(imageContents, imageId) -> liftIO $ do
+      Data.Text.IO.writeFile
+        (state ^. ssImagePathPrefix <> Data.Text.unpack imageId <> ".xbm") imageContents
 
   pure (bar', state ^. ssAutomataHandles, barRuntime, state ^. ssClickableAreas)
 
@@ -264,10 +268,12 @@ initialize (BarScope child) = do
 initialize (BarProp (CA ca) child) = do
 
   identifier <- getCounter
-  namedPipe <- get <&> (^. ssNamedPipe)
+  namedPipe  <- get <&> (^. ssNamedPipe)
+  scope      <- get <&> (^. ssScopeName)
 
   let command =
-        "echo click:" <> showPack identifier <> " >> " <> Data.Text.pack namedPipe
+        "echo click:" <> showPack identifier <>
+        ",scope:" <> scope <> " >> " <> Data.Text.pack namedPipe
 
   modify $ ssClickableAreas %~ H.insert identifier (ca ^. caCommand)
 
@@ -290,6 +296,22 @@ initialize (BarTrim width direction p) =
   BarTrim width direction <$> initialize p
 initialize (Bars ps) =
   Bars <$> mapM initialize ps
+initialize (BarShape (I image))
+  | isImageContents image = do
+
+      images          <- get <&> (^. ssImages)
+      imagePathPrefix <- get <&> (^. ssImagePathPrefix)
+
+      imageId <- case H.lookup image images of
+                   Just imageId ->
+                     pure imageId
+                   Nothing -> do
+                     imageId <- showPack <$> getCounter
+                     modify $ ssImages %~ H.insert image imageId
+                     pure imageId
+
+      pure $ BarShape $ I $ Data.Text.pack imagePathPrefix <> imageId <> ".xbm"
+
 initialize (BarShape shape) =
   pure $ BarShape shape
 initialize (BarMarkup text) =
@@ -297,6 +319,9 @@ initialize (BarMarkup text) =
 initialize (BarText text) =
   pure $ BarText text
 
+isImageContents :: Text -> Bool
+isImageContents =
+  Data.Text.isInfixOf "#define"
 
 -- | Run source process either once or forever, depending on source settings.
 mkThread
