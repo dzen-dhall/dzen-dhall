@@ -18,7 +18,6 @@ data Runtime = Runtime
   { _rtConfigDir :: String
   , _rtConfigurations :: [Configuration]
   , _rtDzenBinary :: String
-  , _rtAPIVersion :: Int
   , _rtArguments :: Arguments
   , _rtSupportsANSI :: Bool
   }

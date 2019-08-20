@@ -44,7 +44,6 @@ readRuntime args = do
     configDir
     configurations
     dzenBinary
-    apiVersion
     args
     supportsANSI
 

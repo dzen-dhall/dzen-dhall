@@ -51,6 +51,8 @@
 	./StateMap.dhall
 , StateTransitionTable =
 	./StateTransitionTable.dhall
+, Token =
+	./Token.dhall
 , Variable =
 	./Variable.dhall
 , VerticalDirection =

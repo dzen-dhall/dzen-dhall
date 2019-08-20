@@ -57,16 +57,12 @@ plugCommand :: String -> App Common ()
 plugCommand argument = do
 
   withEither (parseSourceSpec argument) invalidSourceSpec $ \sourceSpec -> do
-    runtime <- getRuntime
-
-    let version  = runtime ^. rtAPIVersion
-
     rawContents <- liftIO $
-      handle httpHandler $ getPluginContents sourceSpec version
+      handle httpHandler $ getPluginContents sourceSpec
 
     withMaybe (tryDhallParse rawContents) (invalidFile rawContents) $ \expr -> do
 
-      eiMeta <- readPluginMeta rawContents
+      eiMeta <- readPluginMeta sourceSpec rawContents
 
       withEither eiMeta handleMetaValidationError $ \meta -> do
 
@@ -158,15 +154,15 @@ httpHandler err = do
 
 
 parseSourceSpec :: String -> Either P.ParseError PluginSourceSpec
-parseSourceSpec = P.runParser pluginSourceSpecParser () "input"
+parseSourceSpec argument = P.runParser sourceSpecParser () argument argument
   where
 
-    pluginSourceSpecParser :: P.Parsec String () PluginSourceSpec
-    pluginSourceSpecParser = ( P.try fromURL
-                           <|> P.try fromGithub
-                           <|> P.try fromOrg
-                           <|> P.try fromFile
-                             ) <* P.eof
+    sourceSpecParser :: P.Parsec String () PluginSourceSpec
+    sourceSpecParser = ( P.try fromURL
+                     <|> P.try fromGithub
+                     <|> P.try fromOrg
+                     <|> P.try fromFile
+                       ) <* P.eof
 
     fromURL :: P.Parsec String () PluginSourceSpec
     fromURL = do
@@ -200,27 +196,29 @@ parseSourceSpec = P.runParser pluginSourceSpecParser () "input"
 
     saneIdentifier = P.many1 (P.alphaNum <|> P.char '-' <|> P.char '_')
 
-getPluginContents :: PluginSourceSpec -> Int -> IO Text
-getPluginContents FromGithub{userName, repository, revision} version =
-  getPluginContentsFromURL $
+getPluginSource :: PluginSourceSpec -> String
+getPluginSource FromGithub{userName, repository, revision} =
   "https://raw.githubusercontent.com/" <> userName
   <> "/" <> repository
   <> "/" <> revision
-  <> "/v" <> show version
+  <> "/v" <> show apiVersion
   <> "/plugin.dhall"
-
-getPluginContents (FromOrg { name, revision }) version =
-  getPluginContentsFromURL $
+getPluginSource (FromOrg { name, revision }) =
   "https://raw.githubusercontent.com/dzen-dhall/plugins/" <> revision
   <> "/" <> name
-  <> "/v" <> show version
+  <> "/v" <> show apiVersion
   <> "/plugin.dhall"
+getPluginSource (FromURL url) = do
+  uriToString id url ""
+getPluginSource (FromFile filePath) =
+  filePath
 
-getPluginContents (FromURL url) _version = do
-  getPluginContentsFromURL $ uriToString id url ""
 
-getPluginContents (FromFile filePath) _version =
+getPluginContents :: PluginSourceSpec -> IO Text
+getPluginContents (FromFile filePath)  =
   Data.Text.IO.readFile filePath
+getPluginContents other =
+  getPluginContentsFromURL $ getPluginSource other
 
 
 -- | Load plugin from URL and validate it by parsing.
@@ -262,8 +260,8 @@ handleMetaValidationError err = do
 
 -- | Try to load plugin meta by inserting a plugin into the current environment
 -- (using 'inputWithSettings').
-readPluginMeta :: Text -> App Common (Either MetaValidationError PluginMeta)
-readPluginMeta contents = do
+readPluginMeta :: PluginSourceSpec -> Text -> App Common (Either MetaValidationError PluginMeta)
+readPluginMeta sourceSpec contents = do
   dhallDir <- getRuntime <&> (^. rtConfigDir)
 
   -- A dirty hack - we just access the `meta` field, discarding `main`
@@ -271,7 +269,8 @@ readPluginMeta contents = do
   let metaBody      = "(" <> contents <> ").meta"
       inputSettings =
         defaultInputSettings &
-        rootDirectory .~ (dhallDir </> "plugins")
+        rootDirectory .~ (dhallDir </> "plugins") &
+        sourceName    .~ getPluginSource sourceSpec
 
 
   -- TODO: convert exception to `NoParse`
