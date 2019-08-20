@@ -19,5 +19,7 @@
 	Natural
 | Check :
 	./Check.dhall
+| Define :
+	{ name : Text, value : Text }
 | Close
 >

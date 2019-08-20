@@ -29,6 +29,8 @@ makeLenses ''Runtime
 type AutomatonState = Text
 type Slot = Text
 type Scope = Text
+type VariableName = Text
+type Value = Text
 
 -- | 'StateTransitionTable' is needed to know *how* to update,
 -- @'IORef' ('Bar' 'Initialized')@ is needed to know *what* to update.
@@ -49,7 +51,7 @@ type ClickableAreas = H.HashMap Int Text
 data StartupState
   = StartupState
   { _ssAutomataHandles :: AutomataHandles
-  , _ssScopeName :: Text
+  , _ssScopeName :: Scope
   , _ssBarSettings :: BarSettings
   , _ssCounter :: Int
   -- ^ Counter that is incremented each time it is requested (used as a source
@@ -57,6 +59,7 @@ data StartupState
   , _ssSourceCache :: H.HashMap (Text, Source) (IORef Text, Cache)
   , _ssAutomataCache :: H.HashMap (Text, Text) (IORef (Bar Initialized))
   , _ssSourceQueue :: [(Source, IORef Text, Cache, Text)]
+  , _ssVariableDefinitions :: [(Scope, VariableName, Value)]
   -- ^ A queue containing ready-to-be-initialized `Source`s and their handles &
   -- scope names.
   -- This queue is needed because we want to create a `BarRuntime` before
@@ -65,6 +68,9 @@ data StartupState
   -- ^ A mapping from clickable area identifiers to scripts
   , _ssNamedPipe :: String
   , _ssEmitterFile :: String
+  , _ssGetterFile :: String
+  , _ssSetterFile :: String
+  , _ssVariableFilePrefix :: String
   }
 
 makeLenses ''StartupState
@@ -76,6 +82,8 @@ data BarRuntime = BarRuntime
   -- ^ Named pipe to use as a communication channel for listening to mouse events
   , _brEmitterScript :: String
   -- ^ A script that can be used to emit events
+  , _brGetterScript :: String
+  , _brSetterScript :: String
   , _brHandle :: Handle
   -- ^ A handle to write to. The value is either stdin of a @dzen2@ process or
   -- 'System.IO.stdout', if @--stdout@ flag is passed.

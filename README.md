@@ -8,7 +8,7 @@ Unfortunately, combining outputs of multiple executables before feeding them to 
 
 ### Use of newlines
 
-By default, dzen2 only renders the last line of its input, so newlines must be handled somehow by the programmer. When running in multiline mode (`-l` option), preserving correct output height is even more hard.
+By default, dzen2 only renders the last line of its input, so newlines must be handled somehow by the user.
 
 ### Complexity of dynamic text formatting
 
@@ -20,19 +20,23 @@ Some output sources (shell scripts or commands used to provide the data) take to
 
 ### No code reuse
 
-It is hard to share pieces of code used to produce output in dzen2 markup format because of the need to adapt the code. Ideally, there should be a "plugin system" allowing to import reusable configurations with a single command.
+It is hard to share pieces of code used to produce output in `dzen2` markup format because of the need to adapt the code. Ideally, there should be a "plugin system" allowing to import reusable configurations with a single command.
 
 ### Non-trivial markup is hard
 
 Dzen markup language is quite rich: it features almost-arbitrary text positioning (using `^p` command), text coloring (`^fg`, `^bg`), drawing shapes (`^c`, `^co`, `^r`, `^ro`), loading XBM images (`^i`) and even allows to define clickable areas (`^ca`). However, these control structures are too low-level: implementing UI elements we want to use (for example, [marquee](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee)-like blocks with arbitrary content) would require too much effort. Besides, one more problem with this markup language is that nested tags are not supported.
 
-To fill the *abstraction gap*, new DSL should be introduced. This language should allow its users to abstract away from markup-as-text and focus on markup-as-[syntax-tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) instead - no need to say, tree structures are more suitable for the purpose of defining UIs. It is also way easier to process tree representations programmatically.
+To fill the *abstraction gap*, a new [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) should be introduced. This language should allow its users to abstract away from markup-as-text and focus on markup-as-[syntax-tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) instead - no need to say, tree structures are more suitable for the purpose of defining UIs. It is also way easier to process tree representations programmatically.
 
 ## The solution
 
 [Dhall](https://dhall-lang.org/) is a statically-typed [total](https://en.wikipedia.org/wiki/Total_functional_programming) functional programming language. Its unique properties make it a good choice for dealing with complex user-defined configurations: static typing allows to catch typos and errors early, and totality guarantees that a configuration program will never hang. Unlike some other configuration languages, it requires very little learning (even for people with no background in functional programming).
 
 This repository contains data type and function definitions in Dhall that form a DSL for defining almost arbitrary Dzen UIs, called "bars", and a Haskell program capable of reading bar definitions and producing input for `dzen2` binary based on them.
+
+In effect, `dzen-dhall` introduces a new approach to desktop scripting/customization with Dzen. Basically, it provides solutions for all of the aforementioned problems. `dzen-dhall` is perfect at formatting text, handles newlines gracefully, allows to run output sources in parallel, and its [plugin system](#installing-plugins) makes code reuse no more a problem.
+
+### Quick example
 
 The essence of the DSL can be illustrated by the following excerpt from [the default config file](dhall/config.dhall) (with additional comments):
 
@@ -133,7 +137,7 @@ dzen-dhall init
 
 `dzen-dhall` will put some files to `~/.config/dzen-dhall/`
 
-Files in `src/` and `lib/` subdirectories are set read-only by default - the user should not edit them, because they contain the implementation. They are still exposed to simplify debugging.
+Files in `src/` and `lib/` subdirectories are set read-only by default - the user should not edit them, since they contain the implementation. They are still exposed to simplify learning and debugging.
 
 ## Installing plugins
 
@@ -143,11 +147,7 @@ To install your first plugin, run...
 
 TODO
 
-This command will fetch the plugin source from TODO
-
-It's recommended to check the downloaded source before proceeding. *Note that when fetching from remote, for maximum security you should review the file that was downloaded, and not just visit the link.*
-
-You will see the following output:
+This command will fetch the plugin source from TODO and pretty-print it to your terminal for review. After you confirm the installation, you will see the following output:
 
 TODO
 
@@ -161,7 +161,7 @@ This chapter describes `dzen-dhall` DSL in depth. It's best to read the [Dhall w
 
 ### [Bars](dhall/src/Bar.dhall)
 
-The most important concept is `Bar`. Essentially, `Bar` is a tree data structure containing text, images, shapes, etc. in its leaves. [Default config file](dhall/config.dhall) exposes some functions for working with `Bar`s.
+The most important concept of the DSL is `Bar`. Essentially, `Bar` is a tree data structure containing text, images, shapes, etc. in its leaves. [Default config file](dhall/config.dhall) exposes some functions for working with `Bar`s.
 
 Below you can see a hyperlinked list of these functions:
 
@@ -198,6 +198,8 @@ let [plug](#plugins) : Plugin → Bar
 let [listener](#listeners) : Slot → Bar → Bar
 let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
 let [check](#assertions) : List [Check](#assertions) → Bar
+-- Define a scope-local variable
+let [define](#variables) : Variable → Text = carrier.define
 let [scope](#scopes) : Bar → Bar
 </pre></big>
 

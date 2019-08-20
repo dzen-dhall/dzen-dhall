@@ -25,6 +25,7 @@ let Slot = types.Slot
 let Source = types.Source
 let StateMap = types.StateMap
 let StateTransitionTable = types.StateTransitionTable
+let Variable = types.Variable
 let VerticalDirection = types.VerticalDirection
 
 let mkConfigs = utils.mkConfigs
@@ -69,6 +70,7 @@ let defaultBar
 			= carrier.automaton
 		let check : List Check → Bar = carrier.check
 		let scope : Bar → Bar = carrier.scope
+		let define : Variable → Text → Bar = carrier.define
 
 		let separateBy =
 				λ(sep : Bar)

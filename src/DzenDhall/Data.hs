@@ -36,6 +36,7 @@ data Bar id
   | BarSlider Slider (Vector (Bar id))
   | BarSource (SourceRefX id)
   | BarText Text
+  | BarDefine Variable
   | Bars [Bar id]
   deriving (Generic)
 

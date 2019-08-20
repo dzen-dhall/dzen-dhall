@@ -32,6 +32,8 @@ let StateMap = ./StateMap.dhall
 
 let StateTransitionTable = ./StateTransitionTable.dhall
 
+let Variable = ./Variable.dhall
+
 let Carrier
 	: ∀(Bar : Type) → Type
 	=   λ(Bar : Type)
@@ -81,6 +83,8 @@ let Carrier
 			Address → StateTransitionTable → StateMap Bar → Bar
 		, check :
 			List Check → Bar
+		, define :
+			Variable → Text → Bar
 		, scope :
 			Bar → Bar
 		}

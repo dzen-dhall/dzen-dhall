@@ -351,35 +351,50 @@ shapeSizeType = record $
   ShapeSize <$> field "w" (fromIntegral <$> natural)
             <*> field "h" (fromIntegral <$> natural)
 
+data Variable
+  = Variable { _varName  :: Text
+             , _varValue :: Text
+             }
+  deriving (Show, Eq, Generic)
+
+makeLenses ''Variable
+
+variableType :: Type Variable
+variableType = record $
+  Variable <$> field "name"  strictText
+           <*> field "value" strictText
+
 data Token
   = TokOpen OpeningTag
-  | TokMarkup Text
-  | TokSource Source
-  | TokTxt Text
+  | TokClose
   | TokSeparator
+  | TokTxt Text
+  | TokSource Source
+  | TokMarkup Text
   | TokI Image
   | TokR ShapeSize
   | TokRO ShapeSize
   | TokC Int
   | TokCO Int
   | TokCheck Check
-  | TokClose
+  | TokDefine Variable
   deriving (Show, Eq, Generic)
 
 tokenType :: Type Token
 tokenType = union
   $  (TokOpen      <$> constructor "Open"      openingTagType)
-  <> (TokMarkup    <$> constructor "Markup"    strictText)
-  <> (TokSource    <$> constructor "Source"    sourceSettingsType)
-  <> (TokTxt       <$> constructor "Txt"       strictText)
+  <> (TokClose     <$  constructor "Close"     unit)
   <> (TokSeparator <$  constructor "Separator" unit)
+  <> (TokTxt       <$> constructor "Txt"       strictText)
+  <> (TokSource    <$> constructor "Source"    sourceSettingsType)
+  <> (TokMarkup    <$> constructor "Markup"    strictText)
   <> (TokI         <$> constructor "I"         imageType)
   <> (TokR         <$> constructor "R"         shapeSizeType)
   <> (TokRO        <$> constructor "RO"        shapeSizeType)
   <> (TokC         <$> constructor "C"         (fromIntegral <$> natural))
   <> (TokCO        <$> constructor "CO"        (fromIntegral <$> natural))
   <> (TokCheck     <$> constructor "Check"     checkType)
-  <> (TokClose     <$  constructor "Close"     unit)
+  <> (TokDefine    <$> constructor "Define"    variableType)
 
 stateMapType :: Type (H.HashMap Text [Token])
 stateMapType = H.fromList <$>

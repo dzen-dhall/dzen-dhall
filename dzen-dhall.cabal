@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1cc5d7149b94be6b29261879910415c16c16a1bdb4acfb80522126d370e5e912
+-- hash: 1ace407078a77d01ee518dfb1b2e974a64672d2765ebf768d6bc1b47e92bd87f
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -62,6 +62,7 @@ data-files:
     dhall/src/Token.dhall
     dhall/src/types.dhall
     dhall/src/utils.dhall
+    dhall/src/Variable.dhall
     dhall/src/VerticalDirection.dhall
 
 library

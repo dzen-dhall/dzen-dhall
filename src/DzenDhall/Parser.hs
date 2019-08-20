@@ -45,6 +45,7 @@ topLevel = fmap Bars $ many $
   <|> BarText   <$> text
   <|> BarSource <$> source
   <|> BarShape  <$> shape
+  <|> BarDefine <$> variable
   <|> wrapped
   <|> separated
   <|> automaton
@@ -145,6 +146,11 @@ text = withPreview $ \case
 source :: Parser Source
 source = withPreview $ \case
   TokSource settings -> Just settings
+  _                  -> Nothing
+
+variable :: Parser Variable
+variable = withPreview $ \case
+  TokDefine variable -> Just variable
   _                  -> Nothing
 
 shape :: Parser Shape

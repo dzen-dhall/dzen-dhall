@@ -134,6 +134,10 @@ let carrierListToken
 			)
 	  , check =
 		  List/map Check Token Token.Check
+	  , define =
+			λ(name : Text)
+		  → λ(value : Text)
+		  → [ Token.Define { name = name, value = value } ]
 	  , scope =
 		  enclose OpeningTag.Scope
 	  }

@@ -51,6 +51,8 @@
 	./StateMap.dhall
 , StateTransitionTable =
 	./StateTransitionTable.dhall
+, Variable =
+	./Variable.dhall
 , VerticalDirection =
 	./VerticalDirection.dhall
 }

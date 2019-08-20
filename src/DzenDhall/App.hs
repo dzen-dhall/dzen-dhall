@@ -25,6 +25,7 @@ import           System.Random
 import           System.Directory
 import           System.FilePath ((</>))
 import qualified Dhall
+import qualified Data.HashMap.Strict as H
 
 
 -- * App execution stages
@@ -91,11 +92,29 @@ liftStartingUp (App app) barSettings = do
   tmpFilePrefix <- fmap (</> "dzen-dhall-rt-") $ liftIO $
     getTemporaryDirectory `catch` \(_e :: IOException) -> getCurrentDirectory
 
-  namedPipe   <- (tmpFilePrefix <>) <$> randomSuffix
-  emitterFile <- (tmpFilePrefix <>) <$> randomSuffix
+  -- Let's pretend collisions are impossible.
+  -- TODO: handle them.
+  namedPipe          <- (tmpFilePrefix <>) <$> randomSuffix
+  emitterFile        <- (tmpFilePrefix <>) <$> randomSuffix
+  getterFile         <- (tmpFilePrefix <>) <$> randomSuffix
+  setterFile         <- (tmpFilePrefix <>) <$> randomSuffix
+  variableFilePrefix <- (tmpFilePrefix <>) <$> randomSuffix
 
   let initialStartupState =
-        StartupState mempty "scope" barSettings 0 mempty mempty [] mempty namedPipe emitterFile
+        StartupState
+        mempty "scope"
+        barSettings
+        0
+        H.empty
+        H.empty
+        []
+        []
+        mempty
+        namedPipe
+        emitterFile
+        getterFile
+        setterFile
+        variableFilePrefix
 
   App . lift $ State.evalStateT app initialStartupState
 

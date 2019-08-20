@@ -129,14 +129,24 @@ runHooks environment barRuntime scope hooks = do
         args   = map Data.Text.unpack $
           tail $ hook ^. hookCommand
         input  = hook ^. hookInput
+
         emitter =
           barRuntime ^. brEmitterScript <> " " <> Data.Text.unpack scope
+        getter =
+          barRuntime ^. brGetterScript  <> " " <> Data.Text.unpack scope
+        setter =
+          barRuntime ^. brSetterScript  <> " " <> Data.Text.unpack scope
+
+
         process =
           (proc binary args) { std_out = CreatePipe
                              , std_in  = CreatePipe
                              , std_err = CreatePipe
                              , env = Just $
-                               [ ("EMIT", emitter) ] <> environment
+                               [ ("EMIT", emitter)
+                               , ("SET",  setter)
+                               , ("GET",  getter)
+                               ] <> environment
                              }
 
     (exitCode, _stdOut, _stdErr) <- lift $

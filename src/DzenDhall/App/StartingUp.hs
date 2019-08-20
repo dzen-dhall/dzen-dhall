@@ -46,6 +46,24 @@ startUp cfg bar = do
     \(source, outputRef, cacheRef, scope) -> do
       mkThread environment barRuntime source outputRef cacheRef scope
 
+  forM_ (state ^. ssVariableDefinitions) $
+    \(scope, name, value) -> do
+
+      let fileName =
+            state ^. ssVariableFilePrefix <>
+            Data.Text.unpack scope <>
+            "-v-" <>
+            Data.Text.unpack name
+
+      liftIO $ do
+        Data.Text.IO.writeFile fileName value
+        setFileMode fileName $
+          ownerReadMode  `unionFileModes`
+          groupReadMode  `unionFileModes`
+          ownerWriteMode `unionFileModes`
+          groupWriteMode
+
+
   pure (bar', state ^. ssAutomataHandles, barRuntime, state ^. ssClickableAreas)
 
 
@@ -63,30 +81,53 @@ mkBarRuntime cfg = do
       fontArgs   = maybe [] (\font -> ["-fn", font]) $ barSettings ^. bsFont
       args       = fontArgs <> extraArgs
 
-      namedPipe   = state ^. ssNamedPipe
-      emitterFile = state ^. ssEmitterFile
+      namedPipe          = state ^. ssNamedPipe
+      emitterFile        = state ^. ssEmitterFile
+      getterFile         = state ^. ssGetterFile
+      setterFile         = state ^. ssSetterFile
+      variableFilePrefix = state ^. ssVariableFilePrefix
 
   liftIO $
     createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
 
   liftIO $ do
+    forM_ [ ( [ "#!/usr/bin/env bash"
+              , "SCOPE=\"$1\""
+              , "SLOT=\"$2\""
+              , "EVENT=\"$3\""
+              , "echo event:\"$EVENT\",slot:\"$SLOT\"@\"$SCOPE\" >> " <>
+                Data.Text.pack namedPipe
+              ],
+              emitterFile
+            )
 
-    let emitterScript = fromLines
-          [ "#!/usr/bin/env bash"
-          , "SCOPE=\"$1\""
-          , "SLOT=\"$2\""
-          , "EVENT=\"$3\""
-          , "echo event:\"$EVENT\",slot:\"$SLOT\"@\"$SCOPE\" >> " <>
-            Data.Text.pack namedPipe
-          ]
+          , ( [ "#!/usr/bin/env bash"
+              , "SCOPE=\"$1\""
+              , "VAR=\"$2\""
+              , "cat \"" <> Data.Text.pack variableFilePrefix <> "$SCOPE-v-$VAR\""
+              ]
+            , getterFile
+            )
 
-    Data.Text.IO.writeFile emitterFile emitterScript
+          , ( [ "#!/usr/bin/env bash"
+              , "SCOPE=\"$1\""
+              , "VAR=\"$2\""
+              , "VALUE=\"$3\""
+              , "echo \"$VALUE\" > " <>
+                Data.Text.pack variableFilePrefix <> "\"$SCOPE-v-$VAR\""
+              ]
+            , setterFile
+            )
+          ] $
 
-    setFileMode emitterFile $
-      ownerExecuteMode `unionFileModes`
-      groupExecuteMode `unionFileModes`
-      ownerReadMode    `unionFileModes`
-      groupReadMode
+      \(codeLines, file) -> do
+
+        Data.Text.IO.writeFile file $ fromLines codeLines
+        setFileMode file $
+          ownerExecuteMode `unionFileModes`
+          groupExecuteMode `unionFileModes`
+          ownerReadMode    `unionFileModes`
+          groupReadMode
 
   handle <- case runtime ^. rtArguments ^. stdoutFlag of
 
@@ -110,7 +151,7 @@ mkBarRuntime cfg = do
           "Couldn't open IO handles for dzen binary " <>
           showPack dzenBinary
 
-  pure $ BarRuntime cfg 0 namedPipe emitterFile handle
+  pure $ BarRuntime cfg 0 namedPipe emitterFile getterFile setterFile handle
 
 
 -- | During initialization, IORefs for source outputs and caches are created.
@@ -234,6 +275,15 @@ initialize (BarProp (CA ca) child) = do
 
 initialize (BarProp prop p) =
   BarProp prop <$> initialize p
+initialize (BarDefine var) = do
+
+  scope <- get <&> (^. ssScopeName)
+
+  modify $
+    ssVariableDefinitions %~
+    ((scope, var ^. varName, var ^. varValue) :)
+
+  pure mempty
 initialize (BarPad width padding p) =
   BarPad width padding <$> initialize p
 initialize (BarTrim width direction p) =
@@ -274,12 +324,20 @@ mkThread
 
   let emitter =
         barRuntime ^. brEmitterScript <> " " <> Data.Text.unpack scope
+      getter =
+        barRuntime ^. brGetterScript  <> " " <> Data.Text.unpack scope
+      setter =
+        barRuntime ^. brSetterScript  <> " " <> Data.Text.unpack scope
+
       sourceProcess =
         (proc binary args) { std_out = CreatePipe
                            , std_in  = CreatePipe
                            , std_err = CreatePipe
                            , env = Just $
-                             [ ("EMIT", emitter) ] <>
+                             [ ("EMIT", emitter)
+                             , ("GET",  getter)
+                             , ("SET",  setter)
+                             ] <>
                              environment
                            }
 
@@ -408,6 +466,8 @@ collectSources _         (BarShape shape) = do
 
 collectSources fontWidth (BarProp prop child)
   = ASTProp prop <$> collectSources fontWidth child
+collectSources _fontWidth (BarDefine _prop)
+  = pure mempty
 collectSources fontWidth (Bars ps)
   = mconcat <$> mapM (collectSources fontWidth) ps
 collectSources _         (BarText text)
@@ -422,8 +482,12 @@ escape
   -> Text
   -> Text
 escape EscapeMode{joinLines, escapeMarkup} =
-  (if escapeMarkup then Data.Text.replace "^" "^^" else id) .
-  (Data.Text.replace "\n" $ if joinLines then " " else "")
+  (if escapeMarkup
+   then Data.Text.replace "^" "^^"
+   else id) .
+  (if joinLines
+   then Data.Text.replace "\n" ""
+   else fromMaybe "" . listToMaybe . Data.Text.lines)
 
 
 allButtons :: [Button]
