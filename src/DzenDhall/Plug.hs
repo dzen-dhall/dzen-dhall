@@ -9,20 +9,21 @@ import           Control.Applicative
 import           Control.Exception hiding (try)
 import           Control.Monad
 import           Control.Monad.Trans.Except
-import           Data.HashSet (member)
+import           Data.Either
 import           Data.Maybe
 import           Data.Text (Text)
 import           Dhall
 import           Dhall.Core
 import           Lens.Micro
-import           Network.HTTP.Simple
 import           Network.HTTP.Client.Conduit
+import           Network.HTTP.Simple
 import           Network.HTTP.Types
 import           Network.URI
 import           Prelude
 import           System.Directory
 import           System.Exit
 import           System.FilePath ((</>))
+import qualified Data.ByteString.UTF8                      as BSU
 import qualified Data.Text                                 as T
 import qualified Data.Text.Encoding                        as STE
 import qualified Data.Text.IO
@@ -32,11 +33,8 @@ import qualified Dhall.Parser                              as Dhall
 import qualified Dhall.Pretty
 import qualified Dhall.Pretty                              as Pretty
 import qualified System.IO
-import qualified Text.Megaparsec
 import qualified Text.Megaparsec                           as MP
 import qualified Text.Parsec                               as P
-import qualified Text.Parser.Combinators (try)
-import qualified Data.ByteString.UTF8                      as BSU
 
 
 data PluginSourceSpec
@@ -204,7 +202,9 @@ parseSourceSpec argument = P.runParser sourceSpecParser () argument argument
       void $ P.char '@'
       P.many1 (P.alphaNum <|> P.char '-' <|> P.char '_' <|> P.char '.')
 
-    saneIdentifier = P.many1 (P.alphaNum <|> P.char '-' <|> P.char '_')
+
+saneIdentifier :: P.Parsec String () String
+saneIdentifier = P.many1 (P.alphaNum <|> P.char '-' <|> P.char '_')
 
 getPluginSource :: PluginSourceSpec -> String
 getPluginSource FromGithub{userName, repository, revision} =
@@ -285,38 +285,16 @@ readPluginMeta sourceSpec contents = do
   meta <- explained $ inputWithSettings inputSettings pluginMetaType metaBody
 
   let name          = meta ^. pmName
-      parseResult   = MP.parseMaybe (Dhall.unParser simpleLabel) name
+      parseResult   = P.runParser saneIdentifier () "Plugin name" (T.unpack name)
 
   liftIO $ runExceptT $ do
 
     -- TODO: add more validations
 
-    unless (isJust parseResult) $ do
+    unless (isRight parseResult) $ do
       throwE (InvalidPluginName name)
 
     pure meta
-
--- | Parser for valid variable names. Borrowed from `Dhall.Parser.Token`,
--- slightly modified.
-simpleLabel :: Dhall.Parser Text
-simpleLabel = Text.Parser.Combinators.try $ do
-    c    <- Dhall.Parser $ Text.Megaparsec.satisfy headCharacter
-    rest <- takeWhile' tailCharacter
-    let text = T.cons c rest
-    Control.Monad.guard (not $ member text reservedIdentifiers)
-    return text
-  where
-    headCharacter c = alpha c || c == '_'
-    tailCharacter c = alpha c || digit c || c == '_' || c == '-' || c == '/'
-
-    alpha :: Char -> Bool
-    alpha c = ('\x41' <= c && c <= '\x5A') || ('\x61' <= c && c <= '\x7A')
-
-    digit :: Char -> Bool
-    digit c = '\x30' <= c && c <= '\x39'
-
-    takeWhile' :: (Char -> Bool) -> Dhall.Parser Text
-    takeWhile' predicate = Dhall.Parser (Text.Megaparsec.takeWhileP Nothing predicate)
 
 
 checkIfPluginFileExists :: Text -> App Common ()

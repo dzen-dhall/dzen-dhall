@@ -63,7 +63,7 @@ argParser = Arguments
        <> command "plug" (
             info
               (Plug <$> argument str (metavar "PLUGIN PATH"))
-              ( progDesc "Download plugin to plugins directory")
+              ( progDesc "Install a plugin to the `plugins` directory. Acceptable formats: `name`, `github-username/repository`, a file name or URL")
             )
         )
       )

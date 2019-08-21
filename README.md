@@ -74,18 +74,26 @@ let swapUsage
 	  echo "$((UsedSwap * 100 / TotalSwap))"
 	  ''
 
--- A bar that shows current date and time:
-let clocks
+-- A bar that shows current date:
+let date
 	: Bar
-	= bashWithBinaries [ "date" ] 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
+	= bashWithBinaries [ "date" ] 1000 "date +'%d.%m.%Y'"
 
-in  separate
+-- A bar that shows current time:
+let time
+	: Bar
+	= bashWithBinaries [ "date" ] 1000 "date +'%H:%M'"
+
+-- A function that colorizes a given `Bar`:
+let accent : Bar → Bar = fg "white"
+
+in	separate
     -- ^ a function that inserts |-separators between nearby elements of a list
-	[ join [ text "Mem: ", memoryUsage, text "%" ]
-           -- ^ `text` is used to convert a text value to a `Bar`
-	, join [ text "Swap: ", swapUsage, text "%" ]
+	[ join [ text "Mem: ", accent memoryUsage, text "%" ]
 	-- ^ `join` concatenates multiple `Bar`s
-	, clocks
+	, join [ text "Swap: ", accent swapUsage, text "%" ]
+		  -- ^ `text` is used to convert a text value to a `Bar`
+	, join [ date, text " ", accent time ]
 	] : Bar
 ```
 
@@ -143,17 +151,19 @@ Files in `types/` and `utils/` subdirectories are set read-only by default - the
 
 `dzen-dhall` comes with a plugin system capable of pulling pieces of Dhall code with metadata either from a [curated set of plugins](https://github.com/dzen-dhall/plugins) or from third-party sources.
 
-To install your first plugin, run...
+For example, running `dzen-dhall plug date` will result in fetching the plugin source from [this file](https://github.com/dzen-dhall/plugins/blob/master/date/plugin.dhall) and pretty-printing it to your terminal for review. You will be prompted for confirmation, and if you confirm the installation, you will see the following output:
 
-TODO
+```
+New plugin "date" can now be used as follows:
 
-This command will fetch the plugin source from TODO and pretty-print it to your terminal for review. After you confirm the installation, you will see the following output:
+  let date = (./plugins/date.dhall).main
 
-TODO
+  in plug (date "%d.%m.%Y %A - %H:%M:%S")
+```
 
 This is a message the author left for you, to demonstrate how to actually use their plugin. Follow the instructions and edit your config file (which is usually located at `~/.config/dzen-dhall/config.dhall`) accordingly.
 
-After saving the file, run `dzen-dhall` again. You should be able to see the output of a newly installed plugin, or a descriptive error message if something went wrong during the previous step.
+After saving the file, run `dzen-dhall` again. You should be able to see the output of a newly installed plugin.
 
 ## Modifying configuration
 
