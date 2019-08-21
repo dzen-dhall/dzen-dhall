@@ -16,6 +16,8 @@ import           Dhall
 import           Dhall.Core
 import           Lens.Micro
 import           Network.HTTP.Simple
+import           Network.HTTP.Client.Conduit
+import           Network.HTTP.Types
 import           Network.URI
 import           Prelude
 import           System.Directory
@@ -34,6 +36,7 @@ import qualified Text.Megaparsec
 import qualified Text.Megaparsec                           as MP
 import qualified Text.Parsec                               as P
 import qualified Text.Parser.Combinators (try)
+import qualified Data.ByteString.UTF8                      as BSU
 
 
 data PluginSourceSpec
@@ -58,7 +61,7 @@ plugCommand argument = do
 
   withEither (parseSourceSpec argument) invalidSourceSpec $ \sourceSpec -> do
     rawContents <- liftIO $
-      handle httpHandler $ getPluginContents sourceSpec
+      getPluginContents sourceSpec
 
     withMaybe (tryDhallParse rawContents) (invalidFile rawContents) $ \expr -> do
 
@@ -147,9 +150,16 @@ invalidFile rawContents =
 
 
 httpHandler :: HttpException -> IO a
-httpHandler err = do
+httpHandler exception = do
   Data.Text.IO.putStrLn "Exception occured while trying to load plugin source:"
-  print err
+  case exception of
+    HttpExceptionRequest _request (StatusCodeException response _) -> do
+      let status  = getResponseStatus response
+          code    = getResponseStatusCode response
+          message = BSU.toString $ statusMessage status
+      putStrLn $ "Error: " <> show code <> ", " <> message
+
+    _ -> print exception
   exitWith $ ExitFailure 1
 
 
@@ -221,9 +231,9 @@ getPluginContents other =
 
 -- | Load plugin from URL and validate it by parsing.
 getPluginContentsFromURL :: String -> IO Text
-getPluginContentsFromURL url = do
+getPluginContentsFromURL url = handle httpHandler $ do
 
-  req <- parseRequest url `catch` httpHandler
+  req <- parseUrlThrow url
   res <- httpBS req
 
   let body     = getResponseBody res

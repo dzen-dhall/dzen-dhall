@@ -27,6 +27,7 @@ library:
   - filepath
   - hashable
   - http-conduit
+  - http-types
   - megaparsec
   - microlens
   - microlens-th

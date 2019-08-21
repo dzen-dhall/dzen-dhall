@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 15092a3e67647d5989aa0d8c8a2bdb7b712b8b29002f2808f9313eea5fd552fd
+-- hash: bc90cdf399c1cd73939c7f2272f84bde62043ffd8f27397bccfe882cfe5ffad1
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -194,6 +194,7 @@ library
     , filepath
     , hashable
     , http-conduit
+    , http-types
     , megaparsec
     , microlens
     , microlens-th
