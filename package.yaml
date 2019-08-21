@@ -10,7 +10,7 @@ extra-source-files:
 - README.md
 
 data-files:
-- dhall/**/*.dhall
+- dhall/**/*
 
 library:
   source-dirs: src
@@ -22,7 +22,7 @@ library:
   - base
   - bytestring
   - containers
-  - dhall
+  - dhall==1.25.0
   - directory
   - filepath
   - hashable
@@ -104,7 +104,7 @@ tests:
     - HUnit
     - QuickCheck
     - base
-    - dhall
+    - dhall==1.25.0
     - dzen-dhall
     - filepath
     - hspec

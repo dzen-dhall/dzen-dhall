@@ -54,8 +54,6 @@ initCommand args = do
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure (args ^. mbConfigDir)
 
   let pluginsDir = configDir </> "plugins"
-      srcDir     = configDir </> "src"
-      libDir     = configDir </> "lib"
 
   exists <- doesDirectoryExist configDir
 
@@ -82,11 +80,7 @@ initCommand args = do
 
   let configFile = configDir </> "config.dhall"
 
-  setFileMode configDir  mode700
-  setFileMode pluginsDir mode700
   setFileMode configFile mode600
-  setFileMode srcDir     mode700
-  setFileMode libDir     mode700
 
   putStrLn $ "Success! You can now view your configuration at " <> configFile
   putStrLn $ "Run dzen-dhall again to see it in action."

@@ -1,4 +1,4 @@
-let Source : Type = ./src/Source.dhall
+let Source : Type = ./types/Source.dhall
 
 in  { updateInterval =
 		Some 1

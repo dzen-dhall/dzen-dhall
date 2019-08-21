@@ -1,10 +1,10 @@
-let Token = ./src/Token.dhall
+let Token = ./types/Token.dhall
 
-let OpeningTag = ./src/OpeningTag.dhall
+let OpeningTag = ./types/OpeningTag.dhall
 
-let Source = ./src/Source.dhall
+let Source = ./types/Source.dhall
 
-let Marquee = ./src/Marquee.dhall
+let Marquee = ./types/Marquee.dhall
 
 in  [ Token.Open
 	  ( OpeningTag.Marquee

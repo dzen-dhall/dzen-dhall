@@ -1,4 +1,4 @@
-let BarSettings = ./src/BarSettings.dhall
+let BarSettings = ./types/BarSettings.dhall
 
 in    { monitor =
 		  1

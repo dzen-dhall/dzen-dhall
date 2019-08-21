@@ -80,7 +80,7 @@ let clocks
 	= bashWithBinaries [ "date" ] 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
 
 in  separate
-    -- ^ a function that inserts a |-separator between nearby elements of a list
+    -- ^ a function that inserts |-separators between nearby elements of a list
 	[ join [ text "Mem: ", memoryUsage, text "%" ]
            -- ^ `text` is used to convert a text value to a `Bar`
 	, join [ text "Swap: ", swapUsage, text "%" ]
@@ -137,7 +137,7 @@ dzen-dhall init
 
 `dzen-dhall` will put some files to `~/.config/dzen-dhall/`
 
-Files in `src/` and `lib/` subdirectories are set read-only by default - the user should not edit them, since they contain the implementation. They are still exposed to simplify learning and debugging.
+Files in `types/` and `utils/` subdirectories are set read-only by default - the user should not edit them, since they contain the implementation. They are still exposed to simplify learning and debugging. `prelude/` directory contains a copy of [Dhall prelude](https://github.com/dhall-lang/dhall-lang/tree/cf263a128d4e2e25afb3187cb8b243e7e68af9fb/Prelude).
 
 ## Installing plugins
 
@@ -223,7 +223,25 @@ Background and foreground colors can be set using `bg` and `fg`. A color can be 
 
 #### Drawing images
 
-[XBM bitmaps](https://www.fileformat.info/format/xbm/egff.htm) can be loaded using `ib` function.
+[XBM bitmaps](https://www.fileformat.info/format/xbm/egff.htm) can be loaded using `i` function.
+
+`i` accepts both filenames and raw image contents (XBM images are just pieces of C code):
+
+Example:
+
+```dhall
+i
+''
+#define smiley_width 15
+#define smiley_height 15
+static unsigned char smiley_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0xc8, 0x00, 0xcc, 0x00, 0x4c, 0x00, 0x48, 0x00,
+   0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x04, 0x04, 0x3c, 0x07, 0xe0, 0x01,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+''
+```
+
+will be rendered as ![smiley](img/xbm_smiley.png).
 
 To edit/create XBM images, use [GIMP](https://www.gimp.org/).
 

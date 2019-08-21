@@ -1,12 +1,12 @@
-let StateTransitionTable = ./src/StateTransitionTable.dhall
+let StateTransitionTable = ./types/StateTransitionTable.dhall
 
-let Event = ./src/Event.dhall
+let Event = ./types/Event.dhall
 
-let Button = ./src/Button.dhall
+let Button = ./types/Button.dhall
 
-let Slot = ./src/Slot.dhall
+let Slot = ./types/Slot.dhall
 
-let Hook = ./src/Hook.dhall
+let Hook = ./types/Hook.dhall
 
 let mkLeftClick =
 		λ(from : Text)

@@ -1,7 +1,7 @@
 {- An example of how to define automata. -}
-let lib = ./lib/index.dhall
-let types = ./src/types.dhall
-let utils = ./src/utils.dhall
+let prelude = ./prelude/package.dhall
+let types = ./types/package.dhall
+let utils = ./utils/package.dhall
 
 let Address = types.Address
 let Bar = types.Bar

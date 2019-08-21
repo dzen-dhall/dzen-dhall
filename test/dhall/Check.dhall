@@ -1,6 +1,6 @@
-let Assertion = ./src/Assertion.dhall
+let Assertion = ./types/Assertion.dhall
 
-let Check = ./src/Check.dhall
+let Check = ./types/Check.dhall
 
 in  [ { message = "", assertion = Assertion.SuccessfulExit "" : Assertion }
 	, { message = "", assertion = Assertion.BinaryInPath "" : Assertion }

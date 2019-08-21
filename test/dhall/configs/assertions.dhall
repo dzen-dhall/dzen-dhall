@@ -1,6 +1,6 @@
-let lib = ./lib/index.dhall
-let types = ./src/types.dhall
-let utils = ./src/utils.dhall
+let prelude = ./prelude/package.dhall
+let types = ./types/package.dhall
+let utils = ./utils/package.dhall
 
 let Assertion = types.Assertion
 let BarSettings = types.BarSettings

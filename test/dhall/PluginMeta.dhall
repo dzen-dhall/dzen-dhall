@@ -1,4 +1,4 @@
-let PluginMeta = ./src/PluginMeta.dhall
+let PluginMeta = ./types/PluginMeta.dhall
 
 let pluginMeta =
 	  { name =

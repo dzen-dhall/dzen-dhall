@@ -1,10 +1,10 @@
-let OpeningTag = ./src/OpeningTag.dhall
+let OpeningTag = ./types/OpeningTag.dhall
 
-let Marquee = ./src/Marquee.dhall
+let Marquee = ./types/Marquee.dhall
 
-let Direction = ./src/Direction.dhall
+let Direction = ./types/Direction.dhall
 
-let Color = ./src/Color.dhall
+let Color = ./types/Color.dhall
 
 in    [ OpeningTag.Marquee { framesPerCharacter = 2, width = 3 }
 	  , OpeningTag.FG "red"

@@ -1,6 +1,6 @@
-let lib = ./lib/index.dhall
-let types = ./src/types.dhall
-let utils = ./src/utils.dhall
+let prelude = ./prelude/package.dhall
+let types = ./types/package.dhall
+let utils = ./utils/package.dhall
 
 let AbsolutePosition = types.AbsolutePosition
 let Address = types.Address
@@ -31,18 +31,18 @@ let VerticalDirection = types.VerticalDirection
 let mkConfigs = utils.mkConfigs
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
 
-let defaultBar
+let bar
 	: Bar
 	=   λ(Bar : Type)
 	  → λ(carrier : Carrier Bar)
-	  → -- Text:
+	  → -- Text primitives:
 		let text : Text → Bar = carrier.text
 		let markup : Text → Bar = carrier.markup
 
-		-- Used to combine multiple Bars into one.
+		-- Combining multiple `Bar`s into one:
 		let join : List Bar → Bar = carrier.join
 
-		-- Primitives of Dzen markup language.
+		-- Primitives of Dzen markup language:
 		let fg : Color → Bar → Bar = carrier.fg
 		let bg : Color → Bar → Bar = carrier.bg
 		let i : Image → Bar = carrier.i
@@ -55,11 +55,11 @@ let defaultBar
 		let ca : Button → Text → Bar → Bar = carrier.ca
 		let ib : Bar → Bar = carrier.ib
 
-		-- Animations
+		-- Animations:
 		let slider : Slider → List Bar → Bar = carrier.slider
 		let marquee : Marquee → Bar → Bar = carrier.marquee
 
-		-- Other
+		-- Other:
 		let pad : Natural → Padding → Bar → Bar = carrier.pad
 		let trim : Natural → Direction → Bar → Bar = carrier.trim
 		let source : Source → Bar = carrier.source
@@ -72,44 +72,13 @@ let defaultBar
 		let scope : Bar → Bar = carrier.scope
 		let define : Variable → Text → Bar = carrier.define
 
-		let separateBy =
-				λ(sep : Bar)
-			  → λ(list : List Bar)
-			  → join (lib.List/intersperse Bar sep list)
-
-		let separate = separateBy (text " | ")
-
-		let bash
-			: Natural → Text → Bar
-			=   λ(interval : Natural)
-			  → λ(input : Text)
-			  → source
-				{ command =
-					[ "bash" ]
-				, input = input
-				, updateInterval =
-					Some interval
-				, escapeMode =
-					{ joinLines = False, escapeMarkup = True }
-				}
-
+		-- Utilities:
+		let separateBy : Bar → List Bar → Bar = utils.mkSeparateBy Bar carrier
+		let separate : List Bar → Bar = separateBy (text " | ")
+		let bash : Natural → Text → Bar = utils.mkBash Bar carrier
 		let bashWithBinaries
 			: List Text → Natural → Text → Bar
-			=   λ(binaries : List Text)
-			  → λ(interval : Natural)
-			  → λ(input : Text)
-			  → join
-				[ check
-				  ( lib.List/map
-					Text
-					Check
-					(   λ(binary : Text)
-					  → { message = "", assertion = Assertion.BinaryInPath binary }
-					)
-					binaries
-				  )
-				, bash interval input
-				]
+			= utils.mkBashWithBinaries Bar carrier
 
 		let memoryUsage
 			: Bar
@@ -135,17 +104,23 @@ let defaultBar
 			  echo "$((UsedSwap * 100 / TotalSwap))"
 			  ''
 
-		let clocks
+		let date
 			: Bar
-			= bashWithBinaries [ "date" ] 1000 "date +'%d.%m.%Y %A - %H:%M:%S'"
+			= bashWithBinaries [ "date" ] 1000 "date +'%d.%m.%Y'"
+
+		let time
+			: Bar
+			= bashWithBinaries [ "date" ] 1000 "date +'%H:%M'"
+
+		let accent : Bar → Bar = fg "white"
 
 		in  separate
-			[ join [ text "Mem: ", memoryUsage, text "%" ]
-			, join [ text "Swap: ", swapUsage, text "%" ]
-			, clocks
+			[ join [ text "Mem: ", accent memoryUsage, text "%" ]
+			, join [ text "Swap: ", accent swapUsage, text "%" ]
+			, join [ date, text " ", accent time ]
 			]
 
 in    mkConfigs
-	  [ { bar = defaultBar : Bar, settings = defaultBarSettings : BarSettings }
+	  [ { bar = bar, settings = defaultBarSettings : BarSettings }
 	  ]
 	: List Configuration

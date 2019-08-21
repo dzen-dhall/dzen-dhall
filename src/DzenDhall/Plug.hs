@@ -201,12 +201,10 @@ getPluginSource FromGithub{userName, repository, revision} =
   "https://raw.githubusercontent.com/" <> userName
   <> "/" <> repository
   <> "/" <> revision
-  <> "/v" <> show apiVersion
   <> "/plugin.dhall"
 getPluginSource (FromOrg { name, revision }) =
   "https://raw.githubusercontent.com/dzen-dhall/plugins/" <> revision
   <> "/" <> name
-  <> "/v" <> show apiVersion
   <> "/plugin.dhall"
 getPluginSource (FromURL url) = do
   uriToString id url ""

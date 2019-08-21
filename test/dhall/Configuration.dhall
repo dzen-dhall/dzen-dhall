@@ -1,8 +1,8 @@
-let Configuration = ./src/Configuration.dhall
+let Configuration = ./types/Configuration.dhall
 
-let BarSettings = ./src/BarSettings.dhall
+let BarSettings = ./types/BarSettings.dhall
 
-let Token = ./src/Token.dhall
+let Token = ./types/Token.dhall
 
 in  [ { bar =
 		  [ Token.Close ]

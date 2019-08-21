@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1ace407078a77d01ee518dfb1b2e974a64672d2765ebf768d6bc1b47e92bd87f
+-- hash: 15092a3e67647d5989aa0d8c8a2bdb7b712b8b29002f2808f9313eea5fd552fd
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -19,51 +19,144 @@ extra-source-files:
     README.md
 data-files:
     dhall/config.dhall
-    dhall/lib/index.dhall
-    dhall/lib/List/concat.dhall
-    dhall/lib/List/concatMap.dhall
-    dhall/lib/List/generate.dhall
-    dhall/lib/List/intersperse.dhall
-    dhall/lib/List/map.dhall
-    dhall/lib/List/null.dhall
-    dhall/src/AbsolutePosition.dhall
-    dhall/src/Address.dhall
-    dhall/src/Assertion.dhall
-    dhall/src/Bar.dhall
-    dhall/src/BarSettings.dhall
-    dhall/src/Button.dhall
-    dhall/src/Carrier.dhall
-    dhall/src/Check.dhall
-    dhall/src/ClosingTag.dhall
-    dhall/src/Color.dhall
-    dhall/src/Configuration.dhall
-    dhall/src/defaultBarSettings.dhall
-    dhall/src/defaultSlider.dhall
-    dhall/src/definitions.dhall
-    dhall/src/Direction.dhall
-    dhall/src/EscapeMode.dhall
-    dhall/src/Event.dhall
-    dhall/src/Hook.dhall
-    dhall/src/Image.dhall
-    dhall/src/Marquee.dhall
-    dhall/src/mkConfigs.dhall
-    dhall/src/mkPlugin.dhall
-    dhall/src/OpeningTag.dhall
-    dhall/src/Padding.dhall
-    dhall/src/Plugin.dhall
-    dhall/src/PluginMeta.dhall
-    dhall/src/Position.dhall
-    dhall/src/Slider.dhall
-    dhall/src/Slot.dhall
-    dhall/src/Source.dhall
-    dhall/src/State.dhall
-    dhall/src/StateMap.dhall
-    dhall/src/StateTransitionTable.dhall
-    dhall/src/Token.dhall
-    dhall/src/types.dhall
-    dhall/src/utils.dhall
-    dhall/src/Variable.dhall
-    dhall/src/VerticalDirection.dhall
+    dhall/prelude/Bool/and
+    dhall/prelude/Bool/build
+    dhall/prelude/Bool/even
+    dhall/prelude/Bool/fold
+    dhall/prelude/Bool/not
+    dhall/prelude/Bool/odd
+    dhall/prelude/Bool/or
+    dhall/prelude/Bool/package.dhall
+    dhall/prelude/Bool/show
+    dhall/prelude/Double/package.dhall
+    dhall/prelude/Double/show
+    dhall/prelude/Function/compose
+    dhall/prelude/Function/package.dhall
+    dhall/prelude/Integer/package.dhall
+    dhall/prelude/Integer/show
+    dhall/prelude/Integer/toDouble
+    dhall/prelude/JSON/array
+    dhall/prelude/JSON/bool
+    dhall/prelude/JSON/keyText
+    dhall/prelude/JSON/keyValue
+    dhall/prelude/JSON/Nesting
+    dhall/prelude/JSON/null
+    dhall/prelude/JSON/number
+    dhall/prelude/JSON/object
+    dhall/prelude/JSON/package.dhall
+    dhall/prelude/JSON/render
+    dhall/prelude/JSON/string
+    dhall/prelude/JSON/Tagged
+    dhall/prelude/JSON/Type
+    dhall/prelude/List/all
+    dhall/prelude/List/any
+    dhall/prelude/List/build
+    dhall/prelude/List/concat
+    dhall/prelude/List/concatMap
+    dhall/prelude/List/filter
+    dhall/prelude/List/fold
+    dhall/prelude/List/generate
+    dhall/prelude/List/head
+    dhall/prelude/List/indexed
+    dhall/prelude/List/iterate
+    dhall/prelude/List/last
+    dhall/prelude/List/length
+    dhall/prelude/List/map
+    dhall/prelude/List/null
+    dhall/prelude/List/package.dhall
+    dhall/prelude/List/replicate
+    dhall/prelude/List/reverse
+    dhall/prelude/List/shifted
+    dhall/prelude/List/unzip
+    dhall/prelude/Location/Type
+    dhall/prelude/Map/Entry
+    dhall/prelude/Map/keys
+    dhall/prelude/Map/map
+    dhall/prelude/Map/package.dhall
+    dhall/prelude/Map/Type
+    dhall/prelude/Map/values
+    dhall/prelude/Monoid
+    dhall/prelude/Natural/build
+    dhall/prelude/Natural/enumerate
+    dhall/prelude/Natural/even
+    dhall/prelude/Natural/fold
+    dhall/prelude/Natural/isZero
+    dhall/prelude/Natural/odd
+    dhall/prelude/Natural/package.dhall
+    dhall/prelude/Natural/product
+    dhall/prelude/Natural/show
+    dhall/prelude/Natural/sum
+    dhall/prelude/Natural/toDouble
+    dhall/prelude/Natural/toInteger
+    dhall/prelude/Optional/all
+    dhall/prelude/Optional/any
+    dhall/prelude/Optional/build
+    dhall/prelude/Optional/concat
+    dhall/prelude/Optional/filter
+    dhall/prelude/Optional/fold
+    dhall/prelude/Optional/head
+    dhall/prelude/Optional/last
+    dhall/prelude/Optional/length
+    dhall/prelude/Optional/map
+    dhall/prelude/Optional/null
+    dhall/prelude/Optional/package.dhall
+    dhall/prelude/Optional/toList
+    dhall/prelude/Optional/unzip
+    dhall/prelude/package.dhall
+    dhall/prelude/Text/concat
+    dhall/prelude/Text/concatMap
+    dhall/prelude/Text/concatMapSep
+    dhall/prelude/Text/concatSep
+    dhall/prelude/Text/package.dhall
+    dhall/prelude/Text/show
+    dhall/prelude/XML/attribute
+    dhall/prelude/XML/element
+    dhall/prelude/XML/emptyAttributes
+    dhall/prelude/XML/leaf
+    dhall/prelude/XML/package.dhall
+    dhall/prelude/XML/render
+    dhall/prelude/XML/text
+    dhall/prelude/XML/Type
+    dhall/types/AbsolutePosition.dhall
+    dhall/types/Address.dhall
+    dhall/types/Assertion.dhall
+    dhall/types/Bar.dhall
+    dhall/types/BarSettings.dhall
+    dhall/types/Button.dhall
+    dhall/types/Carrier.dhall
+    dhall/types/Check.dhall
+    dhall/types/ClosingTag.dhall
+    dhall/types/Color.dhall
+    dhall/types/Configuration.dhall
+    dhall/types/Direction.dhall
+    dhall/types/EscapeMode.dhall
+    dhall/types/Event.dhall
+    dhall/types/Hook.dhall
+    dhall/types/Image.dhall
+    dhall/types/Marquee.dhall
+    dhall/types/OpeningTag.dhall
+    dhall/types/package.dhall
+    dhall/types/Padding.dhall
+    dhall/types/Plugin.dhall
+    dhall/types/PluginMeta.dhall
+    dhall/types/Position.dhall
+    dhall/types/Slider.dhall
+    dhall/types/Slot.dhall
+    dhall/types/Source.dhall
+    dhall/types/State.dhall
+    dhall/types/StateMap.dhall
+    dhall/types/StateTransitionTable.dhall
+    dhall/types/Token.dhall
+    dhall/types/Variable.dhall
+    dhall/types/VerticalDirection.dhall
+    dhall/utils/defaultBarSettings.dhall
+    dhall/utils/intersperse.dhall
+    dhall/utils/mkBash.dhall
+    dhall/utils/mkBashWithBinaries.dhall
+    dhall/utils/mkConfigs.dhall
+    dhall/utils/mkPlugin.dhall
+    dhall/utils/mkSeparateBy.dhall
+    dhall/utils/package.dhall
 
 library
   exposed-modules:
@@ -96,7 +189,7 @@ library
     , base
     , bytestring
     , containers
-    , dhall
+    , dhall ==1.25.0
     , directory
     , filepath
     , hashable
@@ -155,7 +248,7 @@ test-suite tasty
       HUnit
     , QuickCheck
     , base
-    , dhall
+    , dhall ==1.25.0
     , dzen-dhall
     , filepath
     , generic-random

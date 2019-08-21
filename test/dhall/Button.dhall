@@ -1,4 +1,4 @@
-let Button = ./src/Button.dhall
+let Button = ./types/Button.dhall
 
 in  [ Button.Left
 	, Button.Middle

@@ -1,3 +1,3 @@
-let EscapeSettings = ./src/EscapeSettings.dhall
+let EscapeSettings = ./types/EscapeSettings.dhall
 
 in  { joinLines = True, escapeMarkup = True }

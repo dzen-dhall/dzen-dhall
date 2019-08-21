@@ -28,6 +28,8 @@ let
 
           # Indirect dependencies
           repline = haskellPackagesNew.callPackage ./hackage/repline.nix { };
+          th-lift-instances = haskellPackagesNew.callPackage ./hackage/th-lift-instances.nix { };
+          th-lift = haskellPackagesNew.callPackage ./hackage/th-lift.nix { };
 
         };
       };
