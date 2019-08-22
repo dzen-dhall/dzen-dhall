@@ -19,13 +19,24 @@ getTests =
                        , _mbCommand = Just Init
                        , _explain = DontExplain
                        }
+
   , testCase "#2" $ do
       runArgParser [ "--explain", "plug", "foo" ]
         `shouldBe`
         pure Arguments { _mbConfigDir = Nothing
                        , _mbDzenBinary = Nothing
                        , _stdoutFlag = ToDzen
-                       , _mbCommand = Just (Plug "foo")
+                       , _mbCommand = Just (Plug $ PlugCommand "foo" Confirm)
+                       , _explain = Explain
+                       }
+
+  , testCase "#3" $ do
+      runArgParser [ "--explain", "plug", "--yes", "foo" ]
+        `shouldBe`
+        pure Arguments { _mbConfigDir = Nothing
+                       , _mbDzenBinary = Nothing
+                       , _stdoutFlag = ToDzen
+                       , _mbCommand = Just (Plug $ PlugCommand "foo" DontConfirm)
                        , _explain = Explain
                        }
   ]

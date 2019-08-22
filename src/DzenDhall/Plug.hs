@@ -4,6 +4,7 @@ import           DzenDhall.App
 import           DzenDhall.Config
 import           DzenDhall.Extra
 import           DzenDhall.Runtime.Data
+import           DzenDhall.Arguments (PlugCommand (..), ConfirmPlug(..))
 
 import           Control.Applicative
 import           Control.Exception hiding (try)
@@ -54,10 +55,10 @@ data PluginSourceSpec
   deriving (Eq, Show)
 
 
-plugCommand :: String -> App Common ()
-plugCommand argument = do
+plugCommand :: PlugCommand -> App Common ()
+plugCommand (PlugCommand spec shouldConfirm) = do
 
-  withEither (parseSourceSpec argument) invalidSourceSpec $ \sourceSpec -> do
+  withEither (parseSourceSpec spec) invalidSourceSpec $ \sourceSpec -> do
     rawContents <- liftIO $
       getPluginContents sourceSpec
 
@@ -67,13 +68,16 @@ plugCommand argument = do
 
       withEither eiMeta handleMetaValidationError $ \meta -> do
 
-        checkIfPluginFileExists (meta ^. pmName)
+        let pluginName = meta ^. pmName
 
-        suggestReviewing expr
+        checkIfPluginFileExists pluginName
 
-        askConfirmation
+        when (shouldConfirm == Confirm) $ do
+          suggestReviewing expr
 
-        writePluginFile (meta ^. pmName) rawContents
+          askConfirmation
+
+        writePluginFile pluginName rawContents
 
         printUsage meta
 
@@ -162,7 +166,7 @@ httpHandler exception = do
 
 
 parseSourceSpec :: String -> Either P.ParseError PluginSourceSpec
-parseSourceSpec argument = P.runParser sourceSpecParser () argument argument
+parseSourceSpec spec = P.runParser sourceSpecParser () spec spec
   where
 
     sourceSpecParser :: P.Parsec String () PluginSourceSpec

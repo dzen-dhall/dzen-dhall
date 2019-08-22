@@ -4,11 +4,11 @@ import           DzenDhall.App
 import           DzenDhall.App.Run (useConfigurations)
 import           DzenDhall.Arguments
 import           DzenDhall.Plug
+import           DzenDhall.Validate
 import           DzenDhall.Runtime
 
 import           Lens.Micro
 import           Options.Applicative (execParser)
-import           System.Exit (exitWith, ExitCode(..))
 import qualified GHC.IO.Encoding
 import qualified System.IO
 
@@ -28,10 +28,12 @@ main = do
 
     Just Init -> do
       initCommand arguments
-      exitWith ExitSuccess
 
-    Just (Plug str) -> do
+    Just (Plug commandArgs) -> do
       runtime <- readRuntime arguments
-      runApp runtime () $ do
-        plugCommand str
-        liftIO $ exitWith ExitSuccess
+      runApp runtime () $
+        plugCommand commandArgs
+
+    Just (Validate commandArgs) -> do
+      runtime <- readRuntime arguments
+      runApp runtime () (validateCommand commandArgs)

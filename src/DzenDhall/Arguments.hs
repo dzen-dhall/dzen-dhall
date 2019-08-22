@@ -6,17 +6,42 @@ import           Options.Applicative
 import           Data.Semigroup ((<>))
 import           Lens.Micro.TH
 
+-- * Flags
+
+data Explain
+  = Explain | DontExplain
+  deriving (Show, Eq)
+
+-- | Whether to skip confirmation when running `plug` command.
+data ConfirmPlug
+  = Confirm | DontConfirm
+  deriving (Show, Eq)
+
 data StdoutFlag
   = ToDzen | ToStdout
   deriving (Show, Eq)
 
-data Command
-  = Init
-  | Plug String
+data SkipAssertions
+  = SkipAssertions | DontSkip
   deriving (Show, Eq)
 
-data Explain
-  = Explain | DontExplain
+-- * Main data
+
+data PlugCommand
+  = PlugCommand { source :: String
+                , confirm :: ConfirmPlug
+                }
+  deriving (Show, Eq)
+
+data ValidateCommand
+  = ValidateCommand { skipAssertions :: SkipAssertions
+                    }
+  deriving (Show, Eq)
+
+data Command
+  = Init
+  | Plug PlugCommand
+  | Validate ValidateCommand
   deriving (Show, Eq)
 
 data Arguments
@@ -44,7 +69,7 @@ argParser = Arguments
       ( strOption
       $ long "dzen-binary"
      <> metavar "FILE"
-     <> help "Path to dzen2 executable. By default, 'dzen2' binary from $PATH will be used."
+     <> help "Path to Dzen executable. By default, 'dzen2' binary from $PATH will be used."
       )
 
   <*> flag ToDzen ToStdout
@@ -55,16 +80,21 @@ argParser = Arguments
   <*> optional
       (
         hsubparser
-        ( command "init" (
-            info
-              ( pure Init )
-              ( progDesc "Write default configuration files to configuration directory." )
+        ( command "init"
+          ( info
+            ( pure Init )
+            ( progDesc "Write default configuration files to configuration directory." )
+          )
+       <> command "plug"
+          ( info
+              ( Plug <$> plugCommandParser )
+              ( progDesc "Install a plugin to the `plugins` directory. Acceptable formats: `name`, `github-username/repository`, a file name or URL." )
             )
-       <> command "plug" (
-            info
-              (Plug <$> argument str (metavar "PLUGIN PATH"))
-              ( progDesc "Install a plugin to the `plugins` directory. Acceptable formats: `name`, `github-username/repository`, a file name or URL")
-            )
+       <> command "validate"
+          ( info
+              ( Validate <$> validateCommandParser )
+              ( progDesc "Validate the configuration without running it." )
+          )
         )
       )
 
@@ -74,7 +104,23 @@ argParser = Arguments
       )
 
 
+plugCommandParser :: Parser PlugCommand
+plugCommandParser =
+  PlugCommand <$> argument str (metavar "PLUGIN SOURCE")
+              <*> flag Confirm DontConfirm
+                  ( long "yes"
+                 <> help "Skip manual code review and confirmation."
+                  )
+
+validateCommandParser :: Parser ValidateCommand
+validateCommandParser =
+  ValidateCommand <$> flag SkipAssertions DontSkip
+                      ( long "include-assertions"
+                     <> short 'a'
+                     <> help "Validate assertions too (this will result in running executable code)."
+                      )
+
 argumentsParser :: ParserInfo Arguments
 argumentsParser = info (argParser <**> helper)
-             (  fullDesc
-             <> progDesc "Configure dzen2 bars in Dhall language." )
+             ( fullDesc
+            <> progDesc "Configure dzen2 bars in Dhall language." )

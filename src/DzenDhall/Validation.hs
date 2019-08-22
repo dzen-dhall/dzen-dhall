@@ -36,10 +36,12 @@ run tokens = do
   let errors = validate tokens
   assertionErrors <- checkAssertions tokens
   pure $ (errors <> assertionErrors, filterOutAssertions tokens)
-    where
-      filterOutAssertions = filter $ \case
-        TokCheck _ -> False
-        _          -> True
+
+
+filterOutAssertions :: [Token] -> [Token]
+filterOutAssertions = filter $ \case
+  TokCheck _ -> False
+  _          -> True
 
 
 validate :: [Token] -> [Error]
