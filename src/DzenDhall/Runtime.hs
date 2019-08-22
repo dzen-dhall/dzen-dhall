@@ -2,19 +2,21 @@ module DzenDhall.Runtime where
 
 import           DzenDhall.Arguments
 import           DzenDhall.Runtime.Data
+import           DzenDhall.Templates (staticFiles)
 import           DzenDhall.Config hiding (Hook)
-import           Paths_dzen_dhall
 
 import           Control.Monad
+import           Control.Arrow
 import           Data.Maybe
 import           Dhall hiding (maybe)
 import           Lens.Micro
 import           System.Directory
 import           System.Exit (ExitCode(..), exitWith)
-import           System.FilePath ((</>))
+import           System.FilePath ((</>), takeDirectory)
 import           System.Posix.Files
 import qualified System.Console.ANSI
 import qualified System.IO
+import qualified Data.ByteString as BS
 
 
 -- Read runtime from configuration file, if possible.
@@ -58,25 +60,19 @@ initCommand args = do
   exists <- doesDirectoryExist configDir
 
   when exists $ do
-    putStrLn "Configuration directory already exists."
+    putStrLn $ "Configuration directory already exists: " <> configDir
     exitWith (ExitFailure 1)
 
-  dataDir <- getDataDir
+  let mode400 = ownerReadMode
+      mode600 = mode400 `unionFileModes` ownerWriteMode
 
   createDirectoryIfMissing True configDir
   createDirectoryIfMissing True pluginsDir
 
-  let mode400 = ownerReadMode
-      mode600 = mode400 `unionFileModes` ownerWriteMode
-      mode700 = mode600 `unionFileModes` ownerExecuteMode
-
-  copyDir
-    -- for files
-    (`setFileMode` mode400)
-    -- for directories
-    (`setFileMode` mode700)
-    (dataDir </> "dhall")
-    configDir
+  forM_ (staticFiles <&> first (configDir <>)) $ \(file, contents) -> do
+    createDirectoryIfMissing True (takeDirectory file)
+    BS.writeFile file contents
+    setFileMode file mode400
 
   let configFile = configDir </> "config.dhall"
 
@@ -84,24 +80,3 @@ initCommand args = do
 
   putStrLn $ "Success! You can now view your configuration at " <> configFile
   putStrLn $ "Run dzen-dhall again to see it in action."
-
-type FileHook = FilePath -> IO ()
-
-copyDir :: FileHook -> FileHook -> FilePath -> FilePath -> IO ()
-copyDir fileCreationHook dirCreationHook = go
-  where
-    go src dst = do
-      content <- listDirectory src
-      forM_ content $ \name -> do
-        let srcPath = src </> name
-        let dstPath = dst </> name
-
-        isDir <- doesDirectoryExist srcPath
-        if isDir
-          then do
-          createDirectoryIfMissing True dstPath
-          dirCreationHook dstPath
-          go srcPath dstPath
-          else do
-          copyFile srcPath dstPath
-          fileCreationHook dstPath

@@ -11,8 +11,6 @@ import qualified DzenDhall.Test.Parser
 import qualified DzenDhall.Test.Plug
 
 import qualified GHC.IO.Encoding
-import           Paths_dzen_dhall
-import           System.FilePath ((</>))
 import qualified System.IO
 import           Test.Tasty
 
@@ -20,11 +18,9 @@ main :: IO ()
 main = do
   GHC.IO.Encoding.setLocaleEncoding System.IO.utf8
 
-  dhallDir <- (</> "dhall") <$> getDataDir
-
   Test.Tasty.defaultMain $
     testGroup "DzenDhall"
-    [ DzenDhall.Test.Config.getTests dhallDir
+    [ DzenDhall.Test.Config.getTests
     , DzenDhall.Test.Parser.getTests
     , DzenDhall.Test.AST.getTests
     , DzenDhall.Test.AST.Render.getTests

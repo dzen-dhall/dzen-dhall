@@ -9,9 +9,6 @@ extra-source-files:
 - CHANGELOG.md
 - README.md
 
-data-files:
-- dhall/**/*
-
 library:
   source-dirs: src
   ghc-options: -Wall
@@ -25,6 +22,7 @@ library:
   - dhall==1.25.0
   - directory
   - filepath
+  - file-embed-lzma
   - hashable
   - hourglass
   - http-conduit
@@ -66,8 +64,8 @@ library:
   - DzenDhall.Plug
   - DzenDhall.Runtime
   - DzenDhall.Runtime.Data
+  - DzenDhall.Templates
   - DzenDhall.Validation
-  - Paths_dzen_dhall
 
   default-extensions: &extensions
   - DeriveFunctor

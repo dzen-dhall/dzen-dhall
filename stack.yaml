@@ -4,6 +4,7 @@ packages:
 nix:
   packages:
   - zlib
+  - lzma
 
   # `nix.pure: false` simplifies development, because with it there is no need to
   # put all packages containing binaries that are referenced by default

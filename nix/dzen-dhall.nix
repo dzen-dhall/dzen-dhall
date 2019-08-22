@@ -1,11 +1,12 @@
 { mkDerivation, ansi-terminal, base, bytestring, containers, dhall
-, directory, filepath, generic-random, hashable, hpack, hspec
-, http-conduit, http-types, HUnit, megaparsec, microlens
-, microlens-th, network-uri, optparse-applicative, parsec, parsers
-, pipes, prettyprinter, prettyprinter-ansi-terminal, process
-, QuickCheck, random, stdenv, tasty, tasty-hspec, tasty-hunit
-, tasty-quickcheck, template-haskell, text, time, transformers
-, unix, unordered-containers, utf8-string, vector
+, directory, file-embed-lzma, filepath, generic-random, hashable
+, hourglass, hpack, hspec, http-conduit, http-types, HUnit
+, megaparsec, microlens, microlens-th, network-uri
+, optparse-applicative, parsec, parsers, pipes, prettyprinter
+, prettyprinter-ansi-terminal, process, QuickCheck, random, stdenv
+, tasty, tasty-hspec, tasty-hunit, tasty-quickcheck
+, template-haskell, text, transformers, unix, unordered-containers
+, utf8-string, vector
 }:
 mkDerivation {
   pname = "dzen-dhall";
@@ -15,11 +16,12 @@ mkDerivation {
   isExecutable = true;
   enableSeparateDataOutput = true;
   libraryHaskellDepends = [
-    ansi-terminal base bytestring containers dhall directory filepath
-    hashable http-conduit http-types megaparsec microlens microlens-th
-    network-uri optparse-applicative parsec parsers pipes prettyprinter
-    prettyprinter-ansi-terminal process random text time transformers
-    unix unordered-containers utf8-string vector
+    ansi-terminal base bytestring containers dhall directory
+    file-embed-lzma filepath hashable hourglass http-conduit http-types
+    megaparsec microlens microlens-th network-uri optparse-applicative
+    parsec parsers pipes prettyprinter prettyprinter-ansi-terminal
+    process random text transformers unix unordered-containers
+    utf8-string vector
   ];
   libraryToolDepends = [ hpack ];
   executableHaskellDepends = [ base ];

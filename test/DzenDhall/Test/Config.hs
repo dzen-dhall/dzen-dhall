@@ -12,8 +12,10 @@ import qualified Data.HashMap.Strict as H
 import qualified Data.Text.IO
 
 
-getTests :: FilePath -> TestTree
-getTests dhallDir =
+dhallDir = "./dhall"
+
+getTests :: TestTree
+getTests =
   testGroup "Config data marshalling"
   [ testGroup "Data types" $
     [ testOpeningTag
@@ -28,18 +30,18 @@ getTests dhallDir =
     , testConfiguration
     , testStateTransitionTable
     , testPluginMeta
-    ] <&> ($ dhallDir)
+    ]
 
   , testGroup "Config examples" $
     [ dummy "dhall/config.dhall"
     , dummy "test/dhall/configs/automata.dhall"
     , dummy "test/dhall/configs/assertions.dhall"
-    ] <&> ($ dhallDir)
+    ]
   ]
 
 testFile :: (Eq a, Show a) =>
-            Type a -> FilePath -> a -> FilePath -> TestTree
-testFile ty file expected dhallDir  =
+            Type a -> FilePath -> a -> TestTree
+testFile ty file expected  =
   Test.Tasty.HUnit.testCase (file <> " marshalling") $ do
     program <- Data.Text.IO.readFile file
     actual  <- inputWithSettings (defaultInputSettings &
@@ -47,12 +49,12 @@ testFile ty file expected dhallDir  =
                                   sourceName .~ file) ty program
     actual @?= expected
 
-testOpeningTag :: FilePath -> TestTree
+testOpeningTag :: TestTree
 testOpeningTag =
   testFile (list openingTagType) "test/dhall/OpeningTag.dhall"
     [ OMarquee (Marquee 2 3), OFG (Color "red"), OTrim 3 DRight ]
 
-testToken :: FilePath -> TestTree
+testToken :: TestTree
 testToken =
   testFile (list tokenType) "test/dhall/Token.dhall"
     [ TokOpen (OMarquee (Marquee 2 3))
@@ -65,7 +67,7 @@ testToken =
     , TokTxt "txt"
     , TokClose ]
 
-testSource :: FilePath -> TestTree
+testSource :: TestTree
 testSource =
   testFile sourceSettingsType "test/dhall/Source.dhall"
     Source { updateInterval = Just 1000
@@ -74,14 +76,14 @@ testSource =
            , escapeMode = EscapeMode True True
            }
 
-testMarquee :: FilePath -> TestTree
+testMarquee :: TestTree
 testMarquee =
   testFile marqueeType "test/dhall/Marquee.dhall"
     Marquee { _mqFramesPerChar = 2
             , _mqWidth = 3
             }
 
-testButton :: FilePath -> TestTree
+testButton :: TestTree
 testButton =
   testFile (list buttonType) "test/dhall/Button.dhall"
     [ MouseLeft
@@ -93,26 +95,26 @@ testButton =
     , MouseScrollRight
     ]
 
-testPadding :: FilePath -> TestTree
+testPadding :: TestTree
 testPadding =
   testFile (list paddingType) "test/dhall/Padding.dhall"
     [ PLeft, PRight, PSides ]
 
-testEvent :: FilePath -> TestTree
+testEvent :: TestTree
 testEvent =
   testFile (list eventType) "test/dhall/Event.dhall"
     [ CustomEvent "some text"
     , MouseEvent MouseLeft
     ]
 
-testCheck :: FilePath -> TestTree
+testCheck :: TestTree
 testCheck =
   testFile (list checkType) "test/dhall/Check.dhall"
   [ Check "" $ SuccessfulExit ""
   , Check "" $ BinaryInPath ""
   ]
 
-testBarSettings :: FilePath -> TestTree
+testBarSettings :: TestTree
 testBarSettings =
   testFile barSettingsType "test/dhall/BarSettings.dhall"
     BarSettings { _bsMonitor = 1
@@ -122,7 +124,7 @@ testBarSettings =
                 , _bsFontWidth = Nothing
                 }
 
-testConfiguration :: FilePath -> TestTree
+testConfiguration :: TestTree
 testConfiguration =
   testFile (list configurationType) "test/dhall/Configuration.dhall"
     [ Configuration { _cfgBarTokens = [ TokClose ]
@@ -135,7 +137,7 @@ testConfiguration =
                     }
     ]
 
-testStateTransitionTable :: FilePath -> TestTree
+testStateTransitionTable :: TestTree
 testStateTransitionTable =
   testFile stateTransitionTableType "test/dhall/StateTransitionTable.dhall" $
     STT ( H.fromList [ (("a", "", MouseEvent MouseLeft,  ""), ("1", []))
@@ -153,7 +155,7 @@ testStateTransitionTable =
                      ]
         )
 
-testPluginMeta :: FilePath -> TestTree
+testPluginMeta :: TestTree
 testPluginMeta =
   testFile pluginMetaType "test/dhall/PluginMeta.dhall" $
     PluginMeta "1" "2" (Just "3") (Just "4") (Just "5") "6" "7" 8
@@ -161,8 +163,8 @@ testPluginMeta =
 -- These tests assert succesful input reading (i.e. that "contracts" (in dhall terminology)
 -- are not violated):
 
-dummy :: FilePath -> FilePath -> TestTree
-dummy file dhallDir =
+dummy :: FilePath -> TestTree
+dummy file =
   Test.Tasty.HUnit.testCase (file <> " marshalling") $ do
     program <- Data.Text.IO.readFile file
     void $
