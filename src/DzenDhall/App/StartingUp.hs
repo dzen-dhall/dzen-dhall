@@ -31,7 +31,7 @@ import qualified System.IO
 startUp
   :: Configuration
   -> Bar Marshalled
-  -> App StartingUp (Bar Initialized, AutomataHandles, BarRuntime, ClickableAreas)
+  -> App StartingUp (Bar Initialized, Subscriptions, BarRuntime, ClickableAreas)
 startUp cfg bar = do
   barRuntime  <- mkBarRuntime cfg
   bar'        <- initialize bar
@@ -66,7 +66,7 @@ startUp cfg bar = do
       Data.Text.IO.writeFile
         (state ^. ssImagePathPrefix <> Data.Text.unpack imageId <> ".xbm") imageContents
 
-  pure (bar', state ^. ssAutomataHandles, barRuntime, state ^. ssClickableAreas)
+  pure (bar', state ^. ssSubscriptions, barRuntime, state ^. ssClickableAreas)
 
 
 mkBarRuntime
@@ -229,7 +229,7 @@ initialize (BarAutomaton address rawSTT rawStateMap) = do
         let subscription = [ AutomatonSubscription address stt stateMap stateRef barRef ]
 
         -- Bind new subscription to the scope.
-        modify $ ssAutomataHandles %~ H.insertWith (++) scope subscription
+        modify $ ssSubscriptions %~ H.insertWith (++) scope subscription
 
         -- Cache this automaton
         modify $ ssAutomataCache %~ H.insert (scope, address) barRef

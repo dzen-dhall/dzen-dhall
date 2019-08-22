@@ -2,6 +2,8 @@
 	./defaultBarSettings.dhall
 , intersperse =
 	./intersperse.dhall
+, mkAddress =
+	./mkAddress.dhall
 , mkPlugin =
 	./mkPlugin.dhall
 , mkConfigs =
@@ -14,6 +16,8 @@
 	./mkBash.dhall
 , mkBashWithBinaries =
 	./mkBashWithBinaries.dhall
+, showAddress =
+	./showAddress.dhall
 , showButton =
 	./showButton.dhall
 , showEvent =
@@ -26,6 +30,6 @@
 	./get.dhall
 , set =
 	./set.dhall
-, getState =
-	./getState.dhall
+, query =
+	./query.dhall
 }

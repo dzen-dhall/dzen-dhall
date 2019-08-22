@@ -18,6 +18,10 @@ stateType :: Type AutomatonState
 stateType = union $ constructor "State" strictText
 
 type AutomatonAddress = Text
+
+automatonAddressType :: Type AutomatonAddress
+automatonAddressType = union $ constructor "Address" strictText
+
 type Scope            = Text
 type VariableName     = Text
 type Value            = Text
@@ -279,7 +283,7 @@ data OpeningTag
   | OIB
   | OPadding     Int  Padding
   | OTrim        Int  Direction
-  | OAutomaton   Text StateTransitionTable
+  | OAutomaton   AutomatonAddress StateTransitionTable
   | OStateMapKey Text
   | OScope
   deriving (Show, Eq, Generic)
@@ -308,7 +312,7 @@ openingTagType = union
      )
 
   <> (uncurry OAutomaton <$> constructor "Automaton"
-       ( record $ (,) <$> field "address"  strictText
+       ( record $ (,) <$> field "address"  automatonAddressType
                       <*> field "stt"      stateTransitionTableType
        )
      )

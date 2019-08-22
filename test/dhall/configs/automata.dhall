@@ -79,7 +79,7 @@ let defaultBar
 			  , { state = ON, bar = text "Switcher is ON" }
 			  ]
 
-		let myID = "MY_AUTOMATON"
+		let myID : Address = utils.mkAddress "MY_AUTOMATON"
 
 		in  ca Button.Left (emit Toggle) (automaton myID stt stateMap)
 

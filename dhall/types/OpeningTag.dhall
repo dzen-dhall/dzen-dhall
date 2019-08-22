@@ -1,5 +1,7 @@
 let AbsolutePosition = ./AbsolutePosition.dhall
 
+let Address = ./Address.dhall
+
 let Button = ./Button.dhall
 
 let Color = ./Color.dhall
@@ -40,7 +42,7 @@ in  < Marquee :
 	| Trim :
 		{ width : Natural, direction : Direction }
 	| Automaton :
-		{ stt : StateTransitionTable, address : Text }
+		{ stt : StateTransitionTable, address : Address }
 	| StateMapKey :
 		State
 	| Scope

@@ -35,7 +35,7 @@ data Subscription
     (IORef AutomatonState)
     (IORef (Bar Initialized))
 
-type AutomataHandles = H.HashMap Scope [Subscription]
+type Subscriptions = H.HashMap Scope [Subscription]
 
 -- | A mapping from clickable area identifiers to script contents.
 -- We maintain this mapping to allow using scripts containing `)` in @^ca@.
@@ -44,7 +44,7 @@ type ClickableAreas = H.HashMap Int Text
 
 data StartupState
   = StartupState
-  { _ssAutomataHandles     :: AutomataHandles
+  { _ssSubscriptions       :: Subscriptions
   , _ssScopeName           :: Scope
   , _ssBarSettings         :: BarSettings
   , _ssCounter             :: Int
