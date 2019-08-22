@@ -4,16 +4,12 @@ let Event = ./types/Event.dhall
 
 let Button = ./types/Button.dhall
 
-let Slot = ./types/Slot.dhall
-
 let Hook = ./types/Hook.dhall
 
 let mkLeftClick =
 		λ(from : Text)
 	  → λ(to : Text)
-	  → [ { slots =
-			  [ "a", "b" ] : List Slot
-		  , events =
+	  → [ { events =
 			  [ Event.Mouse Button.Left, Event.Mouse Button.Right ]
 		  , hooks =
 			  [] : List Hook

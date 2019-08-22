@@ -31,7 +31,7 @@ import qualified Pipes.Prelude as P
 
 
 data PipeCommand
-  = RoutedEvent Event Slot Scope
+  = RoutedEvent Event Scope
   | Click Scope Int
   deriving (Eq, Show)
 
@@ -63,14 +63,14 @@ launchEventListener handles clickableAreas = do
 
         case parsePipeCommand line of
 
-          Just (RoutedEvent event slot scope) ->
-            case H.lookup (slot, scope) handles of
+          Just (RoutedEvent event scope) ->
+            case H.lookup scope handles of
               Just subscriptions -> do
-                processSubscriptions barRuntime slot scope event subscriptions
+                processSubscriptions barRuntime scope event subscriptions
 
               Nothing ->
                 T.putStrLn $
-                "Failed to find subscriptions for address: " <> slot <> "@" <> scope
+                "Failed to find subscriptions for scope: " <> scope
 
           Just (Click scope identifier) -> do
             whenJust (H.lookup identifier clickableAreas) $
@@ -100,8 +100,8 @@ launchEventListener handles clickableAreas = do
             putStrLn $ "Failed to parse routed event from string: " <> line
 
 
-processSubscriptions :: BarRuntime -> Slot -> Scope -> Event -> [Subscription] -> IO ()
-processSubscriptions barRuntime slot scope event subscriptions = do
+processSubscriptions :: BarRuntime -> Scope -> Event -> [Subscription] -> IO ()
+processSubscriptions barRuntime scope event subscriptions = do
 
   environment <- getEnvironment
 
@@ -113,11 +113,12 @@ processSubscriptions barRuntime slot scope event subscriptions = do
 
       let
         transitions =
-          unSTT stt :: H.HashMap (Slot, Scope, Event, Text) (Text, [Hook])
+          unSTT stt :: H.HashMap (Scope, Event, Text) (Text, [Hook])
         mbNext =
-          H.lookup (slot, scope, event, currentState) transitions <|>
+          H.lookup (scope, event, currentState) transitions <|>
           -- Match "any" event.
-          H.lookup (slot, scope, CustomEvent "*", currentState) transitions
+          H.lookup (scope, CustomEvent "*", currentState) transitions
+
         -- An environment extended with EVENT variable containing the name of the
         -- event.
         environment' =
@@ -131,7 +132,8 @@ processSubscriptions barRuntime slot scope event subscriptions = do
 
           Nothing -> do
             -- TODO: make this error static
-            T.putStrLn $ "Didn't find state " <> showPack nextState <> " in the state map for " <> showPack address
+            T.putStrLn $ "Didn't find state " <> showPack nextState
+              <> " in the state map for " <> showPack address
 
           Just nextBar -> do
             -- Multiple state transitions are executed simultaneously.
@@ -208,20 +210,17 @@ type Parser = Parsec Void String
 --
 -- @
 -- parseMaybe routedEventParser
---   "event:MouseLeft,slot:name@some-scope" ==
---      Just (RoutedEvent (MouseEvent MouseLeft) "name" "some-scope")
+--   "event:MouseLeft@some-scope" ==
+--      Just (RoutedEvent (MouseEvent MouseLeft) "some-scope")
 -- @
 routedEventParser :: Parser PipeCommand
 routedEventParser = do
   void $ string "event:"
   event <- (MouseEvent  <$> buttonParser) <|>
            (CustomEvent <$> customEventParser)
-  void $ char ','
-  void $ string "slot:"
-  slotName <- slotNameParser
   void $ char '@'
   scope <- scopeParser
-  pure $ RoutedEvent event slotName scope
+  pure $ RoutedEvent event scope
 
 buttonParser :: Parser Button
 buttonParser =
@@ -237,9 +236,6 @@ buttonParser =
 
 automatonAddressParser :: Parser Text
 automatonAddressParser = capitalized
-
-slotNameParser :: Parser Text
-slotNameParser = capitalized
 
 customEventParser :: Parser Text
 customEventParser = camelCased
@@ -259,6 +255,6 @@ clickParser :: Parser PipeCommand
 clickParser = do
   void $ string "click:"
   identifier <- some digitChar
-  void $ string ",scope:"
+  void $ string "@"
   scope <- scopeParser
   pure $ Click scope $ fromMaybe 0 $ readMaybe identifier

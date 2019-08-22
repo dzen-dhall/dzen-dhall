@@ -41,7 +41,5 @@ in  < Marquee :
 		{ stt : StateTransitionTable, address : Text }
 	| StateMapKey :
 		Text
-	| Listener :
-		Text
 	| Scope
 	>

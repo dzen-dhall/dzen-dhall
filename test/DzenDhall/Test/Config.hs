@@ -12,6 +12,7 @@ import qualified Data.HashMap.Strict as H
 import qualified Data.Text.IO
 
 
+dhallDir :: FilePath
 dhallDir = "./dhall"
 
 getTests :: TestTree
@@ -140,18 +141,12 @@ testConfiguration =
 testStateTransitionTable :: TestTree
 testStateTransitionTable =
   testFile stateTransitionTableType "test/dhall/StateTransitionTable.dhall" $
-    STT ( H.fromList [ (("a", "", MouseEvent MouseLeft,  ""), ("1", []))
-                     , (("a", "", MouseEvent MouseRight, ""), ("1", []))
-                     , (("b", "", MouseEvent MouseLeft,  ""), ("1", []))
-                     , (("b", "", MouseEvent MouseRight, ""), ("1", []))
-                     , (("a", "", MouseEvent MouseLeft,  "1"), ("2", []))
-                     , (("a", "", MouseEvent MouseRight, "1"), ("2", []))
-                     , (("b", "", MouseEvent MouseLeft,  "1"), ("2", []))
-                     , (("b", "", MouseEvent MouseRight, "1"), ("2", []))
-                     , (("a", "", MouseEvent MouseLeft,  "2"), ("", []))
-                     , (("a", "", MouseEvent MouseRight, "2"), ("", []))
-                     , (("b", "", MouseEvent MouseLeft,  "2"), ("", []))
-                     , (("b", "", MouseEvent MouseRight, "2"), ("", []))
+    STT ( H.fromList [ (("", MouseEvent MouseLeft,  ""), ("1", []))
+                     , (("", MouseEvent MouseRight, ""), ("1", []))
+                     , (("", MouseEvent MouseLeft,  "1"), ("2", []))
+                     , (("", MouseEvent MouseRight, "1"), ("2", []))
+                     , (("", MouseEvent MouseLeft,  "2"), ("", []))
+                     , (("", MouseEvent MouseRight, "2"), ("", []))
                      ]
         )
 

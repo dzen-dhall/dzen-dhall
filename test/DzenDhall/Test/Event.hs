@@ -16,34 +16,27 @@ getTests =
   testGroup "PipeCommand parser"
 
   [ mkTest "parsing #1"
-    "event:1,slot:SLOT@scope" $
-    Just $ RoutedEvent (MouseEvent MouseLeft) "SLOT" "scope"
+    "event:1@scope" $
+    Just $ RoutedEvent (MouseEvent MouseLeft) "scope"
   , mkTest "parsing #2"
-    "event:2,slot:SLOT@another-scope" $
-    Just $ RoutedEvent (MouseEvent MouseMiddle) "SLOT" "another-scope"
+    "event:2@another-scope" $
+    Just $ RoutedEvent (MouseEvent MouseMiddle) "another-scope"
   , mkTest "parsing #3"
-    "event:,slot:name@scope" $
+    "event:@scope" $
     Nothing
   , mkTest "parsing #4"
     "event:1" $
     Nothing
   , mkTest "parsing #5"
-    "event:1,slot:some" $
+    "event:1some" $
     Nothing
   , mkTest "parsing #6"
-    "event:1,slot:some@" $
-    Nothing
-  , mkTest "parsing #7"
-    "event:1,slot:some-name@scope" $
-    Nothing
-  -- slot name must start with [A-Z]
-  , mkTest "parsing #8"
-    "event:2,slot:slot@another-scope" $
+    "event:1@" $
     Nothing
   , mkTest "parsing #9"
-    "event:MyEvent,slot:SLOT@scope" $
-    Just $ RoutedEvent (CustomEvent "MyEvent") "SLOT" "scope"
+    "event:MyEvent@scope" $
+    Just $ RoutedEvent (CustomEvent "MyEvent") "scope"
   , mkTest "parsing #10"
-    "click:123,scope:scope-12" $
+    "click:123@scope-12" $
     Just $ Click "scope-12" 123
   ]

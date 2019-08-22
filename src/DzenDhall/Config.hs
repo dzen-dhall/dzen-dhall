@@ -7,9 +7,17 @@ import           Data.Hashable
 import           Data.Text (Text)
 import           Dhall
 import           Lens.Micro.TH
-import           Lens.Micro (Lens', _2)
+import           Lens.Micro (Lens', _1)
 
 import           DzenDhall.Extra
+
+type AutomatonState   = Text
+type AutomatonAddress = Text
+type Scope            = Text
+type VariableName     = Text
+type Value            = Text
+type ImageContents    = Text
+type ImageId          = Text
 
 data Marquee
   = Marquee
@@ -147,33 +155,31 @@ hookType = record $
   Hook <$> field "command"          (list strictText)
        <*> field "input"            strictText
 
-newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, Text, Event, Text) (Text, [Hook]) }
+newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, Event, Text) (Text, [Hook]) }
   deriving (Show, Eq, Generic)
 
 stateTransitionTableType :: Type StateTransitionTable
 stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
   ( record
-    ( pack5 <$> field "slots"  (list strictText)
-            <*> field "events" (list eventType)
+    ( pack5 <$> field "events" (list eventType)
             <*> field "from"   (list strictText)
             <*> field "to"     strictText
             <*> field "hooks"  (list hookType)
     )
   )
   where
-    pack5 slots events froms to hooks = (slots, events, froms, to, hooks)
+    pack5 events froms to hooks = (events, froms, to, hooks)
 
-    collect (slots, events, froms, to, hooks) =
+    collect (events, froms, to, hooks) =
 
-      [ ((slot, "", event, from), (to, hooks))
+      [ (("", event, from), (to, hooks))
       --        ^ scope is left uninitialized. It will be added later
-      | slot <- slots
-      , event <- events
+      | event <- events
       , from <- froms
       ]
 
-_scope :: Lens' (Text, Text, Event, Text) Text
-_scope = _2
+_scope :: Lens' (Scope, Event, AutomatonState) AutomatonState
+_scope = _1
 
 newtype Color = Color Text
   deriving (Show, Eq, Generic)
@@ -268,7 +274,6 @@ data OpeningTag
   | OTrim        Int  Direction
   | OAutomaton   Text StateTransitionTable
   | OStateMapKey Text
-  | OListener    Text
   | OScope
   deriving (Show, Eq, Generic)
 
@@ -302,7 +307,6 @@ openingTagType = union
      )
 
   <> (OStateMapKey <$> constructor "StateMapKey" strictText)
-  <> (OListener    <$> constructor "Listener"    strictText)
   <> (OScope       <$  constructor "Scope"       unit)
 
 data BarSettings

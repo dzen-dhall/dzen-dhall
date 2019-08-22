@@ -24,8 +24,6 @@ let Position = ./Position.dhall
 
 let Slider = ./Slider.dhall
 
-let Slot = ./Slot.dhall
-
 let Source = ./Source.dhall
 
 let StateMap = ./StateMap.dhall
@@ -77,8 +75,6 @@ let Carrier
 			Source → Bar
 		, plug :
 			Plugin → Bar
-		, listener :
-			Slot → Bar → Bar
 		, automaton :
 			Address → StateTransitionTable → StateMap Bar → Bar
 		, check :

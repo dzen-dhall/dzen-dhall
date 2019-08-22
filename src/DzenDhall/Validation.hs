@@ -23,8 +23,7 @@ type ParseErrors = Text.Megaparsec.ParseErrorBundle String Void
 
 
 data Error
-  = InvalidSlotAddress ParseErrors Text
-  | InvalidAutomatonAddress ParseErrors Text
+  = InvalidAutomatonAddress ParseErrors Text
   | BinaryNotInPath Text Text
   | AssertionFailure Text Text
   | InvalidColor ParseErrors Text
@@ -55,8 +54,6 @@ validate = reverse . go []
       in
         go (proceed InvalidAutomatonAddress automatonAddressParser address
             (sttErrors <> acc)) rest
-    go acc (TokOpen (OListener slot) : rest) =
-      go (proceed InvalidSlotAddress slotNameParser slot acc) rest
     go acc (TokOpen (OFG (Color color)) : rest) =
       go (proceed InvalidColor colorParser color acc) rest
     go acc (TokOpen (OBG (Color color)) : rest) =
@@ -129,11 +126,6 @@ report errors = mappend header $ foldMap ((<> "\n\n") . reportError) errors
 
     reportError :: Error -> Text
     reportError = \case
-      InvalidSlotAddress err address -> fromLines
-        [ "Invalid slot address: " <> address
-        , "Error: " <> Data.Text.pack (Text.Megaparsec.errorBundlePretty err)
-        , namingConventions
-        ]
 
       InvalidAutomatonAddress err address -> fromLines
         [ "Invalid automaton address: " <> address

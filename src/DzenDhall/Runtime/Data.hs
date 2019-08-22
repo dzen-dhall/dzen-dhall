@@ -25,15 +25,6 @@ data Runtime = Runtime
 
 makeLenses ''Runtime
 
-type AutomatonState   = Text
-type AutomatonAddress = Text
-type Slot             = Text
-type Scope            = Text
-type VariableName     = Text
-type Value            = Text
-type ImageContents    = Text
-type ImageId          = Text
-
 -- | 'StateTransitionTable' is needed to know *how* to update,
 -- @'IORef' ('Bar' 'Initialized')@ is needed to know *what* to update.
 data Subscription
@@ -44,7 +35,7 @@ data Subscription
     (IORef AutomatonState)
     (IORef (Bar Initialized))
 
-type AutomataHandles = H.HashMap (Slot, Scope) [Subscription]
+type AutomataHandles = H.HashMap Scope [Subscription]
 
 -- | A mapping from clickable area identifiers to script contents.
 -- We maintain this mapping to allow using scripts containing `)` in @^ca@.
