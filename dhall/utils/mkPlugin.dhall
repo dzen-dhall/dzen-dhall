@@ -38,6 +38,8 @@ let Slider = types.Slider
 
 let Source = types.Source
 
+let State = types.State
+
 let StateMap = types.StateMap
 
 let StateTransitionTable = types.StateTransitionTable
@@ -119,9 +121,9 @@ let carrier
 		  → enclose
 			(OpeningTag.Automaton { stt = stt, address = address })
 			( prelude.List.concatMap
-			  { state : Text, bar : Plugin }
+			  { state : State, bar : Plugin }
 			  Token
-			  (   λ(row : { state : Text, bar : Plugin })
+			  (   λ(row : { state : State, bar : Plugin })
 				→ enclose (OpeningTag.StateMapKey row.state) row.bar
 			  )
 			  stateMap

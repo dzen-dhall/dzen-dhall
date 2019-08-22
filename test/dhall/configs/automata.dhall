@@ -33,9 +33,9 @@ let defaultBarSettings : BarSettings = utils.defaultBarSettings
 
 let emit : Event → Text = utils.emit
 
-let ON : State = "ON"
+let ON : State = utils.mkState "ON"
 
-let OFF : State = "OFF"
+let OFF : State = utils.mkState "OFF"
 
 let Toggle : Event = Event.Custom "Toggle"
 

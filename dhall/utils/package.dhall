@@ -8,6 +8,8 @@
 	./mkConfigs.dhall
 , mkSeparateBy =
 	./mkSeparateBy.dhall
+, mkState =
+	./mkState.dhall
 , mkBash =
 	./mkBash.dhall
 , mkBashWithBinaries =
@@ -16,6 +18,8 @@
 	./showButton.dhall
 , showEvent =
 	./showEvent.dhall
+, showState =
+	./showState.dhall
 , emit =
 	./emit.dhall
 , get =

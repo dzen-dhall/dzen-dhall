@@ -11,7 +11,12 @@ import           Lens.Micro (Lens', _1)
 
 import           DzenDhall.Extra
 
-type AutomatonState   = Text
+
+type AutomatonState = Text
+
+stateType :: Type AutomatonState
+stateType = union $ constructor "State" strictText
+
 type AutomatonAddress = Text
 type Scope            = Text
 type VariableName     = Text
@@ -155,15 +160,17 @@ hookType = record $
   Hook <$> field "command"          (list strictText)
        <*> field "input"            strictText
 
-newtype StateTransitionTable = STT { unSTT :: H.HashMap (Text, Event, Text) (Text, [Hook]) }
+newtype StateTransitionTable
+  = STT { unSTT :: H.HashMap (Scope, Event, AutomatonState) (AutomatonState, [Hook])
+        }
   deriving (Show, Eq, Generic)
 
 stateTransitionTableType :: Type StateTransitionTable
 stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
   ( record
     ( pack5 <$> field "events" (list eventType)
-            <*> field "from"   (list strictText)
-            <*> field "to"     strictText
+            <*> field "from"   (list stateType)
+            <*> field "to"     stateType
             <*> field "hooks"  (list hookType)
     )
   )
@@ -178,7 +185,7 @@ stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
       , from <- froms
       ]
 
-_scope :: Lens' (Scope, Event, AutomatonState) AutomatonState
+_scope :: Lens' (Scope, Event, AutomatonState) Scope
 _scope = _1
 
 newtype Color = Color Text
@@ -306,7 +313,7 @@ openingTagType = union
        )
      )
 
-  <> (OStateMapKey <$> constructor "StateMapKey" strictText)
+  <> (OStateMapKey <$> constructor "StateMapKey" stateType)
   <> (OScope       <$  constructor "Scope"       unit)
 
 data BarSettings

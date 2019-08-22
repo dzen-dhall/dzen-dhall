@@ -1,22 +1,24 @@
-let Marquee = ./Marquee.dhall
+let AbsolutePosition = ./AbsolutePosition.dhall
 
-let Slider = ./Slider.dhall
-
-let StateTransitionTable = ./StateTransitionTable.dhall
+let Button = ./Button.dhall
 
 let Color = ./Color.dhall
 
 let Direction = ./Direction.dhall
 
-let Position = ./Position.dhall
+let Hook = ./Hook.dhall
+
+let Marquee = ./Marquee.dhall
 
 let Padding = ./Padding.dhall
 
-let AbsolutePosition = ./AbsolutePosition.dhall
+let Position = ./Position.dhall
 
-let Button = ./Button.dhall
+let Slider = ./Slider.dhall
 
-let Hook = ./Hook.dhall
+let State = ./State.dhall
+
+let StateTransitionTable = ./StateTransitionTable.dhall
 
 in  < Marquee :
 		Marquee
@@ -40,6 +42,6 @@ in  < Marquee :
 	| Automaton :
 		{ stt : StateTransitionTable, address : Text }
 	| StateMapKey :
-		Text
+		State
 	| Scope
 	>
