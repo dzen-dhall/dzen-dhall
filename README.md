@@ -571,9 +571,9 @@ Scopes are used for encapsulation, to ensure that slots, automata and listeners 
 
 ### Automata
 
-Each Bar is essentialy a finite-state automaton. States are tagged by `Text` labels, and transitions are triggered by [events](#events) (very much like in some functional reactive programming frameworks). In the trivial case, a bar has only one state: you can think of any static `Bar` as of automaton with a single state, the name of which is implicit.
+Each [Bar](#bars) is essentialy a finite-state automaton. States are tagged by `Text` labels, and transitions are triggered by [events](#events) (very much like in some functional reactive programming frameworks). In the trivial case, a bar has only one state: you can think of any static `Bar` as of an automaton with a single state, the name of which is implicit.
 
-A bar with more than one state can be defined by its [state transition function](#state-transition-table), a [mapping from state labels to `Bar`s](#state-maps), which defines its visual representation for different states, and an identifier used to query current state of the automaton from [sources](#sources) ("address").
+A bar with more than one state can be defined by its [state transition function](#state-transition-table), a [mapping from state labels to `Bar`s](#state-maps), which specifies its visual representation for various states, and an identifier ("address"), used to query the state of an automaton from the outside world.
 
 For example, this piece of code defines a `Bar` that switches between two states:
 
@@ -723,7 +723,7 @@ A special environment variable, `EVENT`, contains the name of the event that tri
 
 ### Assertions
 
-Startup-time assertions allow to make sure that some condition is true before proceeding to the execution, i.e. it is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
+Startup-time assertions allow to make sure that some condition is true before proceeding to the execution. It is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
 
 ```dhall
 let Assertion = < BinaryInPath : Text | SuccessfulExit : Text > in Assertion
@@ -777,7 +777,7 @@ Pass `--explain` flag to turn on verbose error reporting.
 
 ### Marquee jittering
 
-Jittering may appear if `fontWidth` parameter value is too large or too small. It can be fixed by specifying the width manually:
+Jittering may appear if `fontWidth` parameter value is too large or too small. It can be fixed by specifying the width manually. Modify `defaultBarSettings` at the end of your config file as follows:
 
 ```dhall
 [ { bar = ...

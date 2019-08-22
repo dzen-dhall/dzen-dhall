@@ -10,10 +10,9 @@ import           DzenDhall.Runtime.Data
 import qualified DzenDhall.Animation.Marquee as Marquee
 import qualified DzenDhall.Animation.Slider as Slider
 
-import           Control.Applicative
 import           Control.Arrow
+import           Control.Applicative
 import           Control.Monad
-import           Data.Containers.ListUtils (nubOrd)
 import           Data.IORef
 import           Data.Maybe
 import           Data.Text (Text)
@@ -96,9 +95,8 @@ mkBarRuntime cfg = do
   liftIO $ do
     forM_ [ ( [ "#!/usr/bin/env bash"
               , "SCOPE=\"$1\""
-              , "SLOT=\"$2\""
-              , "EVENT=\"$3\""
-              , "echo event:\"$EVENT\",slot:\"$SLOT\"@\"$SCOPE\" >> " <>
+              , "EVENT=\"$2\""
+              , "echo event:\"$EVENT\"@\"$SCOPE\" >> " <>
                 Data.Text.pack namedPipe
               ],
               emitterFile
@@ -199,7 +197,7 @@ initialize (BarSlider slider children) = do
 
   BarSlider slider' <$> mapM initialize children
 
-initialize (BarAutomaton address stt stateMap) = do
+initialize (BarAutomaton address rawSTT rawStateMap) = do
   state <- get
 
   let scope = state ^. ssScopeName
@@ -209,38 +207,29 @@ initialize (BarAutomaton address stt stateMap) = do
       newBarRef = do
         let initialState = ""
 
-        -- Add current scope to state transition table
-        let stt' = STT
-                 . H.fromList
-                 . map (first (_scope .~ state ^. ssScopeName))
-                 . H.toList
-                 . unSTT
-                 $ stt
+        -- Add current scope to the state transition table.
+        let stt = STT
+                . H.fromList
+                . map (first (_scope .~ state ^. ssScopeName))
+                . H.toList
+                . unSTT
+                $ rawSTT
 
         -- Create a reference to the current state
         stateRef :: IORef Text <- liftIO $ newIORef initialState
 
         -- Initialize all children
-        stateMap' :: H.HashMap Text (Bar Initialized) <- mapM initialize stateMap
+        stateMap :: H.HashMap Text (Bar Initialized) <- mapM initialize rawStateMap
 
         -- Create a reference to the current Bar (so that collectSources will not need to
-        -- look up the correct Bar in stateMap').
+        -- look up the correct Bar in stateMap).
         barRef :: IORef (Bar Initialized) <- liftIO $
-          newIORef $ fromMaybe mempty (H.lookup initialState stateMap')
+          newIORef $ fromMaybe mempty (H.lookup initialState stateMap)
 
-        let subscription = [ AutomatonSubscription address stt' stateMap' stateRef barRef ]
+        let subscription = [ AutomatonSubscription address stt stateMap stateRef barRef ]
 
-        -- Absolute slot addresses (incl. scope)
-        let slots :: [Text] = nubOrd $ (^. _1) <$> H.keys (unSTT stt')
-
-        -- Add a subscription for each slot
-        modify $ ssAutomataHandles %~
-          (\handleMap -> foldr (
-              \slot ->
-                H.insertWith (++) (slot, scope) subscription
-              )
-            handleMap slots
-          )
+        -- Bind new subscription to the scope.
+        modify $ ssAutomataHandles %~ H.insertWith (++) scope subscription
 
         -- Cache this automaton
         modify $ ssAutomataCache %~ H.insert (scope, address) barRef
@@ -250,11 +239,6 @@ initialize (BarAutomaton address stt stateMap) = do
   barRef <- maybe newBarRef pure mbCached
 
   pure $ BarAutomaton address () barRef
-
-initialize (BarListener slot child) = do
-
-  scope <- (^. ssScopeName) <$> get
-  BarListener (slot <> "@" <> scope) <$> initialize child
 
 initialize (BarScope child) = do
   counter <- getCounter
@@ -272,7 +256,8 @@ initialize (BarProp (CA ca) child) = do
 
   let command =
         "echo click:" <> showPack identifier <>
-        ",scope:" <> scope <> " >> " <> Data.Text.pack namedPipe
+        "@" <> scope <> " >> " <>
+        Data.Text.pack namedPipe
 
   modify $ ssClickableAreas %~ H.insert identifier (ca ^. caCommand)
 
@@ -446,27 +431,6 @@ collectSources fontWidth (BarAutomaton _ _ ref) = do
 
   bar          <- liftIO (readIORef ref)
   collectSources fontWidth bar
-
-collectSources fontWidth (BarListener slot child) = do
-
-  namedPipe    <- view brNamedPipe <$> App.get
-  ast          <- collectSources fontWidth child
-
-  -- Wrap AST into 7 clickable areas, one for each mouse button
-  pure $ foldr (attachClickHandler namedPipe) ast allButtons
-    where
-      attachClickHandler :: String -> Button -> AST -> AST
-      attachClickHandler namedPipe button =
-        let command =
-              ( "echo event:"
-             <> showPack button
-             <> ",slot:"
-             <> slot
-             <> " >> "
-             -- TODO: escape it
-             <> Data.Text.pack namedPipe
-              )
-        in ASTProp $ CA (ClickableArea button command)
 
 collectSources fontWidth (BarScope child) = do
   collectSources fontWidth child

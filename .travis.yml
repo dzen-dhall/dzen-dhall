@@ -9,19 +9,19 @@ git:
 branches:
   only:
   - master
-  - /^\d+\.\d+\.\d+(\.\d+)?$/
-
-cache:
-  directories:
-  - "$HOME/.cabal/store"
-  - "$HOME/.stack"
-  - "$TRAVIS_BUILD_DIR/.stack-work"
+  - /^v\d+\.\d+\.\d+(\.\d+)?$/
 
 matrix:
   include:
   - ghc: 8.6.4
     env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
     language: haskell
+
+    cache:
+      directories:
+        - "$HOME/.cabal/store"
+        - "$HOME/.stack"
+        - "$TRAVIS_BUILD_DIR/.stack-work"
 
     install:
       - |
@@ -38,7 +38,7 @@ matrix:
       - |
         echo "Running before_deploy"
 
-        stack build --system-ghc --copy-bins --local-bin-path ./artifacts"
+        stack build --system-ghc --copy-bins --local-bin-path ./artifacts
         cp artifacts/dzen-dhall dzen-dhall
         tar -zcvf "${TRAVIS_OS_NAME}.tar.gz" dzen-dhall
 

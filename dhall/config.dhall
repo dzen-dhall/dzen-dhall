@@ -21,7 +21,6 @@ let Padding = types.Padding
 let Plugin = types.Plugin
 let Position = types.Position
 let Slider = types.Slider
-let Slot = types.Slot
 let Source = types.Source
 let State = types.State
 let StateMap = types.StateMap
@@ -33,7 +32,7 @@ let VerticalDirection = types.VerticalDirection
 let mkConfigs = utils.mkConfigs
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
 
-let emit : Slot → Event → Text = utils.emit
+let emit : Event → Text = utils.emit
 let get : Variable → Text = utils.get
 let getState : Variable → Text = utils.getState
 let set : Variable → Text → Text = utils.set
@@ -71,7 +70,6 @@ let bar
 		let trim : Natural → Direction → Bar → Bar = carrier.trim
 		let source : Source → Bar = carrier.source
 		let plug : Plugin → Bar = carrier.plug
-		let listener : Slot → Bar → Bar = carrier.listener
 		let automaton
 			: Address → StateTransitionTable → StateMap Bar → Bar
 			= carrier.automaton

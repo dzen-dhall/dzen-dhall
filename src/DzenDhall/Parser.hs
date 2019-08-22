@@ -28,7 +28,6 @@ data Solid
   | SolidPA AbsolutePosition
   | SolidCA ClickableArea
   | SolidIB
-  | SolidListener Text
   | SolidPadding Int Padding
   | SolidTrim Int Direction
   | SolidScope
@@ -73,7 +72,6 @@ wrapped = do
       SolidPA position      -> BarProp     (PA position) child
       SolidCA ca            -> BarProp     (CA ca)       child
       SolidIB               -> BarProp     IB            child
-      SolidListener slot    -> BarListener slot          child
       SolidPadding width padding
                             -> BarPad width padding      child
       SolidTrim width direction
@@ -120,7 +118,6 @@ solid = withPreview $ \case
   TokOpen (OPA position)     -> Just $ SolidPA position
   TokOpen (OCA area)         -> Just $ SolidCA area
   TokOpen OIB                -> Just $ SolidIB
-  TokOpen (OListener slot)   -> Just $ SolidListener slot
   TokOpen (OPadding width padding)
                              -> Just $ SolidPadding width padding
   TokOpen (OTrim width direction)

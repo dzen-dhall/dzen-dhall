@@ -1,77 +1,87 @@
-{- An example of how to define automata. -}
+{- An example showing how to define automata. -}
 let prelude = ./prelude/package.dhall
+
 let types = ./types/package.dhall
+
 let utils = ./utils/package.dhall
 
 let Address = types.Address
+
 let Bar = types.Bar
+
 let BarSettings = types.BarSettings
+
 let Button = types.Button
+
 let Carrier = types.Carrier
+
 let Configuration = types.Configuration
+
 let Event = types.Event
+
 let Hook = types.Hook
-let Slot = types.Slot
+
+let State = types.State
+
 let StateMap = types.StateMap
+
 let StateTransitionTable = types.StateTransitionTable
+
 let mkConfigs = utils.mkConfigs
+
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
+
+let emit : Event → Text = utils.emit
+
+let ON : State = utils.mkState "ON"
+
+let OFF : State = utils.mkState "OFF"
+
+let Toggle : Event = Event.Custom "Toggle"
 
 let defaultBar
 	: Bar
 	=   λ(Bar : Type)
 	  → λ(carrier : Carrier Bar)
 	  → let text : Text → Bar = carrier.text
-		let listener : Slot → Bar → Bar = carrier.listener
+
+		let ca : Button → Text → Bar → Bar = carrier.ca
+
 		let automaton
 			: Address → StateTransitionTable → StateMap Bar → Bar
 			= carrier.automaton
 
-		let mySlot = "MY_SLOT" : Slot
-
 		let stt
 			: StateTransitionTable
-			= [ { slots =
-					[ mySlot ]
-			  , hooks =
-					[ { command =
-						  [ "bash" ]
-					  , input =
-						  ''
-						  notify-desktop $EVENT
-						  ''
-					  }
-					]
-				  : List Hook
-		      , events =
-			        [ Event.Mouse Button.Left ]
-				, from =
-					[ "" ]
-				, to =
-					"1"
-				}
-			  , { slots =
-					[ mySlot ]
-				, hooks =
+			= [ { hooks =
 					[] : List Hook
 				, events =
 					[ Event.Mouse Button.Left ]
 				, from =
-					[ "1" ]
+					[ ON ]
 				, to =
-					""
+					OFF
+				}
+			  , { hooks =
+					[] : List Hook
+				, events =
+					[ Event.Mouse Button.Left ]
+				, from =
+					[ OFF ]
+				, to =
+					ON
 				}
 			  ]
 
 		let stateMap
 			: StateMap Bar
-			= [ { state = "", bar = text "hello!" }
-			  , { state = "1", bar = text "world!" }
+			= [ { state = OFF, bar = text "Switcher is OFF" }
+			  , { state = ON, bar = text "Switcher is ON" }
 			  ]
 
 		let myID = "MY_AUTOMATON"
 
-		in  listener mySlot (automaton myID stt stateMap)
+		in  ca Button.Left (emit Toggle) (automaton myID stt stateMap)
 
 in    mkConfigs
 	  [ { bar = defaultBar : Bar, settings = defaultBarSettings : BarSettings }

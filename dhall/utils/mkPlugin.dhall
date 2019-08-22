@@ -36,9 +36,9 @@ let Position = types.Position
 
 let Slider = types.Slider
 
-let Slot = types.Slot
-
 let Source = types.Source
+
+let State = types.State
 
 let StateMap = types.StateMap
 
@@ -114,8 +114,6 @@ let carrier
 		  λ(source : Source) → [ Token.Source source ]
 	  , plug =
 		  λ(p : Plugin) → p
-	  , listener =
-		  λ(slot : Slot) → enclose (OpeningTag.Listener slot)
 	  , automaton =
 			λ(address : Address)
 		  → λ(stt : StateTransitionTable)
@@ -123,9 +121,9 @@ let carrier
 		  → enclose
 			(OpeningTag.Automaton { stt = stt, address = address })
 			( prelude.List.concatMap
-			  { state : Text, bar : Plugin }
+			  { state : State, bar : Plugin }
 			  Token
-			  (   λ(row : { state : Text, bar : Plugin })
+			  (   λ(row : { state : State, bar : Plugin })
 				→ enclose (OpeningTag.StateMapKey row.state) row.bar
 			  )
 			  stateMap
