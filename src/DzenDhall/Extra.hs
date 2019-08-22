@@ -6,6 +6,8 @@ import           Control.Monad.Trans.Except
 import qualified Data.List
 import qualified Data.Text
 import           Data.Text (Text)
+import           Time.Types
+
 
 nonNegative :: (Num a, Ord a) => a -> a
 nonNegative x
@@ -58,3 +60,11 @@ hush (Right a) = Just a
 
 throwMaybe :: Monad m => MaybeT m a
 throwMaybe = exceptToMaybeT (throwE ())
+
+-- This is a workaround,
+-- see https://github.com/vincenthz/hs-hourglass/issues/32
+addElapsedP :: ElapsedP -> ElapsedP -> ElapsedP
+addElapsedP (ElapsedP e1 (NanoSeconds ns1)) (ElapsedP e2 (NanoSeconds ns2)) =
+    let notNormalizedNS = ns1 + ns2
+        (retainedNS, ns) = notNormalizedNS `divMod` 1000000000
+    in  ElapsedP (e1 + e2 + (Elapsed $ Seconds retainedNS)) (NanoSeconds ns)

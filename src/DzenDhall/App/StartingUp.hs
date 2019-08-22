@@ -10,9 +10,8 @@ import           DzenDhall.Runtime.Data
 import qualified DzenDhall.Animation.Marquee as Marquee
 import qualified DzenDhall.Animation.Slider as Slider
 
-import           Control.Arrow
 import           Control.Applicative
-import           Control.Concurrent
+import           Control.Arrow
 import           Control.Monad
 import           Data.Containers.ListUtils (nubOrd)
 import           Data.IORef
@@ -366,19 +365,17 @@ mkThread
                              environment
                            }
 
-  void $ liftIO $ forkIO $ case updateInterval of
+  forkApp $ case updateInterval of
 
     -- If update interval is specified, loop forever.
-    Just interval -> do
-
-      forever $ do
-        runSourceProcess sourceProcess outputRef cacheRef input
-
-        threadDelay interval
+    Just interval ->
+      timely interval $ liftIO $
+      runSourceProcess sourceProcess outputRef cacheRef input
 
     -- If update interval is not specified, run the source once.
     Nothing -> do
-      runSourceProcess sourceProcess outputRef cacheRef input
+      liftIO $
+        runSourceProcess sourceProcess outputRef cacheRef input
 
 
 -- | Creates a process, subscribes to its stdout handle and updates the output ref.

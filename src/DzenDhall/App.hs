@@ -5,17 +5,21 @@ module DzenDhall.App where
 import DzenDhall.Runtime.Data
 import DzenDhall.Config
 import DzenDhall.Arguments
+import DzenDhall.Extra
 
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Reader as Reader
 import           Control.Monad.Trans.Reader (ReaderT)
 import qualified Control.Monad.Trans.State as State
 import           Control.Monad.Trans.State (StateT)
+import qualified Data.HashMap.Strict as H
+import           Data.Hourglass
 import           Data.Void
 import           Data.Maybe
 import           Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.IO
+import qualified Dhall
 import           Lens.Micro
 import           Control.Concurrent
 import           Control.Exception
@@ -24,8 +28,7 @@ import           System.Exit
 import           System.Random
 import           System.Directory
 import           System.FilePath ((</>))
-import qualified Dhall
-import qualified Data.HashMap.Strict as H
+import           Time.System
 
 
 -- * App execution stages
@@ -126,6 +129,13 @@ runAppForked barRuntime app = do
   rt <- getRuntime
   liftIO $ void $ forkIO $ runApp rt barRuntime app
 
+forkApp :: App stage () -> App stage ()
+forkApp app = do
+  rt <- getRuntime
+  st <- get
+  void $ liftIO $
+    forkIO $ runApp rt st app
+
 exit :: Int -> Text -> App stage a
 exit exitCode message = liftIO $ do
   unless (Data.Text.null message) $
@@ -163,3 +173,31 @@ explained io = do
   liftIO $ case shouldExplain of
              Explain -> Dhall.detailed io
              DontExplain -> io
+
+timely :: Int -> App stage () -> App stage ()
+timely interval task = do
+
+  initialTime <- liftIO $ timeCurrentP
+
+  void $ flip State.runStateT initialTime $ forever $ do
+
+    lastTime <- State.get
+
+    let nextTime =
+          addElapsedP lastTime $
+          ElapsedP 0 $ NanoSeconds $
+          fromIntegral interval * 1000
+
+    State.put nextTime
+
+    lift $ do
+      task
+
+      now <- liftIO timeCurrentP
+
+      let delay =
+            case timeDiffP nextTime now of
+              (Seconds sec, NanoSeconds nsec) ->
+                sec * 1000000 + nsec `div` 1000
+
+      liftIO $ threadDelay $ fromIntegral delay
