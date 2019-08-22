@@ -26,6 +26,7 @@ library:
   - directory
   - filepath
   - hashable
+  - hourglass
   - http-conduit
   - http-types
   - megaparsec
@@ -40,7 +41,6 @@ library:
   - process
   - random
   - text
-  - time
   - transformers
   - unix
   - unordered-containers
