@@ -40,6 +40,8 @@
 	./Position.dhall
 , Slider =
 	./Slider.dhall
+, Shell =
+	./Shell.dhall
 , Source =
 	./Source.dhall
 , State =

@@ -39,11 +39,11 @@ useConfigurations = do
         let barSettings = cfg ^. cfgBarSettings
 
         (bar' :: Bar Initialized,
-         handles :: AutomataHandles,
+         subscriptions :: Subscriptions,
          barRuntime :: BarRuntime,
          clickableAreas) <-
           liftStartingUp (startUp cfg bar) barSettings
 
-        runAppForked barRuntime (launchEventListener handles clickableAreas)
+        runAppForked barRuntime (launchEventListener subscriptions clickableAreas)
 
         runAppForked barRuntime (updateForever bar')

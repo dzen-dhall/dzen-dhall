@@ -37,8 +37,8 @@ data PipeCommand
 
 -- | Start reading lines from a named pipe used to route events.
 -- On each event, try to parse it, and find which event subscriptions does the event affect.
-launchEventListener :: AutomataHandles -> ClickableAreas -> App Forked ()
-launchEventListener handles clickableAreas = do
+launchEventListener :: Subscriptions -> ClickableAreas -> App Forked ()
+launchEventListener subscriptions clickableAreas = do
   barRuntime <- get
 
   let
@@ -64,7 +64,7 @@ launchEventListener handles clickableAreas = do
         case parsePipeCommand line of
 
           Just (RoutedEvent event scope) ->
-            case H.lookup scope handles of
+            case H.lookup scope subscriptions of
               Just subscriptions -> do
                 processSubscriptions barRuntime scope event subscriptions
 

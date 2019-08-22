@@ -20,6 +20,7 @@ let Marquee = types.Marquee
 let Padding = types.Padding
 let Plugin = types.Plugin
 let Position = types.Position
+let Shell = types.Shell
 let Slider = types.Slider
 let Source = types.Source
 let State = types.State
@@ -32,10 +33,13 @@ let VerticalDirection = types.VerticalDirection
 let mkConfigs = utils.mkConfigs
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
 
-let emit : Event → Text = utils.emit
-let get : Variable → Text = utils.get
-let getState : Variable → Text = utils.getState
-let set : Variable → Text → Text = utils.set
+let mkState : Text → State = utils.mkState
+let mkAddress : Text → Address = utils.mkAddress
+
+let emit : Event → Shell = utils.emit
+let get : Variable → Shell = utils.get
+let query : Address → Shell = utils.query
+let set : Variable → Text → Shell = utils.set
 
 let bar
 	: Bar
