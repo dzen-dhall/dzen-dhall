@@ -5,6 +5,12 @@ cabal: "2.4"
 git:
   depth: 5
 
+# Build only master and release tags
+branches:
+  only:
+  - master
+  - /^\d+\.\d+\.\d+(\.\d+)?$/
+
 cache:
   directories:
   - "$HOME/.cabal/store"
@@ -39,7 +45,6 @@ matrix:
     deploy:
       - provider: releases
         api_key: $API_KEY
-        target_commitish: master
         file:
           - ../$TRAVIS_OS_NAME.tar.gz
         skip_cleanup: true
@@ -47,7 +52,6 @@ matrix:
           tags: true
         script:
           - echo 'done'
-        draft: true
 
   - language: nix
 
@@ -69,9 +73,3 @@ matrix:
     cache:
       directories:
         - $HOME/nix.store
-
-# Build only master and release tags
-branches:
-  only:
-  - master
-  - /^\d+\.\d+\.\d+(\.\d+)?$/
