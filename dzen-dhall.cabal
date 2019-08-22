@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bc90cdf399c1cd73939c7f2272f84bde62043ffd8f27397bccfe882cfe5ffad1
+-- hash: c16f0eefef62f6c8f409796f348d1f6b42240b22b24bb72f7a6d8236f22ad65c
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -147,9 +147,13 @@ data-files:
     dhall/types/StateMap.dhall
     dhall/types/StateTransitionTable.dhall
     dhall/types/Token.dhall
+    dhall/types/Transition.dhall
     dhall/types/Variable.dhall
     dhall/types/VerticalDirection.dhall
     dhall/utils/defaultBarSettings.dhall
+    dhall/utils/emit.dhall
+    dhall/utils/get.dhall
+    dhall/utils/getState.dhall
     dhall/utils/intersperse.dhall
     dhall/utils/mkBash.dhall
     dhall/utils/mkBashWithBinaries.dhall
@@ -157,6 +161,9 @@ data-files:
     dhall/utils/mkPlugin.dhall
     dhall/utils/mkSeparateBy.dhall
     dhall/utils/package.dhall
+    dhall/utils/set.dhall
+    dhall/utils/showButton.dhall
+    dhall/utils/showEvent.dhall
 
 library
   exposed-modules:
@@ -193,6 +200,7 @@ library
     , directory
     , filepath
     , hashable
+    , hourglass
     , http-conduit
     , http-types
     , megaparsec
@@ -208,7 +216,6 @@ library
     , process
     , random
     , text
-    , time
     , transformers
     , unix
     , unordered-containers

@@ -25,18 +25,20 @@ data Runtime = Runtime
 
 makeLenses ''Runtime
 
-type AutomatonState = Text
-type Slot           = Text
-type Scope          = Text
-type VariableName   = Text
-type Value          = Text
-type ImageContents  = Text
-type ImageId        = Text
+type AutomatonState   = Text
+type AutomatonAddress = Text
+type Slot             = Text
+type Scope            = Text
+type VariableName     = Text
+type Value            = Text
+type ImageContents    = Text
+type ImageId          = Text
 
 -- | 'StateTransitionTable' is needed to know *how* to update,
 -- @'IORef' ('Bar' 'Initialized')@ is needed to know *what* to update.
 data Subscription
   = AutomatonSubscription
+    AutomatonAddress
     StateTransitionTable
     (H.HashMap AutomatonState (Bar Initialized))
     (IORef AutomatonState)

@@ -229,7 +229,7 @@ initialize (BarAutomaton address stt stateMap) = do
         barRef :: IORef (Bar Initialized) <- liftIO $
           newIORef $ fromMaybe mempty (H.lookup initialState stateMap')
 
-        let subscription = [ AutomatonSubscription stt' stateMap' stateRef barRef ]
+        let subscription = [ AutomatonSubscription address stt' stateMap' stateRef barRef ]
 
         -- Absolute slot addresses (incl. scope)
         let slots :: [Text] = nubOrd $ (^. _1) <$> H.keys (unSTT stt')

@@ -1,13 +1,13 @@
 module DzenDhall.Event where
 
-import           DzenDhall.App
 import           DzenDhall.AST.Render (runRender)
+import           DzenDhall.App
 import           DzenDhall.Config
 import           DzenDhall.Extra
 import           DzenDhall.Runtime.Data
 
-import           Control.Exception
 import           Control.Concurrent
+import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Maybe
@@ -23,11 +23,11 @@ import           System.IO
 import           System.Process
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
-import qualified Data.HashMap.Strict as H
-import qualified Data.Text
-import qualified Data.Text.IO
-import qualified Pipes.Prelude as P
 import           Text.Read (readMaybe)
+import qualified Data.HashMap.Strict as H
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import qualified Pipes.Prelude as P
 
 
 data PipeCommand
@@ -60,13 +60,16 @@ launchEventListener handles clickableAreas = do
 
     for (P.fromHandle fh) $ \line -> do
       lift $ do
+
         case parsePipeCommand line of
+
           Just (RoutedEvent event slot scope) ->
             case H.lookup (slot, scope) handles of
               Just subscriptions -> do
                 processSubscriptions barRuntime slot scope event subscriptions
+
               Nothing ->
-                Data.Text.IO.putStrLn $
+                T.putStrLn $
                 "Failed to find subscriptions for address: " <> slot <> "@" <> scope
 
           Just (Click scope identifier) -> do
@@ -75,14 +78,14 @@ launchEventListener handles clickableAreas = do
                 void $ forkIO $ do
 
                   let emitter =
-                        barRuntime ^. brEmitterScript <> " " <> Data.Text.unpack scope
+                        barRuntime ^. brEmitterScript <> " " <> T.unpack scope
                       getter =
-                        barRuntime ^. brGetterScript  <> " " <> Data.Text.unpack scope
+                        barRuntime ^. brGetterScript  <> " " <> T.unpack scope
                       setter =
-                        barRuntime ^. brSetterScript  <> " " <> Data.Text.unpack scope
+                        barRuntime ^. brSetterScript  <> " " <> T.unpack scope
 
                   let process =
-                        (shell $ Data.Text.unpack command)
+                        (shell $ T.unpack command)
                         { env = Just $
                           [ ("EMIT", emitter)
                           , ("GET",  getter)
@@ -104,7 +107,7 @@ processSubscriptions barRuntime slot scope event subscriptions = do
 
   forM_ subscriptions $ \case
 
-    AutomatonSubscription stt stateMap stateRef barRef -> do
+    AutomatonSubscription address stt stateMap stateRef barRef -> do
 
       currentState <- readIORef stateRef
 
@@ -118,22 +121,42 @@ processSubscriptions barRuntime slot scope event subscriptions = do
         -- An environment extended with EVENT variable containing the name of the
         -- event.
         environment' =
-          ("EVENT", Data.Text.unpack $ runRender event) : environment
+          ("EVENT", T.unpack $ runRender event) : environment
 
-      whenJust mbNext $ \(nextState, hooks) -> do
-        whenJust (H.lookup nextState stateMap) $ \nextBar -> do
-          -- Multiple state transitions are executed simultaneously.
-          -- This is fine, we don't want to eliminate race conditions.
-          -- Somethimes a transition is only added for its outside-world effects,
-          -- and we can't distinguish between such a transition and a normal one.
-          void $ forkIO $ do
+      whenJust mbNext $ \(nextState, hooks) -> void $ forkIO $ do
 
-            mbUnit <- runMaybeT (runHooks environment' barRuntime scope hooks)
+        mbUnit <- runMaybeT (runHooks environment' barRuntime scope hooks)
+
+        case H.lookup nextState stateMap of
+
+          Nothing -> do
+            -- TODO: make this error static
+            T.putStrLn $ "Didn't find state " <> showPack nextState <> " in the state map for " <> showPack address
+
+          Just nextBar -> do
+            -- Multiple state transitions are executed simultaneously.
+            -- This is fine, we don't want to eliminate race conditions.
+            -- Somethimes a transition is only added for its outside-world effects,
+            -- and we can't distinguish between such a transition and a normal one.
 
             when (isJust mbUnit) $ do
               writeIORef barRef nextBar
               writeIORef stateRef nextState
+              runStateVariableSetter barRuntime scope address nextState
 
+-- | Set a variable named `STATE_address`
+runStateVariableSetter :: BarRuntime -> Scope -> AutomatonAddress -> AutomatonState -> IO ()
+runStateVariableSetter barRuntime scope address state = do
+  let process = shell $
+        barRuntime ^. brSetterScript <> " " <>
+        T.unpack scope <>
+        " STATE_" <> T.unpack address <> " " <>
+        T.unpack state
+
+  (exitCode, _stdOut, _stdErr) <- readCreateProcessWithExitCode process ""
+
+  when (exitCode /= ExitSuccess) $
+    putStrLn "Setter script exited unsuccessfully. Please report as bug."
 
 runHooks
   :: [(String, String)]
@@ -143,21 +166,21 @@ runHooks
   -> MaybeT IO ()
 runHooks environment barRuntime scope hooks = do
   forM_ hooks $ \hook -> do
-    let binary = Data.Text.unpack $
+
+    let binary = T.unpack $
           head $ hook ^. hookCommand
           -- ^ this is safe, because we checked the list for emptiness
           -- during validation.
-        args   = map Data.Text.unpack $
+        args   = map T.unpack $
           tail $ hook ^. hookCommand
         input  = hook ^. hookInput
 
         emitter =
-          barRuntime ^. brEmitterScript <> " " <> Data.Text.unpack scope
+          barRuntime ^. brEmitterScript <> " " <> T.unpack scope
         getter =
-          barRuntime ^. brGetterScript  <> " " <> Data.Text.unpack scope
+          barRuntime ^. brGetterScript  <> " " <> T.unpack scope
         setter =
-          barRuntime ^. brSetterScript  <> " " <> Data.Text.unpack scope
-
+          barRuntime ^. brSetterScript  <> " " <> T.unpack scope
 
         process =
           (proc binary args) { std_out = CreatePipe
@@ -171,7 +194,7 @@ runHooks environment barRuntime scope hooks = do
                              }
 
     (exitCode, _stdOut, _stdErr) <- lift $
-      readCreateProcessWithExitCode process (Data.Text.unpack input)
+      readCreateProcessWithExitCode process (T.unpack input)
     when (exitCode /= ExitSuccess) $
       throwMaybe
 
@@ -222,15 +245,15 @@ customEventParser :: Parser Text
 customEventParser = camelCased
 
 capitalized :: Parser Text
-capitalized = Data.Text.pack <$>
+capitalized = T.pack <$>
   liftM2 (:) upperChar (many (upperChar <|> digitChar <|> char '_'))
 
 camelCased :: Parser Text
-camelCased = Data.Text.pack <$>
+camelCased = T.pack <$>
   liftM2 (:) upperChar (many (alphaNumChar <|> char '_'))
 
 scopeParser :: Parser Text
-scopeParser = Data.Text.pack <$> some (alphaNumChar <|> char '-')
+scopeParser = T.pack <$> some (alphaNumChar <|> char '-')
 
 clickParser :: Parser PipeCommand
 clickParser = do

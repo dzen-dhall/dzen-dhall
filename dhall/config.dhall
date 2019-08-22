@@ -23,13 +23,20 @@ let Position = types.Position
 let Slider = types.Slider
 let Slot = types.Slot
 let Source = types.Source
+let State = types.State
 let StateMap = types.StateMap
 let StateTransitionTable = types.StateTransitionTable
+let Transition = types.Transition
 let Variable = types.Variable
 let VerticalDirection = types.VerticalDirection
 
 let mkConfigs = utils.mkConfigs
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
+
+let emit : Slot → Event → Text = utils.emit
+let get : Variable → Text = utils.get
+let getState : Variable → Text = utils.getState
+let set : Variable → Text → Text = utils.set
 
 let bar
 	: Bar

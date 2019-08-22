@@ -7,7 +7,7 @@ import qualified Data.List
 import qualified Data.Text
 import           Data.Text (Text)
 
-nonNegative :: Int -> Int
+nonNegative :: (Num a, Ord a) => a -> a
 nonNegative x
   | x < 0 = 0
   | otherwise = x

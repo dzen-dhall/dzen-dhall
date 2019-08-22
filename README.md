@@ -208,7 +208,6 @@ let [plug](#plugins) : Plugin → Bar
 let [listener](#listeners) : Slot → Bar → Bar
 let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
 let [check](#assertions) : List [Check](#assertions) → Bar
--- Define a scope-local variable
 let [define](#variables) : Variable → Text = carrier.define
 let [scope](#scopes) : Bar → Bar
 </pre></big>
@@ -479,6 +478,12 @@ let clocks : Source =
 </details>
 
 
+### Variables
+
+[Sources](#sources), [hooks](#hooks) and [clickable areas](#clickable-areas) can access and modify [scope-local](#scopes) variables.
+
+
+
 ### [Events](dhall/src/Event.dhall)
 
 Events can be emitted by mouse interactions with [listeners](#listeners), by [hooks](#hooks) and by [sources](#sources).
@@ -489,7 +494,7 @@ let Button = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | Scro
 let Event = < Mouse : Button | Custom : Text >
 ```
 
-Listeners can only emit mouse events, while [hooks](#hooks) and [sources](#sources) can emit both mouse and custom events. A special environment variable, `EMIT` can be used in shell scripts to emit events:
+Listeners can only emit mouse events, while [hooks](#hooks), [clickable areas](#clickable-areas) and [sources](#sources) can emit both mouse and custom events. A special environment variable, `EMIT` can be used in shell scripts to emit events:
 
 <details><summary><strong>SHOW EXAMPLES</strong></summary>
 <p>
