@@ -1,5 +1,5 @@
-{ defaultBarSettings =
-	./defaultBarSettings.dhall
+{ defaultSettings =
+	./defaultSettings.dhall
 , intersperse =
 	./intersperse.dhall
 , mkAddress =
@@ -14,14 +14,18 @@
 	./mkState.dhall
 , mkVariable =
 	./mkVariable.dhall
+, mkEvent =
+	./mkEvent.dhall
 , mkBash =
 	./mkBash.dhall
+, mkBashWithBinaries =
+	./mkBashWithBinaries.dhall
+, mkBashHook =
+	./mkBashHook.dhall
 , mkTransition =
 	./mkTransition.dhall
 , mkTransitions =
 	./mkTransitions.dhall
-, mkBashWithBinaries =
-	./mkBashWithBinaries.dhall
 , showAddress =
 	./showAddress.dhall
 , showButton =

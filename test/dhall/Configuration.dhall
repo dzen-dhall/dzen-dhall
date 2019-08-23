@@ -1,6 +1,6 @@
 let Configuration = ./types/Configuration.dhall
 
-let BarSettings = ./types/BarSettings.dhall
+let Settings = ./types/Settings.dhall
 
 let Token = ./types/Token.dhall
 
@@ -18,6 +18,6 @@ in  [ { bar =
 			, fontWidth =
 				None Natural
 			}
-		  : BarSettings
+		  : Settings
 	  }
 	]

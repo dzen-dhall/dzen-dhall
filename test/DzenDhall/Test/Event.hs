@@ -15,13 +15,7 @@ getTests :: TestTree
 getTests =
   testGroup "PipeCommand parser"
 
-  [ mkTest "parsing #1"
-    "event:1@scope" $
-    Just $ RoutedEvent (MouseEvent MouseLeft) "scope"
-  , mkTest "parsing #2"
-    "event:2@another-scope" $
-    Just $ RoutedEvent (MouseEvent MouseMiddle) "another-scope"
-  , mkTest "parsing #3"
+  [ mkTest "parsing #3"
     "event:@scope" $
     Nothing
   , mkTest "parsing #4"
@@ -35,7 +29,7 @@ getTests =
     Nothing
   , mkTest "parsing #9"
     "event:MyEvent@scope" $
-    Just $ RoutedEvent (CustomEvent "MyEvent") "scope"
+    Just $ RoutedEvent (Event "MyEvent") "scope"
   , mkTest "parsing #10"
     "click:123@scope-12" $
     Just $ Click "scope-12" 123

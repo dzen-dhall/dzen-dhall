@@ -6,7 +6,7 @@ let utils = ./utils/package.dhall
 
 let Assertion = types.Assertion
 
-let BarSettings = types.BarSettings
+let Settings = types.Settings
 
 let Bar = types.Bar
 
@@ -18,7 +18,7 @@ let Check = types.Check
 
 let mkConfigs = utils.mkConfigs
 
-let defaultBarSettings : BarSettings = utils.defaultBarSettings
+let defaultSettings : Settings = utils.defaultSettings
 
 let defaultBar
 	: Bar
@@ -38,6 +38,6 @@ let defaultBar
 			]
 
 in    mkConfigs
-	  [ { bar = defaultBar : Bar, settings = defaultBarSettings }
+	  [ { bar = defaultBar : Bar, settings = defaultSettings }
 	  ]
 	: List Configuration

@@ -76,8 +76,7 @@ instance Renderable Button where
     MouseScrollRight -> "7"
 
 instance Renderable Event where
-  render (MouseEvent event) = render event
-  render (CustomEvent event) = write event
+  render (Event event) = write event
 
 instance Renderable ClickableArea where
   render ca = do

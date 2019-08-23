@@ -1,1 +1,5 @@
-{ bar : ./Plugin.dhall, settings : ./BarSettings.dhall }
+let Plugin = ./Plugin.dhall
+
+let Settings = ./Settings.dhall
+
+in  { bar : Plugin, settings : Settings }

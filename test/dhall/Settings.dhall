@@ -1,4 +1,4 @@
-let BarSettings = ./types/BarSettings.dhall
+let Settings = ./types/Settings.dhall
 
 in    { monitor =
 		  1
@@ -11,4 +11,4 @@ in    { monitor =
 	  , fontWidth =
 		  None Natural
 	  }
-	: BarSettings
+	: Settings

@@ -10,11 +10,13 @@ let Hook = ./types/Hook.dhall
 
 let mkState = ./utils/mkState.dhall
 
+let mkEvent = ./utils/mkEvent.dhall
+
 let mkLeftClick =
 		λ(from : State)
 	  → λ(to : State)
 	  → [ { events =
-			  [ Event.Mouse Button.Left, Event.Mouse Button.Right ]
+			  [ mkEvent "A", mkEvent "B" ]
 		  , hooks =
 			  [] : List Hook
 		  , from =

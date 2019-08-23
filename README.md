@@ -214,7 +214,7 @@ let [scope](#scopes) : Bar → Bar
 
 ### Text primitives
 
-`text` is used to create `Bar`s containing static, escaped pieces of text. `markup`, on the contrary, does not escape the given text, so that if it does contain markup, it will be interpreted by dzen2.
+`text` is used to create `Bar`s containing static, escaped pieces of text. `markup`, on the contrary, does not escape its input, so that if it does contain markup, it will be interpreted by dzen2.
 
 ### Primitives
 
@@ -230,99 +230,9 @@ Background and foreground colors can be set using `bg` and `fg`. A color can be 
 
 `fg` can also be used to set colors of [XBM bitmaps](#drawing-images).
 
-#### Drawing images
+`dzen-dhall` color blocks can be nested (unlike when using plain dzen2 markup).
 
-[XBM bitmaps](https://www.fileformat.info/format/xbm/egff.htm) can be loaded using `i` function.
-
-`i` accepts both filenames and raw image contents (XBM images are just pieces of C code):
-
-Example:
-
-```dhall
-i
-''
-#define smiley_width 15
-#define smiley_height 15
-static unsigned char smiley_bits[] = {
-   0x00, 0x00, 0x00, 0x00, 0xc8, 0x00, 0xcc, 0x00, 0x4c, 0x00, 0x48, 0x00,
-   0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x04, 0x04, 0x3c, 0x07, 0xe0, 0x01,
-   0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-''
-```
-
-will be rendered as ![smiley](img/xbm_smiley.png).
-
-To edit/create XBM images, use [GIMP](https://www.gimp.org/).
-
-#### Drawing shapes
-
-| Function | Meaning           |
-|----------|-------------------|
-| `r`      | Rectangle         |
-| `ro`     | Rectangle outline |
-| `c`      | Circle            |
-| `co`     | Circle outline    |
-
-#### Relative positioning
-
-Relative positioning (`p`) allows to shift by some number of pixels in any direction, reset vertical position, lock or unlock horizontal position, and "move" to one of the four edges of the screen:
-
-```dhall
-let Position : Type =
-< XY : { x : Integer, y : Integer }
-| _RESET_Y
-| _LOCK_X
-| _UNLOCK_X
-| _LEFT
-| _RIGHT
-| _TOP
-| _CENTER
-| _BOTTOM  >
-```
-
-For example, `(p (Position.XY { x = +10, y = -5 }) (text "Relative position"))`.
-
-It is not recommended to use this function in conjunction with [animations](#animations).
-
-#### Absolute positioning
-
-With `ap` function, it is possible to specify absolute position of a bar, relative to the top-left edge of the screen.
-
-`AbsolutePosition` is defined as:
-
-```dhall
-let AbsolutePosition : Type = { x : Integer, y : Integer }
-```
-
-Example:
-
-```dhall
-(pa { x = +0, y = +0 } (text "Absolute position"))
-```
-
-It is not recommended to use this function in conjunction with [animations](#animations).
-
-#### Clickable areas
-
-Example:
-
-```dhall
-(ca Button.Left "notify-send hello!" (text "Click me!"))
-```
-
-`dzen2` does not allow a command in `^ca()` tag to contain closing parentheses, because `)` is used to indicate the end of the command. `dzen-dhall` bypasses this limitation:
-
-```dhall
-(ca Button.Left "notify-send '(even with parentheses)'" (text "Click me!"))
-```
-
-##### Buttons
-
-`Button` is defined as:
-
-```dhall
-let Button : Type = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | ScrollRight >
-```
+For example, when using raw Dzen markup, `^fg(red) red ^fg(pink) pink ^fg() red ^fg()` will be rendered as ![](img/nested-colors1.png), but `dzen-dhall` will render `fg "red" (join [ text "red ", fg "pink" (text "pink"), text " red" ])` as ![](img/nested-colors2.png). `^fg()` and `^bg()` raw markup commands only reset colors to default values: they do not backtrack.
 
 #### Ignoring background color
 
@@ -350,6 +260,101 @@ bg
 results in the following output:
 
 ![Ignore background preview](img/ib.png)
+
+#### Drawing images
+
+[XBM bitmaps](https://www.fileformat.info/format/xbm/egff.htm) can be loaded using `i` function.
+
+`i` accepts both filenames and raw image contents (XBM images are just pieces of C code):
+
+For example,
+
+```dhall
+i
+''
+#define smiley_width 15
+#define smiley_height 15
+static unsigned char smiley_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0xc8, 0x00, 0xcc, 0x00, 0x4c, 0x00, 0x48, 0x00,
+   0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x04, 0x04, 0x3c, 0x07, 0xe0, 0x01,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+''
+```
+
+will be rendered as ![smiley](img/xbm_smiley.png).
+
+To edit/create XBM images, use [GIMP](https://www.gimp.org/).
+
+#### Drawing shapes
+
+Four types of shapes are supported:
+
+| Function | Meaning           |
+|----------|-------------------|
+| `r`      | Rectangle         |
+| `ro`     | Rectangle outline |
+| `c`      | Circle            |
+| `co`     | Circle outline    |
+
+#### Relative positioning
+
+Relative positioning (`p`) allows to shift by some number of pixels in any direction, reset vertical position, lock or unlock horizontal position, and "move" to one of the four edges of the screen:
+
+```dhall
+let Position
+	: Type
+	= < XY :
+		  { x : Integer, y : Integer }
+	  | _RESET_Y
+	  | _LOCK_X
+	  | _UNLOCK_X
+	  | _LEFT
+	  | _RIGHT
+	  | _TOP
+	  | _CENTER
+	  | _BOTTOM
+	  >
+```
+
+For example, `(p (Position.XY { x = +10, y = -5 }) (text "Relative position"))`.
+
+#### Absolute positioning
+
+With `pa` function, it is possible to specify absolute position of a bar, relative to the top-left edge of the screen.
+
+`AbsolutePosition` is defined as:
+
+```dhall
+let AbsolutePosition : Type = { x : Integer, y : Integer }
+```
+
+Example:
+
+```dhall
+(pa { x = +0, y = +0 } (text "Absolute position"))
+```
+
+#### Clickable areas
+
+Example:
+
+```dhall
+(ca Button.Left "notify-send hello!" (text "Click me!"))
+```
+
+`dzen2` does not allow a command in `^ca()` tag to contain closing parentheses, because `)` is used to indicate the end of the command. `dzen-dhall` bypasses this limitation:
+
+```dhall
+(ca Button.Left "notify-send '(even with parentheses)'" (text "Click me!"))
+```
+
+##### Buttons
+
+`Button` is defined as:
+
+```dhall
+let Button : Type = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | ScrollRight >
+```
 
 ### Join
 
@@ -563,100 +568,41 @@ MouseScrollRight
 
 ### Scopes
 
-Scopes are used for encapsulation, to ensure that slots, automata and listeners from different plugins are unable to communicate with each other. You should always enclose your plugins in a separate scope. Parent scopes are completely isolated from child scopes and vice versa.
+Scopes are used for encapsulation, to ensure that automata and listeners from different plugins are unable to communicate with each other. You should always enclose your plugins in a separate scope. Parent scopes are completely isolated from child scopes and vice versa.
 
 ### Automata
 
 Each [Bar](#bars) is essentialy a finite-state automaton. States are tagged by `Text` labels, and transitions are triggered by [events](#events) (very much like in some functional reactive programming frameworks). In the trivial case, a bar has only one state: you can think of any static `Bar` as of an automaton with a single state, the name of which is implicit.
 
-A bar with more than one state can be defined by its [state transition function](#state-transition-table), a [mapping from state labels to `Bar`s](#state-maps), which specifies its visual representation for various states, and an identifier ("address"), used to query the state of an automaton from the outside world.
+A bar with more than one state can be defined by its state transition function (in a form of a list of transitions), a mapping from state labels to `Bar`s (`StateMap`), which specifies visual representation of the automaton for various states, and a special identifier (`Address`) used to query the state of the automaton from the outside world.
 
-For example, this piece of code defines a `Bar` that switches between two states:
-
-```dhall
-let mySwitcher : Bar =
-	  let mySlot = "MY_SLOT" : Slot
-      -- ^ used to route events from listener to state transition table
-
-	  let stt
-		  : StateTransitionTable
-		  = [ { slots =
-				  [ mySlot ]
-			  , hooks =
-				  [] : List Hook
-			  , events =
-				  [ Event.Mouse Button.Left ]
-			  , from =
-				  [ "" ]
-			  , to =
-				  "1"
-			  }
-			, { slots =
-				  [ mySlot ]
-			  , hooks =
-				  [] : List Hook
-			  , events =
-				  [ Event.Mouse Button.Left ]
-			  , from =
-				  [ "1" ]
-			  , to =
-				  ""
-			  }
-			]
-
-	  let stateMap
-		  : StateMap Bar
-		  = [ { state = "", bar = text "hello!" }
-			, { state = "1", bar = text "world!" }
-			]
-
-	  let myID = "MY_AUTOMATON"
-
-	  in  listener mySlot (automaton myID stt stateMap)
-```
-
-A [listener](#listeners) awaits for mouse events and sends them to the slot. Two state transitions are bound on the same slot to the left-click event. The initial state of the automaton is `""` (by convention).
-
-### [State Transition Table](dhall/src/StateTransitionTable.dhall)
-
-State transition table is a list of cases, each describing a certain condition and a reaction to it. In run time, when some event occurs, `dzen-dhall` tries to find the first row in a table matching current state of the [automaton](#Automata), an event name and a [slot](#Slots) name to which the event was sent. If there is a matching row in the table, `dzen-dhall` executes the specified [hooks](#Hooks) one by one, and if all of them do not cancel the transition, the state of the automaton is changed to a new one.
+For example, this code snippet defines a bar that switches between two states, `ON` and `OFF`:
 
 ```dhall
-let StateTransitionTable
-    : Type
-    = List
-      { slots :
-          List Slot
-      , events :
-          List Event
-      , from :
-          List State
-      , to :
-          State
-      , hooks :
-          List Hook
-      }
+let OFF : State = mkState ""
+                       -- ^ Empty label means that this state is initial.
+let ON : State = mkState "ON"
+
+let Toggle : Event = Event.Custom "Toggle"
+
+let address : Address = mkAddress "MY_AUTOMATON"
+
+let stateTransitionTable
+	: List Transition
+	= [ mkTransition Toggle ON OFF, mkTransition Toggle OFF ON ]
+
+-- Defines which output to render depending on the state:
+let stateMap : StateMap Bar
+	= [ { state = OFF, bar = text "Switcher is OFF" }
+	  , { state = ON,  bar = text "Switcher is ON" }
+	  ]
+
+-- A clickable area that reacts to left-clicks by emitting `Toggle` events:
+in	ca
+	Button.Left
+	(emit Toggle)
+	(automaton address stateTransitionTable stateMap)
 ```
-
-For example, let's define a simple transition table with two states: `"on"` and `""` (which is the default state of any automaton):
-
-```dhall
-let stt = [ { slots: [ "MY_SLOT" ]
-            , events: [ Event.Mouse Button.Left ]
-            , from: [ "" ]
-            , to: [ "on" ]
-            , hooks: [] : List Hook
-            }
-          , { slots: [ "MY_SLOT" ]
-            , events: [ Event.Mouse Button.Left ]
-            , from: [ "on" ]
-            , to: [ "" ]
-            , hooks: [] : List Hook
-            }
-          ]
-```
-
-This state transition table, when coupled with a [state map](#state-maps) to form an [automaton](#automata) and subscribed to some [listener](#listeners) that awaits for mouse events and sends them to the "MY_SLOT" slot, will result in a clickable area that switches between two states as the user clicks on a some area.
 
 ### [State maps](dhall/src/StateMap.dhall)
 
@@ -669,26 +615,6 @@ in  StateMap
 ```
 
 Note that `StateMap` is parametrized by the `Bar` type.
-
-The following `StateMap` has two states. The default one (`""`) corresponds to the text `hello!`.
-
-```dhall
-let stateMap
-  : StateMap Bar
-  = [ { state = "", bar = text "hello!" }
-	, { state = "1", bar = text "world!" }
-	]
-```
-
-### [Slots](dhall/src/Slot.dhall)
-
-Slots are used to route events throughout the interface: you can think of slots as of adresses to which events can be sent. Each slot is essentially a piece of `Text`:
-
-```dhall
-let Slot : Type = Text
-```
-
-[Automata](#automata) can listen for events on slots and react to them.
 
 ### [Hooks](dhall/src/Hook.dhall)
 
@@ -749,7 +675,6 @@ check
 
 These conventions are enforced by `dzen-dhall` as an attempt to lower cognitive noise for users and plugin maintainers.
 
-- [Slot](#slots) names should contain only capital letters, numbers and `_`: `SLOT_1`, `MY_SLOT`, etc.
 - [Event](#events) names should be written camel-cased, first letter capitalized: `TimeHasCome`, `ButtonClicked`, etc.
 - [Automata](#automata) addresses should contain only capital letters, numbers and `_`.
 
@@ -763,11 +688,11 @@ Pass `--explain` flag to turn on verbose error reporting.
 
 ### Marquee jittering
 
-Jittering may appear if `fontWidth` parameter value is too large or too small. It can be fixed by specifying the width manually. Modify `defaultBarSettings` at the end of your config file as follows:
+Jittering may appear if `fontWidth` parameter value is too large or too small. It can be fixed by specifying the width manually. Modify `defaultSettings` at the end of your config file as follows:
 
 ```dhall
 [ { bar = ...
-  , settings = defaultBarSettings ⫽ { fontWidth = Some 10 }
+  , settings = defaultSettings ⫽ { fontWidth = Some 10 }
   }
 ]
 ```
@@ -782,12 +707,12 @@ It is possible to do so by adding another `Bar` (some code duplication is hardly
 
 ```dhall
 mkConfigs
-	  [ { bar = defaultBar, settings = defaultBarSettings }
+	  [ { bar = defaultBar, settings = defaultSettings }
 	  , { bar =
 		    anotherBar
 		, settings =
 			-- `-xs` flag specifies monitor number:
-			defaultBarSettings ⫽ { extraArgs = [ "-xs", "1" ] }
+			defaultSettings ⫽ { extraArgs = [ "-xs", "1" ] }
 		}
 	  ]
 ```

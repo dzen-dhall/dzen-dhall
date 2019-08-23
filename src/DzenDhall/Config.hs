@@ -105,17 +105,14 @@ buttonType = union
   <> (MouseScrollLeft  <$ constructor "ScrollLeft"  unit)
   <> (MouseScrollRight <$ constructor "ScrollRight" unit)
 
-data Event
-  = MouseEvent Button
-  | CustomEvent Text
-   deriving (Show, Eq, Ord, Generic)
+newtype Event
+  = Event Text
+  deriving (Show, Eq, Ord, Generic)
 
 instance Hashable Event
 
 eventType :: Type Event
-eventType = union
-  $  (MouseEvent  <$> constructor "Mouse"  buttonType)
-  <> (CustomEvent <$> constructor "Custom" strictText)
+eventType = union $ (Event <$> constructor "Event" strictText)
 
 data Fade
   = Fade

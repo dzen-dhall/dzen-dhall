@@ -68,13 +68,9 @@ let carrier
 	  , join =
 		  λ(children : List Plugin) → prelude.List.concat Token children
 	  , fg =
-			λ(color : Color)
-		  → λ(child : Plugin)
-		  → enclose (OpeningTag.FG color) child
+		  λ(color : Color) → enclose (OpeningTag.FG color)
 	  , bg =
-			λ(color : Color)
-		  → λ(child : Plugin)
-		  → enclose (OpeningTag.BG color) child
+		  λ(color : Color) → enclose (OpeningTag.BG color)
 	  , i =
 		  λ(image : Image) → [ Token.I image ]
 	  , r =
@@ -105,9 +101,7 @@ let carrier
 			  (List/intersperse Plugin [ Token.Separator ] children)
 			)
 	  , marquee =
-			λ(marquee : Marquee)
-		  → λ(child : Plugin)
-		  → enclose (OpeningTag.Marquee marquee) child
+		  λ(marquee : Marquee) → enclose (OpeningTag.Marquee marquee)
 	  , pad =
 			λ(width : Natural)
 		  → λ(padding : Padding)

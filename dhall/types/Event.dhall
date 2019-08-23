@@ -1,5 +1,8 @@
-let Button = ./Button.dhall
+{- `Event` is just a tagged ("newtyped", in Haskell terminology) piece of text.
 
-let Event = < Mouse : Button | Custom : Text >
+Tagging is used to catch more errors during type checking, by preventing
+unification with `Text` values of other domains.
 
-in  Event
+`Event` values are meant to be constructed using `utils.mkEvent`.
+-}
+let Event = < Event : Text > in Event

@@ -6,8 +6,8 @@
 	./Assertion.dhall
 , Bar =
 	./Bar.dhall
-, BarSettings =
-	./BarSettings.dhall
+, Settings =
+	./Settings.dhall
 , Button =
 	./Button.dhall
 , Carrier =

@@ -9,7 +9,7 @@ let Address = types.Address
 
 let Bar = types.Bar
 
-let BarSettings = types.BarSettings
+let Settings = types.Settings
 
 let Button = types.Button
 
@@ -29,15 +29,17 @@ let Transition = types.Transition
 
 let mkConfigs = utils.mkConfigs
 
-let defaultBarSettings : BarSettings = utils.defaultBarSettings
+let mkState = utils.mkState
+
+let mkEvent = utils.mkEvent
+
+let mkAddress = utils.mkAddress
+
+let mkTransition = utils.mkTransition
+
+let defaultSettings : Settings = utils.defaultSettings
 
 let emit : Event → Text = utils.emit
-
-let ON : State = utils.mkState "ON"
-
-let OFF : State = utils.mkState "OFF"
-
-let Toggle : Event = Event.Custom "Toggle"
 
 let defaultBar
 	: Bar
@@ -51,27 +53,17 @@ let defaultBar
 			: Address → List Transition → StateMap Bar → Bar
 			= carrier.automaton
 
+		let OFF : State = mkState ""
+
+		let ON : State = mkState "ON"
+
+		let Toggle : Event = mkEvent "Toggle"
+
+		let address : Address = mkAddress "MY_AUTOMATON"
+
 		let stateTransitionTable
 			: List Transition
-			= [ { hooks =
-					[] : List Hook
-				, events =
-					[ Event.Mouse Button.Left ]
-				, from =
-					[ ON ]
-				, to =
-					OFF
-				}
-			  , { hooks =
-					[] : List Hook
-				, events =
-					[ Event.Mouse Button.Left ]
-				, from =
-					[ OFF ]
-				, to =
-					ON
-				}
-			  ]
+			= [ mkTransition Toggle ON OFF, mkTransition Toggle OFF ON ]
 
 		let stateMap
 			: StateMap Bar
@@ -79,11 +71,12 @@ let defaultBar
 			  , { state = ON, bar = text "Switcher is ON" }
 			  ]
 
-		let address : Address = utils.mkAddress "MY_AUTOMATON"
-
-		in  ca Button.Left (emit Toggle) (automaton address stateTransitionTable stateMap)
+		in  ca
+			Button.Left
+			(emit Toggle)
+			(automaton address stateTransitionTable stateMap)
 
 in    mkConfigs
-	  [ { bar = defaultBar : Bar, settings = defaultBarSettings : BarSettings }
+	  [ { bar = defaultBar : Bar, settings = defaultSettings : Settings }
 	  ]
 	: List Configuration

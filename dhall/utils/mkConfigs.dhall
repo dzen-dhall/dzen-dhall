@@ -3,11 +3,15 @@
 
 let prelude = ../prelude/package.dhall
 
-let ConfigEntry
-	: Type
-	= { bar : ../types/Bar.dhall, settings : ../types/BarSettings.dhall }
+let types = ../types/package.dhall
 
-let Configuration : Type = ../types/Configuration.dhall
+let Bar = types.Bar
+
+let Configuration = types.Configuration
+
+let Settings = types.Settings
+
+let ConfigEntry = { bar : Bar, settings : Settings }
 
 let mkPlugin = ./mkPlugin.dhall
 
@@ -16,8 +20,6 @@ let mkConfigs
 	= prelude.List.map
 	  ConfigEntry
 	  Configuration
-	  (   λ(entry : ConfigEntry)
-		→ { bar = mkPlugin entry.bar, settings = entry.settings }
-	  )
+	  (λ(entry : ConfigEntry) → entry ⫽ { bar = mkPlugin entry.bar })
 
 in  mkConfigs

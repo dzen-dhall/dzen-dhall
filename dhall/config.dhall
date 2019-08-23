@@ -6,7 +6,7 @@ let AbsolutePosition = types.AbsolutePosition
 let Address = types.Address
 let Assertion = types.Assertion
 let Bar = types.Bar
-let BarSettings = types.BarSettings
+let Settings = types.Settings
 let Button = types.Button
 let Carrier = types.Carrier
 let Check = types.Check
@@ -31,7 +31,7 @@ let Variable = types.Variable
 let VerticalDirection = types.VerticalDirection
 
 let mkConfigs = utils.mkConfigs
-let defaultBarSettings : BarSettings = utils.defaultBarSettings
+let defaultSettings : Settings = utils.defaultSettings
 
 let showAddress : Address → Text = utils.showAddress
 let showButton : Button → Text = utils.showButton
@@ -42,6 +42,10 @@ let showVariable : Variable → Text = utils.showVariable
 let mkAddress : Text → Address = utils.mkAddress
 let mkState : Text → State = utils.mkState
 let mkVariable : Text → Variable = utils.mkVariable
+let mkEvent : Text → Event = utils.mkEvent
+let mkBashHook : Shell → Hook = utils.mkBashHook
+let mkTransition : Event → State → State → Transition = utils.mkTransition
+let mkTransitions : Event → List State → State → Transition = utils.mkTransitions
 
 let emit : Event → Shell = utils.emit
 let get : Variable → Shell = utils.get
@@ -51,50 +55,50 @@ let set : Variable → Text → Shell = utils.set
 let bar
 	: Bar
 	=   λ(Bar : Type)
-	  → λ(carrier : Carrier Bar)
+	  → λ(cr : Carrier Bar)
 	  → -- Text primitives:
-		let text : Text → Bar = carrier.text
-		let markup : Text → Bar = carrier.markup
+		let text : Text → Bar = cr.text
+		let markup : Text → Bar = cr.markup
 
 		-- Combining multiple `Bar`s into one:
-		let join : List Bar → Bar = carrier.join
+		let join : List Bar → Bar = cr.join
 
 		-- Primitives of Dzen markup language:
-		let fg : Color → Bar → Bar = carrier.fg
-		let bg : Color → Bar → Bar = carrier.bg
-		let i : Image → Bar = carrier.i
-		let r : Natural → Natural → Bar = carrier.r
-		let ro : Natural → Natural → Bar = carrier.ro
-		let c : Natural → Bar = carrier.c
-		let co : Natural → Bar = carrier.co
-		let p : Position → Bar → Bar = carrier.p
-		let pa : AbsolutePosition → Bar → Bar = carrier.pa
-		let ca : Button → Text → Bar → Bar = carrier.ca
-		let ib : Bar → Bar = carrier.ib
+		let fg : Color → Bar → Bar = cr.fg
+		let bg : Color → Bar → Bar = cr.bg
+		let i : Image → Bar = cr.i
+		let r : Natural → Natural → Bar = cr.r
+		let ro : Natural → Natural → Bar = cr.ro
+		let c : Natural → Bar = cr.c
+		let co : Natural → Bar = cr.co
+		let p : Position → Bar → Bar = cr.p
+		let pa : AbsolutePosition → Bar → Bar = cr.pa
+		let ca : Button → Text → Bar → Bar = cr.ca
+		let ib : Bar → Bar = cr.ib
 
 		-- Animations:
-		let slider : Slider → List Bar → Bar = carrier.slider
-		let marquee : Marquee → Bar → Bar = carrier.marquee
+		let slider : Slider → List Bar → Bar = cr.slider
+		let marquee : Marquee → Bar → Bar = cr.marquee
 
 		-- Other:
-		let pad : Natural → Padding → Bar → Bar = carrier.pad
-		let trim : Natural → Direction → Bar → Bar = carrier.trim
-		let source : Source → Bar = carrier.source
-		let plug : Plugin → Bar = carrier.plug
+		let pad : Natural → Padding → Bar → Bar = cr.pad
+		let trim : Natural → Direction → Bar → Bar = cr.trim
+		let source : Source → Bar = cr.source
+		let plug : Plugin → Bar = cr.plug
 		let automaton
 			: Address → List Transition → StateMap Bar → Bar
-			= carrier.automaton
-		let check : Text -> Assertion → Bar = carrier.check
-		let scope : Bar → Bar = carrier.scope
-		let define : Variable → Text → Bar = carrier.define
+			= cr.automaton
+		let check : Text -> Assertion → Bar = cr.check
+		let scope : Bar → Bar = cr.scope
+		let define : Variable → Text → Bar = cr.define
 
 		-- Utilities:
-		let separateBy : Bar → List Bar → Bar = utils.mkSeparateBy Bar carrier
+		let separateBy : Bar → List Bar → Bar = utils.mkSeparateBy Bar cr
 		let separate : List Bar → Bar = separateBy (text " | ")
-		let bash : Natural → Text → Bar = utils.mkBash Bar carrier
+		let bash : Natural → Text → Bar = utils.mkBash Bar cr
 		let bashWithBinaries
 			: List Text → Natural → Text → Bar
-			= utils.mkBashWithBinaries Bar carrier
+			= utils.mkBashWithBinaries Bar cr
 
 		let memoryUsage
 			: Bar
@@ -136,7 +140,4 @@ let bar
 			, join [ date, text " ", accent time ]
 			]
 
-in    mkConfigs
-	  [ { bar = bar, settings = defaultBarSettings }
-	  ]
-	: List Configuration
+in  mkConfigs [ { bar = bar, settings = defaultSettings } ] : List Configuration

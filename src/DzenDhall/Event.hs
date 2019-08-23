@@ -117,7 +117,7 @@ processSubscriptions barRuntime scope event subscriptions = do
         mbNext =
           H.lookup (scope, event, currentState) transitions <|>
           -- Match "any" event.
-          H.lookup (scope, CustomEvent "*", currentState) transitions
+          H.lookup (scope, Event "*", currentState) transitions
 
         -- An environment extended with EVENT variable containing the name of the
         -- event.
@@ -216,8 +216,7 @@ type Parser = Parsec Void String
 routedEventParser :: Parser PipeCommand
 routedEventParser = do
   void $ string "event:"
-  event <- (MouseEvent  <$> buttonParser) <|>
-           (CustomEvent <$> customEventParser)
+  event <- Event <$> eventParser
   void $ char '@'
   scope <- scopeParser
   pure $ RoutedEvent event scope
@@ -237,8 +236,8 @@ buttonParser =
 automatonAddressParser :: Parser Text
 automatonAddressParser = capitalized
 
-customEventParser :: Parser Text
-customEventParser = camelCased
+eventParser :: Parser Text
+eventParser = camelCased
 
 capitalized :: Parser Text
 capitalized = T.pack <$>

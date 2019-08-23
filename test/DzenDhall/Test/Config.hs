@@ -22,6 +22,7 @@ getTests =
     [ testOpeningTag
     , testToken
     , testCheck
+    , testFade
     , testSource
     , testMarquee
     , testButton
@@ -104,8 +105,7 @@ testPadding =
 testEvent :: TestTree
 testEvent =
   testFile (list eventType) "test/dhall/Event.dhall"
-    [ CustomEvent "some text"
-    , MouseEvent MouseLeft
+    [ Event "some text"
     ]
 
 testCheck :: TestTree
@@ -115,9 +115,13 @@ testCheck =
   , Check "" $ BinaryInPath ""
   ]
 
+testFade :: TestTree
+testFade =
+  testFile fadeType "test/dhall/Fade.dhall" (Fade VUp 3 4)
+
 testBarSettings :: TestTree
 testBarSettings =
-  testFile barSettingsType "test/dhall/BarSettings.dhall"
+  testFile barSettingsType "test/dhall/Settings.dhall"
     BarSettings { _bsMonitor = 1
                 , _bsExtraArgs = [ "-l", "10" ]
                 , _bsUpdateInterval = 250000
@@ -141,12 +145,12 @@ testConfiguration =
 testStateTransitionTable :: TestTree
 testStateTransitionTable =
   testFile stateTransitionTableType "test/dhall/StateTransitionTable.dhall" $
-    STT ( H.fromList [ (("", MouseEvent MouseLeft,  ""), ("1", []))
-                     , (("", MouseEvent MouseRight, ""), ("1", []))
-                     , (("", MouseEvent MouseLeft,  "1"), ("2", []))
-                     , (("", MouseEvent MouseRight, "1"), ("2", []))
-                     , (("", MouseEvent MouseLeft,  "2"), ("", []))
-                     , (("", MouseEvent MouseRight, "2"), ("", []))
+    STT ( H.fromList [ (("", Event "A", "" ), ("1", []))
+                     , (("", Event "B", "" ), ("1", []))
+                     , (("", Event "A", "1"), ("2", []))
+                     , (("", Event "B", "1"), ("2", []))
+                     , (("", Event "A", "2"), ("",  []))
+                     , (("", Event "B", "2"), ("",  []))
                      ]
         )
 
