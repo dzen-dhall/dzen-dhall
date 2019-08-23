@@ -429,7 +429,7 @@ Example:
 
 ### Trimming text
 
-`trim` function allows to cut the text to desired width, removing excessive characters from either left or right.
+`trim` function allows to cut a given `Text` to desired width, removing excessive characters from either left or right.
 
 Trim direction is defined as follows:
 
@@ -445,19 +445,14 @@ Example:
 
 ### Sources
 
-Sources serve two purposes:
-
-- Generating text output for [`Bar`s](#bars) (from command's stdout)
-
-- [Emitting events](#events)
+Sources are arbitrary commands that generate text output for `dzen-dhall`.
 
 ```dhall
 let Source : Type =
-  { updateInterval : Optional Natural
-  , command : List Text
-  , input : Optional Text
-  , escapeMode : { joinLines : Bool, escapeMarkup : Bool }
-  }
+  { command : List Text
+  , input : Text
+  , updateInterval : Optional Natural
+  , escapeMode : { joinLines : Bool, escapeMarkup : Bool } }
 ```
 
 <details><summary><strong>SHOW EXAMPLE</strong></summary>
@@ -468,8 +463,8 @@ For example, a simple clock plugin can be created as follows:
 ```dhall
 let clocks : Source =
   { updateInterval = Some 1000
-  , command = "date +%H:%M"
-  , input = None : Optional Text
+  , command = ["date", "+%H:%M"]
+  , input = ""
   , escapeMode = { joinLines = False, escapeMarkup = True }
   }
 ```
@@ -477,12 +472,13 @@ let clocks : Source =
 </p>
 </details>
 
+`updateInterval` specifies *minimum* update interval: new source command will not be spawned if a previous one is still running (this is done to avoid race conditions). Actual time intervals between source command invocations are adjusted to be as close to specified `updateInterval`s as possible. For example, if running a command takes 100ms and `updateInterval` is set to `1000`, the real delay between command's exit and startup will be 900ms. And if it takes more than 1000ms, then the real delay will be zero.
+
+If `updateInterval` is not specified (i.e. set to `None Natural`), the command will run once. It may continue generating output indefinitely, line-by-line, or exit - in the latter case, the last line of the output will be shown forever.
 
 ### Variables
 
 [Sources](#sources), [hooks](#hooks) and [clickable areas](#clickable-areas) can access and modify [scope-local](#scopes) variables.
-
-
 
 ### [Events](dhall/src/Event.dhall)
 

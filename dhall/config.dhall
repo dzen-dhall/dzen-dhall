@@ -25,7 +25,6 @@ let Slider = types.Slider
 let Source = types.Source
 let State = types.State
 let StateMap = types.StateMap
-let StateTransitionTable = types.StateTransitionTable
 let Transition = types.Transition
 let Variable = types.Variable
 let VerticalDirection = types.VerticalDirection
@@ -75,7 +74,7 @@ let bar
 		let source : Source → Bar = carrier.source
 		let plug : Plugin → Bar = carrier.plug
 		let automaton
-			: Address → StateTransitionTable → StateMap Bar → Bar
+			: Address → List Transition → StateMap Bar → Bar
 			= carrier.automaton
 		let check : List Check → Bar = carrier.check
 		let scope : Bar → Bar = carrier.scope

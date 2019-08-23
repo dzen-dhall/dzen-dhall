@@ -25,7 +25,7 @@ let State = types.State
 
 let StateMap = types.StateMap
 
-let StateTransitionTable = types.StateTransitionTable
+let Transition = types.Transition
 
 let mkConfigs = utils.mkConfigs
 
@@ -48,11 +48,11 @@ let defaultBar
 		let ca : Button → Text → Bar → Bar = carrier.ca
 
 		let automaton
-			: Address → StateTransitionTable → StateMap Bar → Bar
+			: Address → List Transition → StateMap Bar → Bar
 			= carrier.automaton
 
-		let stt
-			: StateTransitionTable
+		let stateTransitionTable
+			: List Transition
 			= [ { hooks =
 					[] : List Hook
 				, events =
@@ -79,9 +79,9 @@ let defaultBar
 			  , { state = ON, bar = text "Switcher is ON" }
 			  ]
 
-		let myID : Address = utils.mkAddress "MY_AUTOMATON"
+		let address : Address = utils.mkAddress "MY_AUTOMATON"
 
-		in  ca Button.Left (emit Toggle) (automaton myID stt stateMap)
+		in  ca Button.Left (emit Toggle) (automaton address stateTransitionTable stateMap)
 
 in    mkConfigs
 	  [ { bar = defaultBar : Bar, settings = defaultBarSettings : BarSettings }

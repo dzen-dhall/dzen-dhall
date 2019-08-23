@@ -42,9 +42,11 @@ let State = types.State
 
 let StateMap = types.StateMap
 
-let StateTransitionTable = types.StateTransitionTable
+let Transition = types.Transition
 
 let Token = ../types/Token.dhall
+
+let Variable = ../types/Variable.dhall
 
 let enclose =
 		λ(openingTag : OpeningTag)
@@ -52,6 +54,8 @@ let enclose =
 	  → [ Token.Open openingTag ] # child # [ Token.Close ]
 
 let List/intersperse = ./intersperse.dhall
+
+let showVariable = ./showVariable.dhall
 
 let carrier
 	: Carrier Plugin
@@ -116,7 +120,7 @@ let carrier
 		  λ(p : Plugin) → p
 	  , automaton =
 			λ(address : Address)
-		  → λ(stt : StateTransitionTable)
+		  → λ(stt : List Transition)
 		  → λ(stateMap : StateMap Plugin)
 		  → enclose
 			(OpeningTag.Automaton { stt = stt, address = address })
@@ -131,9 +135,9 @@ let carrier
 	  , check =
 		  prelude.List.map Check Token Token.Check
 	  , define =
-			λ(name : Text)
+			λ(variable : Variable)
 		  → λ(value : Text)
-		  → [ Token.Define { name = name, value = value } ]
+		  → [ Token.Define { name = showVariable variable, value = value } ]
 	  , scope =
 		  enclose OpeningTag.Scope
 	  }

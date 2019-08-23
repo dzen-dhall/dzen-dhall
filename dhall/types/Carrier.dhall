@@ -28,7 +28,7 @@ let Source = ./Source.dhall
 
 let StateMap = ./StateMap.dhall
 
-let StateTransitionTable = ./StateTransitionTable.dhall
+let Transition = ./Transition.dhall
 
 let Variable = ./Variable.dhall
 
@@ -76,7 +76,7 @@ let Carrier
 		, plug :
 			Plugin → Bar
 		, automaton :
-			Address → StateTransitionTable → StateMap Bar → Bar
+			Address → List Transition → StateMap Bar → Bar
 		, check :
 			List Check → Bar
 		, define :

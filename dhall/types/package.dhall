@@ -48,8 +48,6 @@
 	./State.dhall
 , StateMap =
 	./StateMap.dhall
-, StateTransitionTable =
-	./StateTransitionTable.dhall
 , Transition =
 	./Transition.dhall
 , Variable =

@@ -20,7 +20,7 @@ let Slider = ./Slider.dhall
 
 let State = ./State.dhall
 
-let StateTransitionTable = ./StateTransitionTable.dhall
+let Transition = ./Transition.dhall
 
 in  < Marquee :
 		Marquee
@@ -42,7 +42,7 @@ in  < Marquee :
 	| Trim :
 		{ width : Natural, direction : Direction }
 	| Automaton :
-		{ stt : StateTransitionTable, address : Address }
+		{ stt : List Transition, address : Address }
 	| StateMapKey :
 		State
 	| Scope

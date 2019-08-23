@@ -1,4 +1,4 @@
-let StateTransitionTable = ./types/StateTransitionTable.dhall
+let StateTransitionTable = List ./types/Transition.dhall
 
 let Event = ./types/Event.dhall
 

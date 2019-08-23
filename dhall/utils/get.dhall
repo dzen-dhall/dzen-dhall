@@ -1,5 +1,7 @@
 let Variable = ../types/Variable.dhall
 
-let get = λ(name : Variable) → "`\$GET ${name}`"
+let showVariable = ./showVariable.dhall
+
+let get = λ(name : Variable) → "`\$GET ${showVariable name}`"
 
 in  get

@@ -1,7 +1,11 @@
 let Variable = ../types/Variable.dhall
 
+let showVariable = ./showVariable.dhall
+
+let Shell = ../types/Shell.dhall
+
 let set
-	: Text → Text → Text
-	= λ(name : Variable) → λ(value : Text) → "\$SET ${name} \"${value}\""
+	: Variable → Text → Shell
+	= λ(name : Variable) → λ(value : Text) → "\$SET ${showVariable name} \"${value}\""
 
 in  set

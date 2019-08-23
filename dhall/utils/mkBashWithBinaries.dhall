@@ -1,3 +1,8 @@
+{- This function creates a Source that runs a given bash script with specified update interval.
+
+Additionally, it asserts that given executables are in PATH.
+-}
+
 let prelude = ../prelude/package.dhall
 
 let types = ../types/package.dhall
