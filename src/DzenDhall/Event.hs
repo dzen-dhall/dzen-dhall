@@ -65,8 +65,8 @@ launchEventListener subscriptions clickableAreas = do
 
           Just (RoutedEvent event scope) ->
             case H.lookup scope subscriptions of
-              Just subscriptions -> do
-                processSubscriptions barRuntime scope event subscriptions
+              Just scopeSubscriptions -> do
+                processSubscriptions barRuntime scope event scopeSubscriptions
 
               Nothing ->
                 T.putStrLn $

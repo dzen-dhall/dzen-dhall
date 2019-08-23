@@ -7,25 +7,25 @@ let prelude = ../prelude/package.dhall
 
 let types = ../types/package.dhall
 
+let Assertion = types.Assertion
+
+let Carrier = types.Carrier
+
 let mkBash = ./mkBash.dhall
 
 let mkBashWithBinaries =
 		λ(Bar : Type)
-	  → λ(carrier : types.Carrier Bar)
+	  → λ(carrier : Carrier Bar)
 	  → λ(binaries : List Text)
 	  → λ(interval : Natural)
 	  → λ(input : Text)
 	  → carrier.join
-		[ carrier.check
+		[ carrier.join
 		  ( prelude.List.map
 			Text
-			types.Check
+			Bar
 			(   λ(binary : Text)
-			  → { message =
-					""
-				, assertion =
-					types.Assertion.BinaryInPath binary
-				}
+			  → carrier.check "" (Assertion.BinaryInPath binary)
 			)
 			binaries
 		  )

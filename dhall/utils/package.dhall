@@ -12,8 +12,14 @@
 	./mkSeparateBy.dhall
 , mkState =
 	./mkState.dhall
+, mkVariable =
+	./mkVariable.dhall
 , mkBash =
 	./mkBash.dhall
+, mkTransition =
+	./mkTransition.dhall
+, mkTransitions =
+	./mkTransitions.dhall
 , mkBashWithBinaries =
 	./mkBashWithBinaries.dhall
 , showAddress =
@@ -24,6 +30,8 @@
 	./showEvent.dhall
 , showState =
 	./showState.dhall
+, showVariable =
+	./showVariable.dhall
 , emit =
 	./emit.dhall
 , get =

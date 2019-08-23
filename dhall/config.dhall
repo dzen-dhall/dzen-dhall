@@ -13,6 +13,7 @@ let Check = types.Check
 let Color = types.Color
 let Configuration = types.Configuration
 let Direction = types.Direction
+let EscapeMode = types.EscapeMode
 let Event = types.Event
 let Hook = types.Hook
 let Image = types.Image
@@ -32,8 +33,15 @@ let VerticalDirection = types.VerticalDirection
 let mkConfigs = utils.mkConfigs
 let defaultBarSettings : BarSettings = utils.defaultBarSettings
 
-let mkState : Text → State = utils.mkState
+let showAddress : Address → Text = utils.showAddress
+let showButton : Button → Text = utils.showButton
+let showEvent : Event → Text = utils.showEvent
+let showState : State → Text = utils.showState
+let showVariable : Variable → Text = utils.showVariable
+
 let mkAddress : Text → Address = utils.mkAddress
+let mkState : Text → State = utils.mkState
+let mkVariable : Text → Variable = utils.mkVariable
 
 let emit : Event → Shell = utils.emit
 let get : Variable → Shell = utils.get
@@ -76,7 +84,7 @@ let bar
 		let automaton
 			: Address → List Transition → StateMap Bar → Bar
 			= carrier.automaton
-		let check : List Check → Bar = carrier.check
+		let check : Text -> Assertion → Bar = carrier.check
 		let scope : Bar → Bar = carrier.scope
 		let define : Variable → Text → Bar = carrier.define
 
@@ -129,6 +137,6 @@ let bar
 			]
 
 in    mkConfigs
-	  [ { bar = bar, settings = defaultBarSettings : BarSettings }
+	  [ { bar = bar, settings = defaultBarSettings }
 	  ]
 	: List Configuration

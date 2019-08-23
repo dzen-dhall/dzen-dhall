@@ -2,6 +2,8 @@ let AbsolutePosition = ./AbsolutePosition.dhall
 
 let Address = ./Address.dhall
 
+let Assertion = ./Assertion.dhall
+
 let Button = ./Button.dhall
 
 let Color = ./Color.dhall
@@ -78,7 +80,7 @@ let Carrier
 		, automaton :
 			Address → List Transition → StateMap Bar → Bar
 		, check :
-			List Check → Bar
+			Text → Assertion → Bar
 		, define :
 			Variable → Text → Bar
 		, scope :

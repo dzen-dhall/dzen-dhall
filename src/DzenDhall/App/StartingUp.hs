@@ -241,7 +241,7 @@ initialize (BarAutomaton address rawSTT rawStateMap) = do
   pure $ BarAutomaton address () barRef
 
 initialize (BarScope child) = do
-  counter <- getCounter
+  counter <- getNonce
   oldScopeName <- (^. ssScopeName) <$> get
   modify $ ssScopeName <>~ ("-" <> showPack counter)
   child' <- initialize child
@@ -250,7 +250,7 @@ initialize (BarScope child) = do
 
 initialize (BarProp (CA ca) child) = do
 
-  identifier <- getCounter
+  identifier <- getNonce
   namedPipe  <- get <&> (^. ssNamedPipe)
   scope      <- get <&> (^. ssScopeName)
 
@@ -290,7 +290,7 @@ initialize (BarShape (I image))
                    Just imageId ->
                      pure imageId
                    Nothing -> do
-                     imageId <- showPack <$> getCounter
+                     imageId <- showPack <$> getNonce
                      modify $ ssImages %~ H.insert image imageId
                      pure imageId
 

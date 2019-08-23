@@ -8,6 +8,8 @@ let AbsolutePosition = types.AbsolutePosition
 
 let Address = types.Address
 
+let Assertion = types.Assertion
+
 let Bar = types.Bar
 
 let Button = types.Button
@@ -133,7 +135,9 @@ let carrier
 			  stateMap
 			)
 	  , check =
-		  prelude.List.map Check Token Token.Check
+			λ(message : Text)
+		  → λ(assertion : Assertion)
+		  → [ Token.Check { message = message, assertion = assertion } ]
 	  , define =
 			λ(variable : Variable)
 		  → λ(value : Text)

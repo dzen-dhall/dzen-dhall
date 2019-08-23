@@ -84,10 +84,10 @@ modify f = get >>= put . f
 getRuntime :: App stage Runtime
 getRuntime = App $ lift Reader.ask
 
-getCounter :: App StartingUp Int
-getCounter = do
-  modify $ ssCounter +~ 1
-  get <&> (^. ssCounter)
+getNonce :: App StartingUp Int
+getNonce = do
+  modify $ ssNonce +~ 1
+  get <&> (^. ssNonce)
 
 liftStartingUp :: App StartingUp a -> BarSettings -> App Common a
 liftStartingUp (App app) barSettings = do

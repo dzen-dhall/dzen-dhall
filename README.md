@@ -723,8 +723,6 @@ Startup-time assertions allow to make sure that some condition is true before pr
 
 ```dhall
 let Assertion = < BinaryInPath : Text | SuccessfulExit : Text > in Assertion
-
-let Check : Type = { message : Text, assertion : Assertion }
 ```
 
 A `message` will be printed to the console on assertion failure. Assertions, when used wisely, greatly reduce debugging time.
@@ -733,24 +731,16 @@ For example, this assertion fails if there's no `something` binary in `$PATH`:
 
 ```dhall
 check
-[ { message =
-	"Did you miss something?"
-  , assertion =
-	Assertion.BinaryInPath "something"
-  }
-]
+  "Did you miss something?"
+  (Assertion.BinaryInPath "something")
 ```
 
 And this assertion fails on weekends:
 
 ```dhall
 check
-[ { message =
-	"Not going to work!"
-  , assertion =
-	Assertion.SuccessfulExit "[[ \$(date +%u) -lt 6 ]]"
-  }
-]
+  "Not going to work!"
+  (Assertion.SuccessfulExit "[[ \$(date +%u) -lt 6 ]]")
 ```
 
 [[view full example]](test/dhall/configs/assertions.dhall)

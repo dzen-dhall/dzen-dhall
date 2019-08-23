@@ -4,8 +4,6 @@
 	./Address.dhall
 , Assertion =
 	./Assertion.dhall
-, Configuration =
-	./Configuration.dhall
 , Bar =
 	./Bar.dhall
 , BarSettings =
@@ -18,6 +16,8 @@
 	./Check.dhall
 , Color =
 	./Color.dhall
+, Configuration =
+	./Configuration.dhall
 , Direction =
 	./Direction.dhall
 , EscapeMode =
@@ -38,10 +38,10 @@
 	./PluginMeta.dhall
 , Position =
 	./Position.dhall
-, Slider =
-	./Slider.dhall
 , Shell =
 	./Shell.dhall
+, Slider =
+	./Slider.dhall
 , Source =
 	./Source.dhall
 , State =

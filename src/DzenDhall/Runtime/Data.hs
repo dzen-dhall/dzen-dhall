@@ -47,7 +47,7 @@ data StartupState
   { _ssSubscriptions       :: Subscriptions
   , _ssScopeName           :: Scope
   , _ssBarSettings         :: BarSettings
-  , _ssCounter             :: Int
+  , _ssNonce               :: Int
   -- ^ Counter that is incremented each time it is requested (used as a source
   -- of unique identifiers). See also: 'DzenDhall.App.getCounter'
   , _ssSourceCache         :: H.HashMap (Text, Source) (IORef Text, Cache)
