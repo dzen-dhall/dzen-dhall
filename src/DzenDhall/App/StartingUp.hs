@@ -412,10 +412,9 @@ runSourceProcess cp outputRef cacheRef input = do
 
 -- | Reads outputs of 'SourceHandle's and puts them into an AST.
 collectSources
-  :: Int
-  -> Bar Initialized
+  :: Bar Initialized
   -> App Forked AST
-collectSources _ (BarSource handle) = liftIO $ do
+collectSources (BarSource handle) = liftIO do
   let outputRef  = handle ^. shOutputRef
       cacheRef   = handle ^. shCacheRef
       escapeMode = handle ^. shEscapeMode
@@ -430,31 +429,32 @@ collectSources _ (BarSource handle) = liftIO $ do
       writeIORef cacheRef (Just escaped)
       pure $ ASTText escaped
 
-collectSources fontWidth (BarMarquee marquee p) = do
+collectSources (BarMarquee marquee p) = do
 
-  ast          <- collectSources fontWidth p
+  ast          <- collectSources p
   frameCounter <- view brFrameCounter <$> App.get
+  fontWidth    <- App.get <&> (^. brConfiguration . cfgBarSettings . bsFontWidth)
   pure $ Marquee.run fontWidth marquee ast frameCounter
 
-collectSources fontWidth (BarSlider slider ss) = do
+collectSources (BarSlider slider ss) = do
 
   frameCounter <- view brFrameCounter <$> App.get
-  asts         <- mapM (collectSources fontWidth) ss
+  asts         <- mapM collectSources ss
   pure $ Slider.run slider frameCounter asts
 
-collectSources fontWidth (BarAutomaton _ _ ref) = do
+collectSources (BarAutomaton _ _ ref) = do
 
   bar          <- liftIO (readIORef ref)
-  collectSources fontWidth bar
+  collectSources bar
 
-collectSources fontWidth (BarScope child) = do
-  collectSources fontWidth child
+collectSources (BarScope child) = do
+  collectSources child
 
-collectSources fontWidth (BarPad width padding child) = do
-  ASTPadding width padding <$> collectSources fontWidth child
+collectSources (BarPad width padding child) = do
+  ASTPadding width padding <$> collectSources child
 
-collectSources fontWidth (BarTrim width direction child) = do
-  ast <- collectSources fontWidth child
+collectSources (BarTrim width direction child) = do
+  ast <- collectSources child
   case direction of
     DRight ->
       pure $ fst $ split width ast
@@ -462,18 +462,18 @@ collectSources fontWidth (BarTrim width direction child) = do
       let actualWidth = astWidth ast
       pure $ snd $ split (abs $ actualWidth - width) ast
 
-collectSources _         (BarShape shape) = do
+collectSources (BarShape shape) = do
   pure $ ASTShape shape
 
-collectSources fontWidth (BarProp prop child)
-  = ASTProp prop <$> collectSources fontWidth child
-collectSources _fontWidth (BarDefine _prop)
+collectSources (BarProp prop child)
+  = ASTProp prop <$> collectSources child
+collectSources  (BarDefine _prop)
   = pure mempty
-collectSources fontWidth (Bars ps)
-  = mconcat <$> mapM (collectSources fontWidth) ps
-collectSources _         (BarText text)
+collectSources (Bars ps)
+  = mconcat <$> mapM collectSources ps
+collectSources (BarText text)
   = pure $ ASTText text
-collectSources _         (BarMarkup text)
+collectSources (BarMarkup text)
   = pure $ ASTText text
 
 

@@ -7,5 +7,5 @@
 , font :
 	Optional Text
 , fontWidth :
-	Optional Natural
+	Natural
 }

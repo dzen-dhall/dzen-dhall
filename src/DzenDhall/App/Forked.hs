@@ -7,7 +7,6 @@ import           DzenDhall.Config
 import           DzenDhall.Data
 import           DzenDhall.Runtime.Data
 
-import           Data.Maybe
 import           Lens.Micro
 import qualified Data.Text.IO
 
@@ -21,10 +20,9 @@ updateForever bar = do
   barRuntime <- get
 
   let barSettings = barRuntime ^. brConfiguration ^. cfgBarSettings
-      fontWidth = fromMaybe 10 $ barSettings ^. bsFontWidth
 
-  forkApp $ do
-    timely (barSettings ^. bsUpdateInterval) $ do
-      output <- runRender <$> collectSources fontWidth bar
+  forkApp do
+    timely (barSettings ^. bsUpdateInterval) do
+      output <- runRender <$> collectSources bar
       liftIO $ Data.Text.IO.hPutStrLn (barRuntime ^. brHandle) output
       modify $ brFrameCounter +~ 1

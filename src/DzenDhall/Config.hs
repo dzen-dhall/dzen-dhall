@@ -327,7 +327,7 @@ data BarSettings
   -- ^ In microseconds
   , _bsFont           :: Maybe String
   -- ^ Font in XLFD format
-  , _bsFontWidth      :: Maybe Int
+  , _bsFontWidth      :: Int
   }
   deriving (Show, Eq, Generic)
 
@@ -339,7 +339,7 @@ barSettingsType = record $
               <*> field "extraArgs"      (list string)
               <*> field "updateInterval" ((* 1000) . fromIntegral <$> natural)
               <*> field "font"           (Dhall.maybe string)
-              <*> field "fontWidth"      (fmap fromIntegral <$> Dhall.maybe natural)
+              <*> field "fontWidth"      (fromIntegral <$> natural)
 
 
 data ShapeSize

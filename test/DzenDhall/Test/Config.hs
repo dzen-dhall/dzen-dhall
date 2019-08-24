@@ -128,7 +128,7 @@ testBarSettings =
                 , _bsExtraArgs = [ "-l", "10" ]
                 , _bsUpdateInterval = 250000
                 , _bsFont = Nothing
-                , _bsFontWidth = Nothing
+                , _bsFontWidth = 10
                 }
 
 testConfiguration :: TestTree
@@ -139,7 +139,7 @@ testConfiguration =
                                                     , _bsExtraArgs = [ "-l", "10" ]
                                                     , _bsUpdateInterval = 250000
                                                     , _bsFont = Nothing
-                                                    , _bsFontWidth = Nothing
+                                                    , _bsFontWidth = 10
                                                     }
                     }
     ]

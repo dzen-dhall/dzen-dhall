@@ -9,6 +9,6 @@ in    { monitor =
 	  , font =
 		  Some "-*-monospace-medium-r-*-*-14-*-*-*-*-*-*-*"
 	  , fontWidth =
-		  Some 10
+		  10
 	  }
 	: Settings

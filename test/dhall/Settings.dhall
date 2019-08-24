@@ -9,6 +9,6 @@ in    { monitor =
 	  , font =
 		  None Text
 	  , fontWidth =
-		  None Natural
+		  10
 	  }
 	: Settings

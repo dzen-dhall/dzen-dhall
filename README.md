@@ -779,7 +779,7 @@ Jittering may appear if `fontWidth` parameter value is too large or too small. I
 
 ```dhall
 [ { bar = ...
-  , settings = defaultSettings ⫽ { fontWidth = Some 10 }
+  , settings = defaultSettings ⫽ { fontWidth = 10 }
   }
 ]
 ```

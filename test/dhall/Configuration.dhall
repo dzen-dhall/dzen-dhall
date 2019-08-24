@@ -16,7 +16,7 @@ in  [ { bar =
 			, font =
 				None Text
 			, fontWidth =
-				None Natural
+				10
 			}
 		  : Settings
 	  }
