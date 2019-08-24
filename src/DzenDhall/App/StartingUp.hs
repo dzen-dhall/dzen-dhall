@@ -23,9 +23,11 @@ import           System.Environment
 import           System.Posix.Files
 import           System.Process
 import qualified Data.HashMap.Strict as H
-import qualified Data.Text
-import qualified Data.Text.IO
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified System.IO
+import qualified Pipes.Prelude as P
+import qualified Pipes as P
 
 
 startUp
@@ -49,12 +51,12 @@ startUp cfg bar = do
 
       let fileName =
             state ^. ssVariableFilePrefix <>
-            Data.Text.unpack scope <>
+            T.unpack scope <>
             "-v-" <>
-            Data.Text.unpack name
+            T.unpack name
 
       liftIO $ do
-        Data.Text.IO.writeFile fileName value
+        T.writeFile fileName value
         setFileMode fileName $
           ownerReadMode  `unionFileModes`
           groupReadMode  `unionFileModes`
@@ -63,8 +65,8 @@ startUp cfg bar = do
 
   forM_ (H.toList $ state ^. ssImages) $
     \(imageContents, imageId) -> liftIO $ do
-      Data.Text.IO.writeFile
-        (state ^. ssImagePathPrefix <> Data.Text.unpack imageId <> ".xbm") imageContents
+      T.writeFile
+        (state ^. ssImagePathPrefix <> T.unpack imageId <> ".xbm") imageContents
 
   pure (bar', state ^. ssSubscriptions, barRuntime, state ^. ssClickableAreas)
 
@@ -97,7 +99,7 @@ mkBarRuntime cfg = do
               , "SCOPE=\"$1\""
               , "EVENT=\"$2\""
               , "echo event:\"$EVENT\"@\"$SCOPE\" >> " <>
-                Data.Text.pack namedPipe
+                T.pack namedPipe
               ],
               emitterFile
             )
@@ -105,7 +107,7 @@ mkBarRuntime cfg = do
           , ( [ "#!/usr/bin/env bash"
               , "SCOPE=\"$1\""
               , "VAR=\"$2\""
-              , "cat \"" <> Data.Text.pack variableFilePrefix <> "$SCOPE-v-$VAR\""
+              , "cat \"" <> T.pack variableFilePrefix <> "$SCOPE-v-$VAR\""
               ]
             , getterFile
             )
@@ -115,7 +117,7 @@ mkBarRuntime cfg = do
               , "VAR=\"$2\""
               , "VALUE=\"$3\""
               , "echo \"$VALUE\" > " <>
-                Data.Text.pack variableFilePrefix <> "\"$SCOPE-v-$VAR\""
+                T.pack variableFilePrefix <> "\"$SCOPE-v-$VAR\""
               ]
             , setterFile
             )
@@ -123,7 +125,7 @@ mkBarRuntime cfg = do
 
       \(codeLines, file) -> do
 
-        Data.Text.IO.writeFile file $ fromLines codeLines
+        T.writeFile file $ fromLines codeLines
         setFileMode file $
           ownerExecuteMode `unionFileModes`
           groupExecuteMode `unionFileModes`
@@ -257,7 +259,7 @@ initialize (BarProp (CA ca) child) = do
   let command =
         "echo click:" <> showPack identifier <>
         "@" <> scope <> " >> " <>
-        Data.Text.pack namedPipe
+        T.pack namedPipe
 
   modify $ ssClickableAreas %~ H.insert identifier (ca ^. caCommand)
 
@@ -294,7 +296,7 @@ initialize (BarShape (I image))
                      modify $ ssImages %~ H.insert image imageId
                      pure imageId
 
-      pure $ BarShape $ I $ Data.Text.pack imagePathPrefix <> imageId <> ".xbm"
+      pure $ BarShape $ I $ T.pack imagePathPrefix <> imageId <> ".xbm"
 
 initialize (BarShape shape) =
   pure $ BarShape shape
@@ -305,7 +307,7 @@ initialize (BarText text) =
 
 isImageContents :: Text -> Bool
 isImageContents =
-  Data.Text.isInfixOf "#define"
+  T.isInfixOf "#define"
 
 -- | Run source process either once or forever, depending on source settings.
 mkThread
@@ -332,11 +334,11 @@ mkThread
   scope = do
 
   let emitter =
-        barRuntime ^. brEmitterScript <> " " <> Data.Text.unpack scope
+        barRuntime ^. brEmitterScript <> " " <> T.unpack scope
       getter =
-        barRuntime ^. brGetterScript  <> " " <> Data.Text.unpack scope
+        barRuntime ^. brGetterScript  <> " " <> T.unpack scope
       setter =
-        barRuntime ^. brSetterScript  <> " " <> Data.Text.unpack scope
+        barRuntime ^. brSetterScript  <> " " <> T.unpack scope
 
       sourceProcess =
         (proc binary args) { std_out = CreatePipe
@@ -350,17 +352,18 @@ mkThread
                              environment
                            }
 
-  forkApp $ case updateInterval of
+  forkApp
+    case updateInterval of
 
-    -- If update interval is specified, loop forever.
-    Just interval ->
-      timely interval $ liftIO $
-      runSourceProcess sourceProcess outputRef cacheRef input
+      -- If update interval is specified, loop forever.
+      Just interval -> do
+        timely interval $ liftIO do
+          runSourceProcess sourceProcess outputRef cacheRef input
 
-    -- If update interval is not specified, run the source once.
-    Nothing -> do
-      liftIO $
-        runSourceProcess sourceProcess outputRef cacheRef input
+      -- If update interval is not specified, run the source once.
+      Nothing ->
+        liftIO $
+          runSourceProcess sourceProcess outputRef cacheRef input
 
 
 -- | Creates a process, subscribes to its stdout handle and updates the output ref.
@@ -380,14 +383,15 @@ runSourceProcess cp outputRef cacheRef input = do
       hSetBuffering stdin  LineBuffering
       hSetBuffering stdout LineBuffering
 
-      Data.Text.IO.hPutStrLn stdin input
+      T.hPutStrLn stdin input
       hClose stdin
 
-      output <- Data.Text.IO.hGetContents stdout
+      P.runEffect do
+        P.for (P.fromHandle stdout) \line -> P.lift do
 
-      -- Drop cache
-      writeIORef cacheRef Nothing
-      writeIORef outputRef output
+          -- Drop cache
+          writeIORef cacheRef Nothing
+          writeIORef outputRef (T.pack line)
 
       void $ waitForProcess ph
 
@@ -469,11 +473,11 @@ escape
   -> Text
 escape EscapeMode{joinLines, escapeMarkup} =
   (if escapeMarkup
-   then Data.Text.replace "^" "^^"
+   then T.replace "^" "^^"
    else id) .
   (if joinLines
-   then Data.Text.replace "\n" ""
-   else fromMaybe "" . listToMaybe . Data.Text.lines)
+   then T.replace "\n" ""
+   else fromMaybe "" . listToMaybe . T.lines)
 
 
 allButtons :: [Button]
