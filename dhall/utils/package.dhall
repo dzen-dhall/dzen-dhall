@@ -1,4 +1,6 @@
-{ defaultSettings =
+{ addHook =
+	./addHook.dhall
+, defaultSettings =
 	./defaultSettings.dhall
 , intersperse =
 	./intersperse.dhall

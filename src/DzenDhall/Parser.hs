@@ -90,27 +90,27 @@ automaton = do
   pure $ BarAutomaton address stt $ H.fromList kvs
 
 stateTransitionTable :: Parser (Text, StateTransitionTable)
-stateTransitionTable = withPreview $ \case
+stateTransitionTable = withPreview \case
   TokOpen (OAutomaton address stt) -> Just (address, stt)
   _                                -> Nothing
 
 stateMapKey :: Parser Text
-stateMapKey = withPreview $ \case
+stateMapKey = withPreview \case
   TokOpen (OStateMapKey key) -> Just key
   _                          -> Nothing
 
 separatable :: Parser Separatable
-separatable = withPreview $ \case
+separatable = withPreview \case
   TokOpen (OSlider slider) -> Just (SepSlider slider)
   _                        -> Nothing
 
 separator :: Parser ()
-separator = withPreview $ \case
+separator = withPreview \case
   TokSeparator -> Just ()
   _            -> Nothing
 
 solid :: Parser Solid
-solid = withPreview $ \case
+solid = withPreview \case
   TokOpen (OMarquee marquee) -> Just $ SolidMarquee marquee
   TokOpen (OFG color)        -> Just $ SolidFG color
   TokOpen (OBG color)        -> Just $ SolidBG color
@@ -126,32 +126,32 @@ solid = withPreview $ \case
   _                          -> Nothing
 
 closing :: Parser ()
-closing = withPreview $ \case
+closing = withPreview \case
   TokClose -> Just ()
   _        -> Nothing
 
 markup :: Parser Text
-markup = withPreview $ \case
+markup = withPreview \case
   TokMarkup txt -> Just txt
   _             -> Nothing
 
 text :: Parser Text
-text = withPreview $ \case
+text = withPreview \case
   TokTxt txt -> Just txt
   _          -> Nothing
 
 source :: Parser Source
-source = withPreview $ \case
+source = withPreview \case
   TokSource settings -> Just settings
   _                  -> Nothing
 
 variable :: Parser Variable
-variable = withPreview $ \case
+variable = withPreview \case
   TokDefine variable -> Just variable
   _                  -> Nothing
 
 shape :: Parser Shape
-shape = withPreview $ \case
+shape = withPreview \case
   TokI  image     -> Just $ I image
   TokR  shapeSize -> Just $ R  (shapeSize ^. shapeSizeW) (shapeSize ^. shapeSizeH)
   TokRO shapeSize -> Just $ RO (shapeSize ^. shapeSizeW) (shapeSize ^. shapeSizeH)

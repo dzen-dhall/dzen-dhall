@@ -30,7 +30,7 @@ showPack = Data.Text.pack . show
 loopWhileM :: Monad m => m Bool -> m () -> m ()
 loopWhileM pr act = do
     b <- pr
-    when b $ do
+    when b do
       act
       loopWhileM pr act
 
@@ -46,6 +46,9 @@ withMaybe mb b f = maybe b f mb
 
 withEither :: Either a b -> (a -> c) -> (b -> c) -> c
 withEither ei l r = either l r ei
+
+whenLeft :: (Monad m, Monoid b) => Either a b -> (a -> m b) -> m b
+whenLeft e f = whenJust (leftToJust e) f
 
 safeHead :: [a] -> Maybe a
 safeHead = fmap fst . Data.List.uncons
@@ -74,5 +77,8 @@ addElapsedP (ElapsedP e1 (NanoSeconds ns1)) (ElapsedP e2 (NanoSeconds ns2)) =
 -- | Returns a list of executables that are not present in PATH.
 checkExecutables :: [String] -> IO [String]
 checkExecutables executables = do
-  fmap catMaybes $ forM executables $ \executable ->
+  fmap catMaybes $ forM executables \executable ->
     maybe (Just executable) (const Nothing) <$> findExecutable executable
+
+isYes :: String -> Bool
+isYes response = response `elem` ["Y", "y", "Yes", "yes", ""]

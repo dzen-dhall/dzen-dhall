@@ -48,6 +48,8 @@ let mkTransition : Event → State → State → Transition = utils.mkTransition
 let mkTransitions : Event → List State → State → Transition = utils.mkTransitions
 let mkVariable : Text → Variable = utils.mkVariable
 
+let addHook : Hook → Transition → Transition = utils.addHook
+
 let emit : Event → Shell = utils.emit
 let get : Variable → Shell = utils.get
 let query : Address → Shell = utils.query
@@ -77,7 +79,7 @@ let bar
 		let co : Natural → Bar = cr.co
 		let p : Position → Bar → Bar = cr.p
 		let pa : AbsolutePosition → Bar → Bar = cr.pa
-		let ca : Button → Text → Bar → Bar = cr.ca
+		let ca : Button → Shell → Bar → Bar = cr.ca
 		let ib : Bar → Bar = cr.ib
 
 		-- Animations:
@@ -138,12 +140,15 @@ let bar
 
 		let accent : Bar → Bar = fg "white"
 
-		in    -- Bar definition starts here.
+		in    -- Your bar definition starts below.
 
 			  separate
 			  [ join [ text "Mem: ", accent memoryUsage, text "%" ]
 			  , join [ text "Swap: ", accent swapUsage, text "%" ]
 			  , join [ date, text " ", accent time ]
+
+			  -- You can add new plugins right here.
+
 			  ]
 			: Bar
 

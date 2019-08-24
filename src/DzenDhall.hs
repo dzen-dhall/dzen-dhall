@@ -4,6 +4,7 @@ import           DzenDhall.App
 import           DzenDhall.App.Run (useConfigurations)
 import           DzenDhall.Arguments
 import           DzenDhall.Commands.Plug
+import           DzenDhall.Commands.Unplug
 import           DzenDhall.Commands.Validate
 import           DzenDhall.Runtime
 
@@ -33,6 +34,11 @@ main = do
       runtime <- readRuntime arguments
       runApp runtime () $
         plugCommand commandArgs
+
+    Just (Unplug commandArgs) -> do
+      runtime <- readRuntime arguments
+      runApp runtime () $
+        unplugCommand commandArgs
 
     Just (Validate commandArgs) -> do
       runtime <- readRuntime arguments

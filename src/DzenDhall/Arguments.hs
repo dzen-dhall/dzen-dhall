@@ -33,6 +33,10 @@ data PlugCommand
                 }
   deriving (Show, Eq)
 
+newtype UnplugCommand
+  = UnplugCommand String
+  deriving (Show, Eq)
+
 data ValidateCommand
   = ValidateCommand { skipAssertions :: SkipAssertions
                     }
@@ -41,6 +45,7 @@ data ValidateCommand
 data Command
   = Init
   | Plug PlugCommand
+  | Unplug UnplugCommand
   | Validate ValidateCommand
   deriving (Show, Eq)
 
@@ -87,13 +92,18 @@ argParser = Arguments
           )
        <> command "plug"
           ( info
-              ( Plug <$> plugCommandParser )
-              ( progDesc "Install a plugin to the `plugins` directory. Acceptable formats: `name`, `github-username/repository`, a file name or URL." )
+            ( Plug <$> plugCommandParser )
+            ( progDesc "Install a plugin to the `plugins` directory. Acceptable formats: `name`, `github-username/repository`, a file name or URL." )
             )
+       <> command "unplug"
+          ( info
+            ( Unplug <$> unplugCommandParser )
+            ( progDesc "Remove a plugin from plugins directory." )
+          )
        <> command "validate"
           ( info
-              ( Validate <$> validateCommandParser )
-              ( progDesc "Validate the configuration without running it." )
+            ( Validate <$> validateCommandParser )
+            ( progDesc "Validate the configuration without running it." )
           )
         )
       )
@@ -111,6 +121,10 @@ plugCommandParser =
                   ( long "yes"
                  <> help "Skip manual code review and confirmation."
                   )
+
+unplugCommandParser :: Parser UnplugCommand
+unplugCommandParser =
+  UnplugCommand <$> argument str (metavar "PLUGIN NAME")
 
 validateCommandParser :: Parser ValidateCommand
 validateCommandParser =

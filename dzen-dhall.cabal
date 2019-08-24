@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 30e0f232c06e9297e7ca7b62b8f4968e28b46060545db9f4851b1877a87ed5df
+-- hash: c44e10542ce48629f05d9c7760f839c27ca11b3fe750b09477f5f73528982613
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -42,10 +42,11 @@ library
       DzenDhall.Templates
       DzenDhall.Validation
   other-modules:
+      DzenDhall.Commands.Unplug
       Paths_dzen_dhall
   hs-source-dirs:
       src
-  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections FlexibleInstances
+  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections FlexibleInstances BlockArguments
   ghc-options: -Wall
   build-depends:
       ansi-terminal
@@ -107,7 +108,7 @@ test-suite tasty
       Paths_dzen_dhall
   hs-source-dirs:
       test
-  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections FlexibleInstances
+  default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections FlexibleInstances BlockArguments
   ghc-options: -Wall
   build-depends:
       HUnit

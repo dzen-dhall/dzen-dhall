@@ -58,7 +58,7 @@ launchEventListener subscriptions clickableAreas = do
       hSetBuffering fh LineBuffering
       pure fh
 
-    for (P.fromHandle fh) $ \line -> do
+    for (P.fromHandle fh) \line -> do
       lift $ do
 
         case parsePipeCommand line of
@@ -105,7 +105,7 @@ processSubscriptions barRuntime scope event subscriptions = do
 
   environment <- getEnvironment
 
-  forM_ subscriptions $ \case
+  forM_ subscriptions \case
 
     AutomatonSubscription address stt stateMap stateRef barRef -> do
 
@@ -124,7 +124,7 @@ processSubscriptions barRuntime scope event subscriptions = do
         environment' =
           ("EVENT", T.unpack $ runRender event) : environment
 
-      whenJust mbNext $ \(nextState, hooks) -> void $ forkIO $ do
+      whenJust mbNext \(nextState, hooks) -> void $ forkIO $ do
 
         mbUnit <- runMaybeT (runHooks environment' barRuntime scope hooks)
 
@@ -167,7 +167,7 @@ runHooks
   -> [Hook]
   -> MaybeT IO ()
 runHooks environment barRuntime scope hooks = do
-  forM_ hooks $ \hook -> do
+  forM_ hooks \hook -> do
 
     let binary = T.unpack $
           head $ hook ^. hookCommand

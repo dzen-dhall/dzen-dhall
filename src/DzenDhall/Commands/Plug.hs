@@ -38,6 +38,36 @@ import qualified Text.Megaparsec                           as MP
 import qualified Text.Parsec                               as P
 
 
+plugCommand :: PlugCommand -> App Common ()
+plugCommand (PlugCommand spec shouldConfirm) = do
+
+  withEither (parseSourceSpec spec) invalidSourceSpec
+    \sourceSpec -> do
+      rawContents <- liftIO $
+        getPluginContents sourceSpec
+
+      withMaybe (parsePlugin rawContents) (invalidFile rawContents)
+        \expr -> do
+
+          eiMeta <- readPluginMeta sourceSpec rawContents
+
+          withEither eiMeta invalidMeta
+            \meta -> do
+
+              let pluginName = meta ^. pmName
+
+              checkIfPluginFileExists pluginName
+
+              when (shouldConfirm == Confirm) do
+                suggestReviewing expr
+
+                askConfirmation
+
+              writePluginFile pluginName rawContents
+
+              printUsage meta
+
+
 data PluginSourceSpec
   = FromGithub
   -- ^ Load from Github by username and repository
@@ -55,55 +85,23 @@ data PluginSourceSpec
   deriving (Eq, Show)
 
 
-plugCommand :: PlugCommand -> App Common ()
-plugCommand (PlugCommand spec shouldConfirm) = do
-
-  withEither (parseSourceSpec spec) invalidSourceSpec $ \sourceSpec -> do
-    rawContents <- liftIO $
-      getPluginContents sourceSpec
-
-    withMaybe (tryDhallParse rawContents) (invalidFile rawContents) $ \expr -> do
-
-      eiMeta <- readPluginMeta sourceSpec rawContents
-
-      withEither eiMeta handleMetaValidationError $ \meta -> do
-
-        let pluginName = meta ^. pmName
-
-        checkIfPluginFileExists pluginName
-
-        when (shouldConfirm == Confirm) $ do
-          suggestReviewing expr
-
-          askConfirmation
-
-        writePluginFile pluginName rawContents
-
-        printUsage meta
-
-
 askConfirmation :: App Common ()
 askConfirmation = do
 
-  msg <- highlight "Are you sure you want to install this plugin? (Y/n)"
-  echo msg
+  echo =<< highlight "Are you sure you want to install this plugin? (Y/n)"
 
   response <- liftIO getLine
-  unless (response `elem` ["Y", "y", "Yes", "yes", ""]) $
+  unless (isYes response) $
     exit 1 "Aborting."
+
 
 suggestReviewing :: Expr Dhall.Src Import -> App Common ()
 suggestReviewing expr = do
-  msg1 <- highlight "Please review the plugin code:"
-  msg2 <- highlight "Please review the code above."
+  echo =<< highlight "Please review the plugin code:"
+  echo ""
 
   let expr' =
         Dhall.Pretty.prettyCharacterSet Dhall.Pretty.Unicode expr
-
-  echoLines [ ""
-            , msg1
-            , ""
-            ]
 
   supportsANSI <- getRuntime <&> (^. rtSupportsANSI)
 
@@ -118,21 +116,20 @@ suggestReviewing expr = do
       System.IO.stdout
       (Pretty.layoutSmart Pretty.layoutOpts (Pretty.unAnnotate expr'))
 
-  echoLines [ ""
-            , ""
-            , msg2
-            , ""
-            ]
+  echo ""
+  echo =<< highlight "Please review the code above."
+
 
 printUsage :: PluginMeta -> App Common ()
 printUsage meta = do
   msg <- highlight $
-         "New plugin \"" <> meta ^. pmName <> "\" can now be used as follows:"
+    "New plugin \"" <> meta ^. pmName <> "\" can now be used as follows:"
   echoLines [ msg
             , ""
             , ""
             , meta ^. pmUsage
             ]
+
 
 invalidSourceSpec :: P.ParseError -> App Common ()
 invalidSourceSpec err =
@@ -141,6 +138,7 @@ invalidSourceSpec err =
   , ""
   , showPack err
   ]
+
 
 invalidFile :: Text -> App Common ()
 invalidFile rawContents =
@@ -202,13 +200,14 @@ parseSourceSpec spec = P.runParser sourceSpecParser () spec spec
       FromFile <$>
         liftM2 (:) (P.char '.' <|> P.char '/') (P.many1 $ P.satisfy (const True))
 
-    revisionParser = P.option "master" $ do
+    revisionParser = P.option "master" do
       void $ P.char '@'
       P.many1 (P.alphaNum <|> P.char '-' <|> P.char '_' <|> P.char '.')
 
 
 saneIdentifier :: P.Parsec String () String
 saneIdentifier = P.many1 (P.alphaNum <|> P.char '-' <|> P.char '_')
+
 
 getPluginSource :: PluginSourceSpec -> String
 getPluginSource FromGithub{userName, repository, revision} =
@@ -235,7 +234,7 @@ getPluginContents other =
 
 -- | Load plugin from URL and validate it by parsing.
 getPluginContentsFromURL :: String -> IO Text
-getPluginContentsFromURL url = handle httpHandler $ do
+getPluginContentsFromURL url = handle httpHandler do
 
   req <- parseUrlThrow url
   res <- httpBS req
@@ -247,8 +246,8 @@ getPluginContentsFromURL url = handle httpHandler $ do
 
 
 -- | Try parsing a file.
-tryDhallParse :: Text -> Maybe (Expr Dhall.Src Import)
-tryDhallParse =
+parsePlugin :: Text -> Maybe (Expr Dhall.Src Import)
+parsePlugin =
   MP.parseMaybe (Dhall.unParser Dhall.expr)
 
 
@@ -265,8 +264,8 @@ instance Show MetaValidationError where
     "Plugin name must be a valid Dhall identifier: " <> T.unpack pluginName
 
 
-handleMetaValidationError :: MetaValidationError -> App stage ()
-handleMetaValidationError err = do
+invalidMeta :: MetaValidationError -> App stage ()
+invalidMeta err = do
   exit 2 (showPack err)
 
 
@@ -291,11 +290,11 @@ readPluginMeta sourceSpec contents = do
   let name          = meta ^. pmName
       parseResult   = P.runParser saneIdentifier () "Plugin name" (T.unpack name)
 
-  liftIO $ runExceptT $ do
+  liftIO $ runExceptT do
 
     -- TODO: add more validations
 
-    unless (isRight parseResult) $ do
+    unless (isRight parseResult) do
       throwE (InvalidPluginName name)
 
     pure meta
@@ -307,20 +306,22 @@ checkIfPluginFileExists pluginName = do
 
   dirExists <- liftIO $ doesDirectoryExist pluginsDir
 
-  unless dirExists $ do
+  unless dirExists do
     exit 1 $
       "Directory " <> T.pack pluginsDir <> " does not exist! Run `dzen-dhall init` first."
 
   fileExists <- liftIO $ doesFileExist pluginFile
 
-  when fileExists $ do
+  when fileExists do
     exit 1 $
       "File " <> T.pack pluginFile <> " already exists."
+
 
 writePluginFile :: Text -> Text -> App Common ()
 writePluginFile pluginName contents = do
   pluginFile <- snd <$> getPluginPaths pluginName
   liftIO $ Data.Text.IO.writeFile pluginFile contents
+
 
 -- | Given a plugin name, get the file of the plugin and locate the plugins directory.
 getPluginPaths :: Text -> App Common (String, String)

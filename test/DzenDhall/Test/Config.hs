@@ -38,6 +38,8 @@ getTests =
     [ dummy "dhall/config.dhall"
     , dummy "test/dhall/configs/automata.dhall"
     , dummy "test/dhall/configs/assertions.dhall"
+    , dummy "test/dhall/configs/scopes.dhall"
+    , dummy "test/dhall/configs/variables.dhall"
     ]
   ]
 

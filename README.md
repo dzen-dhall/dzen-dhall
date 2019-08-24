@@ -153,17 +153,28 @@ Files in `types/` and `utils/` subdirectories are set read-only by default - the
 
 `dzen-dhall` comes with a plugin system capable of pulling pieces of Dhall code with metadata either from a [curated set of plugins](https://github.com/dzen-dhall/plugins) or from third-party sources.
 
-For example, running `dzen-dhall plug date` will result in fetching the plugin source from [this file](https://github.com/dzen-dhall/plugins/blob/master/date/plugin.dhall) and pretty-printing it to your terminal for review. You will be prompted for confirmation, and if you confirm the installation, you will see the following output:
+For example, let's install [a plugin named `tomato`](https://github.com/dzen-dhall/plugins#tomato), which is a countdown timer with interactive UI.
+
+Running `dzen-dhall plug tomato` will result in fetching the plugin source from [this file](https://github.com/dzen-dhall/plugins/blob/master/tomato/plugin.dhall) and pretty-printing it to the terminal for review. You will be prompted for confirmation, and if you confirm the installation, you will see the following output:
 
 ```
-New plugin "date" can now be used as follows:
+New plugin "tomato" can now be used as follows:
 
-  let date = (./plugins/date.dhall).main
+let tomato = (./plugins/tomato.dhall).main
 
-  in plug (date "%d.%m.%Y %A - %H:%M:%S")
+in  plug
+  ( tomato
+        ''
+        notify-send --urgency critical " *** Time is up! *** "
+        ''
+  )
 ```
 
-This is a message the author left for you, to demonstrate how to actually use their plugin. After inserting the code above into your config file and running `dzen-dhall` again, you should be able to see the output of a newly installed plugin.
+This is a message the author left for you, to demonstrate how to actually use their plugin.
+
+Navigate to your [`config.dhall`](https://github.com/dzen-dhall/dzen-dhall/blob/master/dhall/config.dhall), find a comment saying `You can add new plugins right here` and insert the expression from above instead of the comment (don't forget to also add a leading comma).
+
+After running `dzen-dhall` again, you should be able to see the output of a newly installed plugin.
 
 ## Modifying configuration
 
@@ -191,7 +202,7 @@ let [c](#drawing-shapes) : Natural → Bar
 let [co](#drawing-shapes) : Natural → Bar
 let [p](#relative-positioning) : Position → Bar → Bar
 let [pa](#absolute-positioning) : AbsolutePosition → Bar → Bar
-let [ca](#clickable-areas) : Button → Text → Bar → Bar
+let [ca](#clickable-areas) : Button → Shell → Bar → Bar
 let [ib](#ignoring-background-color) : Bar → Bar
 
 -- [Animations](#animations)
@@ -205,7 +216,7 @@ let [source](#sources) : Source → Bar
 let [plug](#plugins) : Plugin → Bar
 let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
 let [check](#assertions) : List [Check](#assertions) → Bar
-let [define](#variables) : Variable → Text = carrier.define
+let [define](#variables) : Variable → Text → Bar
 let [scope](#scopes) : Bar → Bar
 </pre></big>
 
@@ -480,7 +491,56 @@ If `updateInterval` is not specified (i.e. set to `None Natural`), the command w
 
 ### Variables
 
-[Sources](#sources), [hooks](#hooks) and [clickable areas](#clickable-areas) can access and modify [scope-local](#scopes) variables.
+[Sources](#sources), [hooks](#hooks) and [clickable areas](#clickable-areas) can access and modify [scope-local](#scopes) variables, using `mkVariable`, `define`, `set` and `get` functions.
+
+```dhall
+let mkVariable : Text → Variable = utils.mkVariable
+let define : Variable → Text = carrier.define
+let get : Variable → Shell = utils.get
+let set : Variable → Text → Shell = utils.set
+```
+
+The latter two don't actually do anything with variables, they rather construct shell commands that do. `dzen-dhall` works like a template engine for bash scripts.
+
+For example, let's see how a simple stateful counter can be implemented:
+
+```dhall
+let var = mkVariable "MyVariable"
+
+in	join
+  [ define var "0"
+  -- ^ set a default value (optional)
+
+  , ca
+	Button.Left
+	''
+	shellVar=${get var}
+	${set var "$(( shellVar - 1 ))"}
+	''
+	(text "-")
+  -- ^ a button that decreases the value
+
+  , bash 500
+    ''
+    echo " ${get var} "
+    ''
+  -- ^ a bar that prints the value
+
+  , ca
+	Button.Left
+	''
+	shellVar=${get var}
+	${set var "$(( shellVar + 1 ))"}
+	''
+	(text "+")
+  -- ^ a button that increases the value
+
+  ]
+```
+
+[[view full example]](test/dhall/configs/variables.dhall)
+
+At run time, it will look like this: ![](img/counter.png).
 
 ### [Events](dhall/src/Event.dhall)
 
@@ -491,8 +551,6 @@ let mkEvent : Text → Event
 
 let emit : Event → Shell
 ```
-
-Listeners can only emit mouse events, while [hooks](#hooks), [clickable areas](#clickable-areas) and [sources](#sources) can emit both mouse and custom events. A special environment variable, `EMIT` can be used in shell scripts to emit events:
 
 <details><summary><strong>SHOW EXAMPLES</strong></summary>
 <p>
@@ -563,13 +621,41 @@ MouseScrollLeft
 MouseScrollRight
 ```
 
-### Variables
-
-Variables allow to persist values in runtime.
-
 ### Scopes
 
-Scopes are used for encapsulation, to ensure that automata from different plugins are unable to communicate with each other, and that there are no variable collisions. Parent scopes are completely isolated from child scopes and vice versa.
+Scopes are used for encapsulation. `dzen-dhall` guarantees that automata from different scopes are unable to communicate with each other, and that there are no variable collisions between scopes. Parent scopes are completely isolated from child scopes and vice versa.
+
+For example, let's revisit our [counter example](#variables) from README section about variables.
+
+What if we wanted multiple counters to be present on the screen at the same time? Just inserting many of them is not enough: they will be using the same variable.
+
+But wrapping them into separate scopes helps:
+
+```dhall
+let counter =
+	  join
+	  [ define var "0"
+	  , ca
+		Button.Left
+		''
+		shellVar=${get var}
+		${set var "\$(( shellVar - 1 ))"}
+		''
+		(text "-")
+	  , bash 500 "echo \" ${get var} \""
+	  , ca
+		Button.Left
+		''
+		shellVar=${get var}
+		${set var "\$(( shellVar + 1 ))"}
+		''
+		(text "+")
+	  ]
+
+in	join [ scope counter, scope counter ]
+```
+
+[[view full example]](test/dhall/configs/scopes.dhall)
 
 ### Automata
 

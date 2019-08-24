@@ -69,7 +69,7 @@ initCommand args = do
   createDirectoryIfMissing True configDir
   createDirectoryIfMissing True pluginsDir
 
-  forM_ (staticFiles <&> first (configDir <>)) $ \(file, contents) -> do
+  forM_ (staticFiles <&> first (configDir <>)) \(file, contents) -> do
     createDirectoryIfMissing True (takeDirectory file)
     BS.writeFile file contents
     setFileMode file mode400

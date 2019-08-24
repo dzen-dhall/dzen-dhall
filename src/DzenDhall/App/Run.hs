@@ -24,7 +24,7 @@ useConfigurations = do
 
   runtime <- App.getRuntime
 
-  forM_ (view rtConfigurations runtime) $ \cfg -> do
+  forM_ (view rtConfigurations runtime) \cfg -> do
 
     (errors, barTokens) <- liftIO $
       Validation.run $ cfg ^. cfgBarTokens
