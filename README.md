@@ -494,13 +494,13 @@ If `updateInterval` is not specified (i.e. set to `None Natural`), the command w
 [Sources](#sources), [hooks](#hooks) and [clickable areas](#clickable-areas) can access and modify [scope-local](#scopes) variables, using `mkVariable`, `define`, `set` and `get` functions.
 
 ```dhall
-let mkVariable : Text → Variable = utils.mkVariable
-let define : Variable → Text = carrier.define
-let get : Variable → Shell = utils.get
-let set : Variable → Text → Shell = utils.set
+let mkVariable : Text → Variable
+let define : Variable → Text
+let get : Variable → Shell
+let set : Variable → Text → Shell
 ```
 
-The latter two don't actually do anything with variables, they rather construct shell commands that do. `dzen-dhall` works like a template engine for bash scripts.
+The last two don't actually do anything with variables, they rather construct shell commands that do. `dzen-dhall` works like a template engine for bash scripts.
 
 For example, let's see how a simple stateful counter can be implemented:
 
@@ -788,7 +788,21 @@ After a few guesses, you should be able to get rid of jittering.
 
 Another possible source of this problem is non-monospace font being used. Non-monospace fonts are not supported and will never be.
 
-### Running multiple `dzen`s simultaneously
+### Embedding shell scripts in Dhall
+
+The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file.
+
+So, the following rules apply:
+
+1. Use `\` to escape `${` `}` in a single-line (`"`-quoted) string.
+
+2. Use `''` to escape `${` `}` in a multiline (`''`-quoted) string. (That is, `''` serves as both an escape sequence and a quote symbol).
+
+For example, bash array expansion expression `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` in a double-quoted string or as `'' ''${arr[ ix ]} ''` in a multiline string.
+
+See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
+
+### Running multiple `dzen2`s simultaneously
 
 It is possible to do so by adding another `Bar` (some code duplication is hardly avoidable) and adding another entry to the configuration list:
 
@@ -803,20 +817,6 @@ mkConfigs
 		}
 	  ]
 ```
-
-### Embedding shell scripts in Dhall
-
-The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file.
-
-So, the following rules apply:
-
-1. Use `\` to escape `${` `}` in a single-line (`"`-quoted) string.
-
-2. Use `''` to escape `${` `}` in a multiline (`''`-quoted) string. (That is, `''` serves as both an escape sequence and a quote symbol).
-
-For example, bash array expansion expression `${arr[ ix ]}` should be written as `"\${arr[ ix ]}"` in a double-quoted string or as `'' ''${arr[ ix ]} ''` in a multiline string.
-
-See [the specification](https://github.com/dhall-lang/dhall-lang/blob/master/standard/multiline.md) for details.
 
 ## Implementation details
 
@@ -843,4 +843,14 @@ let Bar =
 
 During the stage of [config](dhall/config.dhall) processing, `Bar`s are converted to a non-recursive data called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s. These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
 
-After that, `dzen-dhall` spawns some threads for each output source (like shell script or binary) and processes the outputs as specified in the configuration.
+After that, `dzen-dhall` spawns some threads for each output source and processes the outputs as specified in the configuration.
+
+### Deduplication
+
+This is a really tricky part: identical-by-definition sources or automata within the same scope are always treated as a single one, no matter how many times they appear in a `Bar` tree.
+
+This is done to handle gracefully the situation where we have an automaton with a `StateMap` of multiple states, some of which contain the same sources and/or automata. Do we want to create these duplicating things for each possible state? Of course, not: this is like saying no to performance from the start. The chosen solution was to just remove these duplicates from runtime.
+
+The reason why we have to deal with this problem at all (while normal reactive frameworks don't have to) is because all sources in a `StateMap` are being run at the same time in background (no matter in which state the automaton is), but the user is only able to observe the output corresponding to exactly one state. This may seem strange, but in fact this approach has its own benefits. For example, output is always available immediately after a state change. And the implementation is much simpler, because there is no need to kill output sources and launch them anew.
+
+If you want "normal" behavior, it's not hard to define an automaton that does not contain sources in its `StateMap` at all, and define a single output source that queries the state of this automaton and switches between various outputs. Of course, you may ask, "what if I want to render complex markup that changes depending on the state?". The answer is that you just have to put your automaton back in a `StateMap` wherever you want it to appear, possibly duplicating it multiple times in various contexts - and at runtime it will be deduplicated!

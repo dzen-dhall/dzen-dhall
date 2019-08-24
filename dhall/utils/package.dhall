@@ -42,6 +42,8 @@
 	./emit.dhall
 , get =
 	./get.dhall
+, mkReader =
+	./mkReader.dhall
 , set =
 	./set.dhall
 , query =

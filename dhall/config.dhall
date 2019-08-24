@@ -94,18 +94,20 @@ let bar
 		let automaton
 			: Address → List Transition → StateMap Bar → Bar
 			= cr.automaton
-		let check : Text -> Assertion → Bar = cr.check
+		let check : Text → Assertion → Bar = cr.check
 		let scope : Bar → Bar = cr.scope
 		let define : Variable → Text → Bar = cr.define
 
 		-- Utilities:
-		let separateBy : Bar → List Bar → Bar = utils.mkSeparateBy Bar cr
-		let separate : List Bar → Bar = separateBy (text " | ")
 		let bash : Natural → Text → Bar = utils.mkBash Bar cr
 		let bashWithBinaries
 			: List Text → Natural → Text → Bar
 			= utils.mkBashWithBinaries Bar cr
+		let reader : Variable → Natural → Bar = utils.mkReader Bar cr
+		let separateBy : Bar → List Bar → Bar = utils.mkSeparateBy Bar cr
+		let separate : List Bar → Bar = separateBy (text " | ")
 
+		-- Pre-defined bars
 		let memoryUsage
 			: Bar
 			= bashWithBinaries

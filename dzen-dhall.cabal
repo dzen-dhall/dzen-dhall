@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c44e10542ce48629f05d9c7760f839c27ca11b3fe750b09477f5f73528982613
+-- hash: cd7573c0ccf8165379399dd03b90254cd6e0c70f173d0317f71444efea7baaf5
 
 name:           dzen-dhall
 version:        0.0.0.1
@@ -52,7 +52,6 @@ library
       ansi-terminal
     , base
     , bytestring
-    , containers
     , dhall ==1.25.0
     , directory
     , file-embed-lzma

@@ -234,11 +234,22 @@ initialize (BarAutomaton address rawSTT rawStateMap) = do
         modify $ ssSubscriptions %~ H.insertWith (++) scope subscription
 
         -- Cache this automaton
-        modify $ ssAutomataCache %~ H.insert (scope, address) barRef
+        let cacheEntry = (barRef, rawSTT, rawStateMap)
 
-        pure barRef
+        modify $ ssAutomataCache %~ H.insert (scope, address) cacheEntry
 
-  barRef <- maybe newBarRef pure mbCached
+        pure cacheEntry
+
+  (barRef, cachedSTT, cachedStateMap) <- maybe newBarRef pure mbCached
+
+  -- Eventually this should be moved to `Validation.hs`. We need a complete
+  -- `Bar` tree available to perform this check, but `Validation.hs` only works
+  -- with tokens at the moment of writing.
+  when (cachedSTT /= rawSTT || cachedStateMap /= rawStateMap) do
+    exit 1 $
+      fromLines [ "Automata adresses must be unique per scope!"
+                , "Found distinct automata definitions for address " <> address
+                ]
 
   pure $ BarAutomaton address () barRef
 

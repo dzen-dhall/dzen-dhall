@@ -42,6 +42,13 @@ type Subscriptions = H.HashMap Scope [Subscription]
 -- @dzen2@ doesn't allow this.
 type ClickableAreas = H.HashMap Int Text
 
+type AutomataCache
+  = H.HashMap (Scope, AutomatonAddress)
+    ( IORef (Bar Initialized)
+    , StateTransitionTable
+    , H.HashMap AutomatonState (Bar Marshalled)
+    )
+
 data StartupState
   = StartupState
   { _ssSubscriptions       :: Subscriptions
@@ -51,7 +58,7 @@ data StartupState
   -- ^ Counter that is incremented each time it is requested (used as a source
   -- of unique identifiers). See also: 'DzenDhall.App.getCounter'
   , _ssSourceCache         :: H.HashMap (Text, Source) (IORef Text, Cache)
-  , _ssAutomataCache       :: H.HashMap (Text, Text) (IORef (Bar Initialized))
+  , _ssAutomataCache       :: AutomataCache
   , _ssSourceQueue         :: [(Source, IORef Text, Cache, Text)]
   , _ssVariableDefinitions :: [(Scope, VariableName, Value)]
   , _ssImages              :: H.HashMap ImageContents ImageId

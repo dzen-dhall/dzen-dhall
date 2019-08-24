@@ -18,7 +18,6 @@ library:
   - prettyprinter-ansi-terminal
   - base
   - bytestring
-  - containers
   - dhall==1.25.0
   - directory
   - filepath
