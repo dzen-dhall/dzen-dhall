@@ -1,4 +1,4 @@
-module DzenDhall.Plug where
+module DzenDhall.Commands.Plug where
 
 import           DzenDhall.App
 import           DzenDhall.Config

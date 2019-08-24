@@ -4,9 +4,11 @@ import           Control.Monad
 import           Control.Monad.Trans.Maybe
 import           Control.Monad.Trans.Except
 import qualified Data.List
+import           Data.Maybe (catMaybes)
 import qualified Data.Text
 import           Data.Text (Text)
 import           Time.Types
+import           System.Directory (findExecutable)
 
 
 nonNegative :: (Num a, Ord a) => a -> a
@@ -68,3 +70,9 @@ addElapsedP (ElapsedP e1 (NanoSeconds ns1)) (ElapsedP e2 (NanoSeconds ns2)) =
     let notNormalizedNS = ns1 + ns2
         (retainedNS, ns) = notNormalizedNS `divMod` 1000000000
     in  ElapsedP (e1 + e2 + (Elapsed $ Seconds retainedNS)) (NanoSeconds ns)
+
+-- | Returns a list of executables that are not present in PATH.
+checkExecutables :: [String] -> IO [String]
+checkExecutables executables = do
+  fmap catMaybes $ forM executables $ \executable ->
+    maybe (Just executable) (const Nothing) <$> findExecutable executable

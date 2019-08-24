@@ -24,17 +24,17 @@ It is hard to share pieces of code used to produce output in `dzen2` markup form
 
 ### Non-trivial markup is hard
 
-Dzen markup language is quite rich: it features almost-arbitrary text positioning (using `^p` command), text coloring (`^fg`, `^bg`), drawing shapes (`^c`, `^co`, `^r`, `^ro`), loading XBM images (`^i`) and even allows to define clickable areas (`^ca`). However, these control structures are too low-level: implementing UI elements we want to use (for example, [marquee](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee)-like blocks with arbitrary content) would require too much effort. Besides, one more problem with this markup language is that nested tags are not supported.
+[Dzen in-text format and control language](https://github.com/robm/dzen/blob/488ab66019f475e35e067646621827c18a879ba1/README#L382) is quite rich: it features almost-arbitrary text positioning, text coloring, drawing simple shapes, loading XBM images and even allows to define clickable areas. However, these control structures are too low-level: implementing UI elements we want to use (for example, [marquee](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee)-like blocks with arbitrary content) would require too much effort. Besides, one more problem with this markup language is that nested tags are not supported.
 
 To fill the *abstraction gap*, a new [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) should be introduced. This language should allow its users to abstract away from markup-as-text and focus on markup-as-[syntax-tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) instead - no need to say, tree structures are more suitable for the purpose of defining UIs. It is also way easier to process tree representations programmatically.
 
 ## The solution
 
-[Dhall](https://dhall-lang.org/) is a statically-typed [total](https://en.wikipedia.org/wiki/Total_functional_programming) functional programming language. Its unique properties make it a good choice for dealing with complex user-defined configurations: static typing allows to catch typos and errors early, and totality guarantees that a configuration program will never hang. Unlike some other configuration languages, it requires very little learning (even for people with no background in functional programming).
+[Dhall](https://dhall-lang.org/) is a statically-typed [total](https://en.wikipedia.org/wiki/Total_functional_programming) functional programming language. These properties make it a good choice for dealing with complex user-defined configurations: static typing allows to catch typos and errors early, and totality guarantees that a configuration program will always terminate.
 
-This repository contains data type and function definitions in Dhall that form a DSL for defining almost arbitrary Dzen UIs, called "bars", and a Haskell program capable of reading bar definitions and producing input for `dzen2` binary based on them.
+This repository contains data type and function definitions in Dhall that form a DSL for creating almost arbitrary Dzen UIs, called "bars", and a Haskell program capable of reading bar definitions and producing input for `dzen2` binary based on them.
 
-In effect, `dzen-dhall` introduces a new approach to desktop scripting/customization with Dzen. Basically, it provides solutions for all of the aforementioned problems. `dzen-dhall` is perfect at formatting text, handles newlines gracefully, allows to run output sources in parallel, and its [plugin system](#installing-plugins) makes code reuse no more a problem.
+In effect, `dzen-dhall` introduces a new approach to desktop scripting/customization with Dzen. Basically, it provides solutions for all of the aforementioned problems. `dzen-dhall` is smart when formatting text, handles newlines gracefully, runs output sources in parallel, and its [plugin system](#installing-plugins) solves the problem of code reuse.
 
 ### Quick example
 
@@ -121,6 +121,8 @@ To use pinned version of nixpkgs, pass `--arg usePinned true`.
 
 ### Installing
 
+[Binary releases](https://github.com/dzen-dhall/dzen-dhall/releases) are available.
+
 #### Using [stack](https://docs.haskellstack.org/en/stable/README/)
 
 ```
@@ -161,9 +163,7 @@ New plugin "date" can now be used as follows:
   in plug (date "%d.%m.%Y %A - %H:%M:%S")
 ```
 
-This is a message the author left for you, to demonstrate how to actually use their plugin. Follow the instructions and edit your config file (which is usually located at `~/.config/dzen-dhall/config.dhall`) accordingly.
-
-After saving the file, run `dzen-dhall` again. You should be able to see the output of a newly installed plugin.
+This is a message the author left for you, to demonstrate how to actually use their plugin. After inserting the code above into your config file and running `dzen-dhall` again, you should be able to see the output of a newly installed plugin.
 
 ## Modifying configuration
 
@@ -171,9 +171,7 @@ This chapter describes `dzen-dhall` DSL in depth. It's best to read the [Dhall w
 
 ### [Bars](dhall/src/Bar.dhall)
 
-The most important concept of the DSL is `Bar`. Essentially, `Bar` is a tree data structure containing text, images, shapes, etc. in its leaves. [Default config file](dhall/config.dhall) exposes some functions for working with `Bar`s.
-
-Below you can see a hyperlinked list of these functions:
+The most important concept of the DSL is `Bar`. Essentially, `Bar` is a tree data structure containing text, images, shapes, etc. in its leaves. [Default config file](dhall/config.dhall) exposes some functions for working with `Bar`s:
 
 <big><pre>
 -- [Text primitives](#text-primitives):
@@ -205,7 +203,6 @@ let [pad](#padding-text) : Natural → Padding → Bar → Bar
 let [trim](#trimming-text) : Natural → Direction → Bar → Bar
 let [source](#sources) : Source → Bar
 let [plug](#plugins) : Plugin → Bar
-let [listener](#listeners) : Slot → Bar → Bar
 let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
 let [check](#assertions) : List [Check](#assertions) → Bar
 let [define](#variables) : Variable → Text = carrier.define
@@ -230,9 +227,7 @@ Background and foreground colors can be set using `bg` and `fg`. A color can be 
 
 `fg` can also be used to set colors of [XBM bitmaps](#drawing-images).
 
-`dzen-dhall` color blocks can be nested (unlike when using plain dzen2 markup).
-
-For example, when using raw Dzen markup, `^fg(red) red ^fg(pink) pink ^fg() red ^fg()` will be rendered as ![](img/nested-colors1.png), but `dzen-dhall` will render `fg "red" (join [ text "red ", fg "pink" (text "pink"), text " red" ])` as ![](img/nested-colors2.png). `^fg()` and `^bg()` raw markup commands only reset colors to default values: they do not backtrack.
+`dzen-dhall` color blocks can be nested (unlike when using plain dzen2 markup). `^fg(red) red ^fg(pink) pink ^fg() red ^fg()` will be rendered by dzen2 as ![](img/nested-colors1.png). But `dzen-dhall` will process `fg "red" (join [ text "red ", fg "pink" (text "pink"), text " red" ])` as ![](img/nested-colors2.png).
 
 #### Ignoring background color
 
@@ -358,9 +353,11 @@ let Button : Type = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft
 
 ### Join
 
-`join` is used to concatenate multiple bars together.
+`join` is used to concatenate multiple bars.
 
 ### Animations
+
+Some built-in animations are available. More may be added in the future.
 
 #### Sliders
 
@@ -487,12 +484,12 @@ If `updateInterval` is not specified (i.e. set to `None Natural`), the command w
 
 ### [Events](dhall/src/Event.dhall)
 
-Events can be emitted by mouse interactions with [listeners](#listeners), by [hooks](#hooks) and by [sources](#sources).
+Events can be emitted from within hooks, sources and clickable areas.
 
 ```dhall
-let Button = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | ScrollRight >
+let mkEvent : Text → Event
 
-let Event = < Mouse : Button | Custom : Text >
+let emit : Event → Shell
 ```
 
 Listeners can only emit mouse events, while [hooks](#hooks), [clickable areas](#clickable-areas) and [sources](#sources) can emit both mouse and custom events. A special environment variable, `EMIT` can be used in shell scripts to emit events:
@@ -566,9 +563,13 @@ MouseScrollLeft
 MouseScrollRight
 ```
 
+### Variables
+
+Variables allow to persist values in runtime.
+
 ### Scopes
 
-Scopes are used for encapsulation, to ensure that automata and listeners from different plugins are unable to communicate with each other. You should always enclose your plugins in a separate scope. Parent scopes are completely isolated from child scopes and vice versa.
+Scopes are used for encapsulation, to ensure that automata from different plugins are unable to communicate with each other, and that there are no variable collisions. Parent scopes are completely isolated from child scopes and vice versa.
 
 ### Automata
 

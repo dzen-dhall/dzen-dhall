@@ -1,4 +1,4 @@
-module DzenDhall.Validate where
+module DzenDhall.Commands.Validate where
 
 import           DzenDhall.App
 import           DzenDhall.App as App

@@ -2,6 +2,8 @@ let prelude = ./prelude/package.dhall
 let types = ./types/package.dhall
 let utils = ./utils/package.dhall
 
+-- * Types
+
 let AbsolutePosition = types.AbsolutePosition
 let Address = types.Address
 let Assertion = types.Assertion
@@ -30,8 +32,7 @@ let Transition = types.Transition
 let Variable = types.Variable
 let VerticalDirection = types.VerticalDirection
 
-let mkConfigs = utils.mkConfigs
-let defaultSettings : Settings = utils.defaultSettings
+-- * Utility functions
 
 let showAddress : Address → Text = utils.showAddress
 let showButton : Button → Text = utils.showButton
@@ -40,17 +41,20 @@ let showState : State → Text = utils.showState
 let showVariable : Variable → Text = utils.showVariable
 
 let mkAddress : Text → Address = utils.mkAddress
-let mkState : Text → State = utils.mkState
-let mkVariable : Text → Variable = utils.mkVariable
-let mkEvent : Text → Event = utils.mkEvent
 let mkBashHook : Shell → Hook = utils.mkBashHook
+let mkEvent : Text → Event = utils.mkEvent
+let mkState : Text → State = utils.mkState
 let mkTransition : Event → State → State → Transition = utils.mkTransition
 let mkTransitions : Event → List State → State → Transition = utils.mkTransitions
+let mkVariable : Text → Variable = utils.mkVariable
 
 let emit : Event → Shell = utils.emit
 let get : Variable → Shell = utils.get
 let query : Address → Shell = utils.query
 let set : Variable → Text → Shell = utils.set
+
+let mkConfigs = utils.mkConfigs
+let defaultSettings : Settings = utils.defaultSettings
 
 let bar
 	: Bar
@@ -134,10 +138,13 @@ let bar
 
 		let accent : Bar → Bar = fg "white"
 
-		in  separate
-			[ join [ text "Mem: ", accent memoryUsage, text "%" ]
-			, join [ text "Swap: ", accent swapUsage, text "%" ]
-			, join [ date, text " ", accent time ]
-			]
+		in    -- Bar definition starts here.
+
+			  separate
+			  [ join [ text "Mem: ", accent memoryUsage, text "%" ]
+			  , join [ text "Swap: ", accent swapUsage, text "%" ]
+			  , join [ date, text " ", accent time ]
+			  ]
+			: Bar
 
 in  mkConfigs [ { bar = bar, settings = defaultSettings } ] : List Configuration

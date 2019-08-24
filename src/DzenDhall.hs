@@ -3,8 +3,8 @@ module DzenDhall where
 import           DzenDhall.App
 import           DzenDhall.App.Run (useConfigurations)
 import           DzenDhall.Arguments
-import           DzenDhall.Plug
-import           DzenDhall.Validate
+import           DzenDhall.Commands.Plug
+import           DzenDhall.Commands.Validate
 import           DzenDhall.Runtime
 
 import           Lens.Micro

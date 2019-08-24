@@ -101,8 +101,8 @@ checkAssertions (TokCheck check : xs) = do
         mbPath <- findExecutable (Data.Text.unpack binary)
         pure [ BinaryNotInPath binary (check ^. chMessage) | isNothing mbPath ]
       SuccessfulExit code -> do
-        let process = System.Process.shell (Data.Text.unpack code)
-        (exitCode, _, _) <- System.Process.readCreateProcessWithExitCode process ""
+        let process = shell (Data.Text.unpack code)
+        (exitCode, _, _) <- readCreateProcessWithExitCode process ""
         pure [ AssertionFailure code (check ^. chMessage) | exitCode /= ExitSuccess ]
 
   (newErrors ++) <$> checkAssertions xs

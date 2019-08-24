@@ -1,16 +1,17 @@
 module DzenDhall.Test.Plug where
 
+import DzenDhall.Commands.Plug as Plug
+
+import Data.Maybe (fromJust)
+import Network.URI
 import Test.Tasty (TestTree, TestName, testGroup)
 import Test.Tasty.HUnit
 import Text.Parsec
-import DzenDhall.Plug
-import Network.URI
-import Data.Maybe (fromJust)
 
 mkTest :: TestName -> String -> Either ParseError PluginSourceSpec -> TestTree
 mkTest name input expected =
   Test.Tasty.HUnit.testCase name $
-    DzenDhall.Plug.parseSourceSpec input @?= expected
+    Plug.parseSourceSpec input @?= expected
 
 getTests :: TestTree
 getTests =

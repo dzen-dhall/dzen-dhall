@@ -57,11 +57,12 @@ library:
   - DzenDhall.App.Forked
   - DzenDhall.Arguments
   - DzenDhall.Config
+  - DzenDhall.Commands.Validate
+  - DzenDhall.Commands.Plug
   - DzenDhall.Data
   - DzenDhall.Event
   - DzenDhall.Extra
   - DzenDhall.Parser
-  - DzenDhall.Plug
   - DzenDhall.Runtime
   - DzenDhall.Runtime.Data
   - DzenDhall.Templates
