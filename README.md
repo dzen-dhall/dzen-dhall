@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/dzen-dhall/dzen-dhall.svg?branch=master)](https://travis-ci.com/dzen-dhall/dzen-dhall/)
 
-[Dzen](https://github.com/robm/dzen) is a general purpose messaging, notification and menuing program for X11. It features rich in-text formating & control language, allowing to create GUIs by piping output of arbitrary executables to the `dzen2` binary. There are plenty of good usage examples on [r/unixporn](https://www.reddit.com/r/unixporn/search/?q=dzen&restrict_sr=1).
+[Dzen](https://github.com/robm/dzen) is a general purpose messaging, notification and menuing program for X11. It features rich in-text formatting & control language, allowing to create GUIs by piping output of arbitrary executables to the `dzen2` binary. There are plenty of good usage examples on [r/unixporn](https://www.reddit.com/r/unixporn/search/?q=dzen&restrict_sr=1).
 
 Unfortunately, combining outputs of multiple executables before feeding them to `dzen2`, which is usually done by custom shell scripts, is a tedious and error-prone task. Consider the following problems:
 
@@ -174,7 +174,7 @@ This is a message the author left for you, to demonstrate how to actually use th
 
 Navigate to your [`config.dhall`](https://github.com/dzen-dhall/dzen-dhall/blob/master/dhall/config.dhall), find a comment saying `You can add new plugins right here` and insert the expression from above instead of the comment (don't forget to also add a leading comma).
 
-After running `dzen-dhall` again, you should be able to see the output of a newly installed plugin.
+After running `dzen-dhall` again, you should be able to see the output of the newly installed plugin.
 
 ## Modifying configuration
 
@@ -390,7 +390,7 @@ in	slider
 	: Bar
 ```
 
-[[view full example]](test/dhall/configs/sliders.dhall)
+[[view complete example]](test/dhall/configs/sliders.dhall)
 
 results in this output:
 
@@ -494,9 +494,6 @@ let Source : Type =
   , escape : Bool
 ```
 
-<details><summary><strong>SHOW EXAMPLE</strong></summary>
-<p>
-
 For example, a simple clock plugin can be created as follows:
 
 ```dhall
@@ -508,12 +505,11 @@ let clocks : Source =
   }
 ```
 
-</p>
-</details>
-
 `updateInterval` specifies *minimum* update interval: new source command will not be spawned if a previous one is still running (this is done to avoid race conditions). Actual time intervals between source command invocations are adjusted to be as close to specified `updateInterval`s as possible. For example, if running a command takes 100ms and `updateInterval` is set to `1000`, the real delay between command's exit and startup will be 900ms. And if it takes more than 1000ms, then the real delay will be zero.
 
 If `updateInterval` is not specified (i.e. set to `None Natural`), the command will run once. It may continue generating output indefinitely, line-by-line, or exit - in the latter case, the last line of the output will be shown forever.
+
+Note that in most cases it's better to use `bash` or `bashWithBinaries` functions instead of constructing sources by hand.
 
 ### Variables
 
@@ -684,6 +680,10 @@ let addHook
 	: Hook → Transition → Transition
 
 let getEvent : Shell
+
+let getCurrentState : Shell = utils.getCurrentState
+
+let getNextState : Shell = utils.getNextState
 ```
 
 For example, The following hook will succeed only if a certain file exists:
@@ -697,14 +697,14 @@ let myHook : Hook =
 
 Hooks can also [emit events](#events) themselves (this may lead to event storm, so the user should be really careful).
 
-A special value, `getEvent`, allows to get the event that triggered the hook.
+A special value, `getEvent`, allows to get the name of the event that triggered the hook. Similarly, `getCurrentState` and `getNextState` contain values from the corresponding row of a state transition table.
 
-For example, a hook that inspects current event can be added to all transitions of a state transition table from the [automata example](#automata):
+For example, a hook that inspects current event and both states can be added to all transitions of a state transition table from the [automata example](#automata):
 
 ```dhall
 let withInspect
 	: Transition → Transition
-	= addHook (mkBashHook "notify-send ${getEvent}")
+	= addHook (mkBashHook "notify-send \"${getEvent}: ${getCurrentState} -> ${getNextState}\"")
 
 let stateTransitionTable
 	: List Transition
@@ -723,7 +723,7 @@ let stateTransitionTable
 Startup-time assertions allow to make sure that some condition is true before proceeding to the execution. It is possible to assert that some binary is in `$PATH` or that some arbitrary shell command exits successfully:
 
 ```dhall
-let Assertion = < BinaryInPath : Text | SuccessfulExit : Text > in Assertion
+let Assertion = < BinaryInPath : Text | SuccessfulExit : Text >
 ```
 
 A `message` will be printed to the console on assertion failure. Assertions, when used wisely, greatly reduce debugging time.
@@ -774,11 +774,11 @@ Jittering may appear if the value of `fontWidth` field in your settings is inade
 
 After a few guesses, you should be able to get rid of jittering.
 
-Another possible source of this problem is non-monospace font being used. Non-monospace fonts are not supported and will never be.
+Another possible source of this problem is a non-monospace font being used. Non-monospace fonts are not supported and will never be.
 
 ### Embedding shell scripts in Dhall
 
-The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file, and using string interpolation is impossible too.
+The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file, and using string interpolation with `as Text` is impossible too.
 
 So, the following rules apply:
 

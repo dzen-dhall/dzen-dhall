@@ -119,12 +119,13 @@ processSubscriptions barRuntime scope event subscriptions = do
           -- Match "any" event.
           H.lookup (scope, Event "*", currentState) transitions
 
-        -- An environment extended with EVENT variable containing the name of the
-        -- event.
-        environment' =
-          ("EVENT", T.unpack $ runRender event) : environment
-
       whenJust mbNext \(nextState, hooks) -> void $ forkIO $ do
+
+        let environment' =
+              [ ( "EVENT"  , T.unpack $ runRender event)
+              , ( "CURRENT_STATE", T.unpack currentState)
+              , ( "NEXT_STATE"   , T.unpack nextState) ]
+              <> environment
 
         mbUnit <- runMaybeT (runHooks environment' barRuntime scope hooks)
 

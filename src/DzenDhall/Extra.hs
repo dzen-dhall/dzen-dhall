@@ -9,6 +9,8 @@ import qualified Data.Text
 import           Data.Text (Text)
 import           Time.Types
 import           System.Directory (findExecutable)
+import           Control.Concurrent.MVar
+import           Foreign.StablePtr
 
 
 nonNegative :: (Num a, Ord a) => a -> a
@@ -82,3 +84,9 @@ checkExecutables executables = do
 
 isYes :: String -> Bool
 isYes response = response `elem` ["Y", "y", "Yes", "yes", ""]
+
+waitForever :: IO ()
+waitForever = do
+  m <- newEmptyMVar
+  _ <- newStablePtr m
+  takeMVar m

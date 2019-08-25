@@ -48,6 +48,10 @@
 	./get.dhall
 , getEvent =
 	./getEvent.dhall
+, getCurrentState =
+	./getCurrentState.dhall
+, getNextState =
+	./getNextState.dhall
 , mkReader =
 	./mkReader.dhall
 , set =

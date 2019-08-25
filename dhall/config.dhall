@@ -57,6 +57,8 @@ let mkTransitions : Event → List State → State → Transition = utils.mkTran
 let emit : Event → Shell = utils.emit
 let get : Variable → Shell = utils.get
 let getEvent : Shell = utils.getEvent
+let getCurrentState : Shell = utils.getCurrentState
+let getNextState : Shell = utils.getNextState
 let query : Address → Shell = utils.query
 let set : Variable → Shell → Shell = utils.set
 
@@ -103,9 +105,9 @@ let bar
 		let define : Variable → Text → Bar = cr.define
 
 		-- Utilities:
-		let bash : Natural → Text → Bar = utils.mkBash Bar cr
+		let bash : Natural → Shell → Bar = utils.mkBash Bar cr
 		let bashWithBinaries
-			: List Text → Natural → Text → Bar
+			: List Text → Natural → Shell → Bar
 			= utils.mkBashWithBinaries Bar cr
 		let reader : Variable → Natural → Bar = utils.mkReader Bar cr
 		let separateBy : Bar → List Bar → Bar = utils.mkSeparateBy Bar cr

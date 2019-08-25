@@ -149,9 +149,6 @@ exit exitCode message = liftIO $ do
     Data.Text.IO.putStrLn message
   exitWith $ ExitFailure exitCode
 
-waitForever :: App stage a
-waitForever = liftIO $ forever $ threadDelay maxBound
-
 randomSuffix :: App stage String
 randomSuffix =
   liftIO $ take 10 . randomRs ('a','z') <$> newStdGen

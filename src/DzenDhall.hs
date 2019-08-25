@@ -7,6 +7,7 @@ import           DzenDhall.Commands.Plug
 import           DzenDhall.Commands.Unplug
 import           DzenDhall.Commands.Validate
 import           DzenDhall.Runtime
+import           DzenDhall.Extra (waitForever)
 
 import           Lens.Micro
 import           Options.Applicative (execParser)
@@ -25,7 +26,7 @@ main = do
       runtime <- readRuntime arguments
       runApp runtime () $ do
         useConfigurations
-        waitForever
+        liftIO waitForever
 
     Just Init -> do
       initCommand arguments

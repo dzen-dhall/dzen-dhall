@@ -1,5 +1,5 @@
 let Shell = ../types/Shell.dhall
 
-let getEvent : Shell = "`echo \"\$EVENT\"`"
+let getEvent : Shell = "\"\$EVENT\""
 
 in  getEvent

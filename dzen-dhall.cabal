@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 34c053be48f6acb49ad1bd85090e0694005671a14065ef8b02a9ba8b162761a2
+-- hash: 10b7bb09490fd44f03cfe0f614df996fbbba4483f469ac6805e660e524eb9a21
 
 name:           dzen-dhall
 version:        0.0.0
@@ -69,7 +69,9 @@ extra-source-files:
     dhall/utils/defaults.dhall
     dhall/utils/emit.dhall
     dhall/utils/get.dhall
+    dhall/utils/getCurrentState.dhall
     dhall/utils/getEvent.dhall
+    dhall/utils/getNextState.dhall
     dhall/utils/intersperse.dhall
     dhall/utils/mkAddress.dhall
     dhall/utils/mkBash.dhall

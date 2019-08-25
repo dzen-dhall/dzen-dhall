@@ -45,15 +45,23 @@ let emit : Event → Shell = utils.emit
 
 let getEvent : Shell = utils.getEvent
 
+let getCurrentState : Shell = utils.getCurrentState
+
+let getNextState : Shell = utils.getNextState
+
 let mkBashHook : Shell → Hook = utils.mkBashHook
 
 let addHook : Hook → Transition → Transition = utils.addHook
 
 let defaultBar
 	: Bar
-	=   λ(Bar : Type)
+	=   λ ( Bar
+		  : Type
+		  )
 	  → λ(carrier : Carrier Bar)
-	  → let text : Text → Bar = carrier.text
+	  → let text
+			: Text → Bar
+			= carrier.text
 
 		let ca : Button → Text → Bar → Bar = carrier.ca
 
@@ -71,7 +79,10 @@ let defaultBar
 
 		let withInspect
 			: Transition → Transition
-			= addHook (mkBashHook "notify-send ${getEvent}")
+			= addHook
+			  ( mkBashHook
+				"notify-send \"${getEvent}: ${getCurrentState} -> ${getNextState} \""
+			  )
 
 		let stateTransitionTable
 			: List Transition
