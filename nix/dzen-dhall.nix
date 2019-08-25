@@ -1,8 +1,8 @@
-{ mkDerivation, ansi-terminal, base, bytestring, containers, dhall
-, directory, file-embed-lzma, filepath, generic-random, hashable
-, hourglass, hpack, hspec, http-conduit, http-types, HUnit
-, megaparsec, microlens, microlens-th, network-uri
-, optparse-applicative, parsec, parsers, pipes, prettyprinter
+{ mkDerivation, ansi-terminal, base, bytestring, dhall, directory
+, file-embed-lzma, filepath, generic-random, hashable, hourglass
+, hpack, hspec, http-conduit, http-types, HUnit, megaparsec
+, microlens, microlens-th, network-uri, optparse-applicative
+, parsec, parsers, pipes, prettyprinter
 , prettyprinter-ansi-terminal, process, QuickCheck, random, stdenv
 , tasty, tasty-hspec, tasty-hunit, tasty-quickcheck
 , template-haskell, text, transformers, unix, unordered-containers
@@ -10,18 +10,17 @@
 }:
 mkDerivation {
   pname = "dzen-dhall";
-  version = "0.0.0.1";
+  version = "1.0.0";
   src = ./..;
   isLibrary = true;
   isExecutable = true;
-  enableSeparateDataOutput = true;
   libraryHaskellDepends = [
-    ansi-terminal base bytestring containers dhall directory
-    file-embed-lzma filepath hashable hourglass http-conduit http-types
-    megaparsec microlens microlens-th network-uri optparse-applicative
-    parsec parsers pipes prettyprinter prettyprinter-ansi-terminal
-    process random text transformers unix unordered-containers
-    utf8-string vector
+    ansi-terminal base bytestring dhall directory file-embed-lzma
+    filepath hashable hourglass http-conduit http-types megaparsec
+    microlens microlens-th network-uri optparse-applicative parsec
+    parsers pipes prettyprinter prettyprinter-ansi-terminal process
+    random text transformers unix unordered-containers utf8-string
+    vector
   ];
   libraryToolDepends = [ hpack ];
   executableHaskellDepends = [ base ];
@@ -33,6 +32,7 @@ mkDerivation {
   ];
   doHaddock = false;
   preConfigure = "hpack";
+  homepage = "https://github.com/dzen-dhall/dzen-dhall#readme";
   description = "Configure dzen2 bars in Dhall language";
   license = stdenv.lib.licenses.bsd3;
 }
