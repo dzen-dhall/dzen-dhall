@@ -214,7 +214,7 @@ let [pad](#padding-text) : Natural → Padding → Bar → Bar
 let [trim](#trimming-text) : Natural → Direction → Bar → Bar
 let [source](#sources) : Source → Bar
 let [plug](#plugins) : Plugin → Bar
-let [automaton](#automata) : Text → [StateTransitionTable](#state-transition-table) → [StateMap](#state-maps) Bar → Bar
+let [automaton](#automata) : Text → StateTransitionTable → [StateMap](#state-maps) Bar → Bar
 let [check](#assertions) : List [Check](#assertions) → Bar
 let [define](#variables) : Variable → Text → Bar
 let [scope](#scopes) : Bar → Bar
@@ -624,7 +624,7 @@ Also note that unlike in traditional reactive frameworks, current state of an au
 
 #### [Events](dhall/src/Event.dhall)
 
-Events can be emitted from within [hooks](#hooks), [sources](#sources) and [clickable areas](#clickable-areas).
+Events can be emitted from within [hooks](#hooks), [sources](#sources) and [clickable areas](#clickable-areas). The only way to react to some event is to use an automaton.
 
 ```dhall
 let mkEvent : Text → Event
@@ -634,9 +634,9 @@ let emit : Event → Shell
 
 #### [Hooks](dhall/src/Hook.dhall)
 
-Hooks allow to execute arbitrary commands before state transitions of automata. When a hook exits with non-zero code, it prevents its corresponding state transition from happening. So, generally, hooks should only contain commands that exit fast.
+Hooks allow to execute arbitrary commands before state transitions of automata. When a hook exits with non-zero code, it prevents its corresponding state transition from happening. So, generally, hooks should only contain commands that exit fast, to prevent excessive delays.
 
-Relevant bindings:
+Relevant bindings include:
 
 ```dhall
 let Hook
@@ -646,6 +646,9 @@ let Hook
 	  , input :
 		  Text
 	  }
+
+let mkBashHook
+	: Shell → Hook
 
 let addHook
 	: Hook → Transition → Transition
@@ -684,8 +687,6 @@ let stateTransitionTable
 ```
 
 [[view full example]](test/dhall/configs/getEvent.dhall)
-
-One technique of writing automata is to bind a single hook to multiple transitions and implement all the logic in the shell script.
 
 ### Assertions
 
@@ -777,7 +778,7 @@ mkConfigs
 
 ## Implementation details
 
-Read this section if you want to understand how `dzen-dhall` works. It is not required neither to use the program, nor to create custom plugins.
+Read this section if you want to understand how `dzen-dhall` works. It is not required if you want to just use the program.
 
 ### Data encoding
 

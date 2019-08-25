@@ -92,17 +92,24 @@ getNonce = do
 liftStartingUp :: App StartingUp a -> BarSettings -> App Common a
 liftStartingUp (App app) barSettings = do
 
-  tmpFilePrefix <- fmap (</> "dzen-dhall-rt-") $ liftIO $
+
+  rtDir <- fmap (</> "dzen-dhall-rt") $ liftIO $
     getTemporaryDirectory `catch` \(_e :: IOException) -> getCurrentDirectory
 
-  -- Let's pretend collisions are impossible.
-  -- TODO: handle them.
-  namedPipe          <- (tmpFilePrefix <>) <$> randomSuffix
-  emitterFile        <- (tmpFilePrefix <>) <$> randomSuffix
-  getterFile         <- (tmpFilePrefix <>) <$> randomSuffix
-  setterFile         <- (tmpFilePrefix <>) <$> randomSuffix
-  variableFilePrefix <- (tmpFilePrefix <>) <$> randomSuffix
-  imagePathPrefix    <- (tmpFilePrefix <>) <$> randomSuffix
+  tmpDir <- (rtDir </>) <$> randomSuffix
+
+  let
+    namedPipe          = tmpDir </> "controller"
+    emitterFile        = tmpDir </> "emitter"
+    getterFile         = tmpDir </> "getter"
+    setterFile         = tmpDir </> "setter"
+    variableFilePrefix = tmpDir </> "variables/"
+    imagePathPrefix    = tmpDir </> "images/"
+
+  liftIO do
+    createDirectoryIfMissing True tmpDir
+    createDirectoryIfMissing True variableFilePrefix
+    createDirectoryIfMissing True imagePathPrefix
 
   let initialStartupState =
         StartupState
