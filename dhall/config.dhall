@@ -8,7 +8,6 @@ let AbsolutePosition = types.AbsolutePosition
 let Address = types.Address
 let Assertion = types.Assertion
 let Bar = types.Bar
-let Settings = types.Settings
 let Button = types.Button
 let Carrier = types.Carrier
 let Check = types.Check
@@ -16,12 +15,14 @@ let Color = types.Color
 let Configuration = types.Configuration
 let Direction = types.Direction
 let Event = types.Event
+let Fade = types.Fade
 let Hook = types.Hook
 let Image = types.Image
 let Marquee = types.Marquee
 let Padding = types.Padding
 let Plugin = types.Plugin
 let Position = types.Position
+let Settings = types.Settings
 let Shell = types.Shell
 let Slider = types.Slider
 let Source = types.Source
@@ -33,30 +34,33 @@ let VerticalDirection = types.VerticalDirection
 
 -- * Utility functions
 
+let mkAddress : Text → Address = utils.mkAddress
+let mkEvent : Text → Event = utils.mkEvent
+let mkState : Text → State = utils.mkState
+let mkVariable : Text → Variable = utils.mkVariable
+
 let showAddress : Address → Text = utils.showAddress
-let showButton : Button → Text = utils.showButton
 let showEvent : Event → Text = utils.showEvent
 let showState : State → Text = utils.showState
 let showVariable : Variable → Text = utils.showVariable
 
-let mkAddress : Text → Address = utils.mkAddress
 let mkBashHook : Shell → Hook = utils.mkBashHook
-let mkEvent : Text → Event = utils.mkEvent
-let mkState : Text → State = utils.mkState
+let addHook : Hook → Transition → Transition = utils.addHook
+
+let mkFade : VerticalDirection → Natural → Natural → Fade = utils.mkFade
+let mkSlider : Fade → Fade → Natural → Slider = utils.mkSlider
+let mkMarquee : Natural → Natural → Bool → Marquee = utils.mkMarquee
+
 let mkTransition : Event → State → State → Transition = utils.mkTransition
 let mkTransitions : Event → List State → State → Transition = utils.mkTransitions
-let mkVariable : Text → Variable = utils.mkVariable
-
-let addHook : Hook → Transition → Transition = utils.addHook
-let getEvent : Shell = utils.getEvent
 
 let emit : Event → Shell = utils.emit
 let get : Variable → Shell = utils.get
+let getEvent : Shell = utils.getEvent
 let query : Address → Shell = utils.query
 let set : Variable → Shell → Shell = utils.set
 
-let mkConfigs = utils.mkConfigs
-let defaultSettings : Settings = utils.defaultSettings
+let defaults = utils.defaults
 
 let bar
 	: Bar
@@ -154,4 +158,4 @@ let bar
 			  ]
 			: Bar
 
-in  mkConfigs [ { bar = bar, settings = defaultSettings } ] : List Configuration
+in  utils.mkConfigs [ { bar = bar, settings = defaults.settings } ] : List Configuration

@@ -16,7 +16,7 @@ mkTest name tokenList expected =
     DzenDhall.Parser.runBarParser tokenList @?= expected
 
 marquee :: Marquee
-marquee = Marquee 0 0
+marquee = Marquee 0 0 True
 
 getTests :: TestTree
 getTests =

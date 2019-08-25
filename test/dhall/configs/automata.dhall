@@ -39,7 +39,7 @@ let mkAddress = utils.mkAddress
 
 let mkTransition = utils.mkTransition
 
-let defaultSettings : Settings = utils.defaultSettings
+let defaults = utils.defaults
 
 let emit : Event → Text = utils.emit
 
@@ -79,5 +79,5 @@ let defaultBar
 			(automaton address stateTransitionTable stateMap)
 
 in    mkConfigs
-	  [ { bar = defaultBar : Bar, settings = defaultSettings : Settings } ]
+	  [ { bar = defaultBar : Bar, settings = defaults.settings : Settings } ]
 	: List Configuration

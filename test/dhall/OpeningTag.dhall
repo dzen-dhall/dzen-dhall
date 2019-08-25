@@ -6,7 +6,7 @@ let Direction = ./types/Direction.dhall
 
 let Color = ./types/Color.dhall
 
-in    [ OpeningTag.Marquee { framesPerCharacter = 2, width = 3 }
+in    [ OpeningTag.Marquee { framesPerCharacter = 2, width = 3, shouldWrap = False }
 	  , OpeningTag.FG "red"
 	  , OpeningTag.Trim { width = 3, direction = Direction.Right }
 	  ]

@@ -5,30 +5,37 @@ import           DzenDhall.Config
 import           DzenDhall.Data
 import qualified DzenDhall.Extra as Extra
 
-import           Lens.Micro.Extras
+import           Data.Function (fix)
+import           Lens.Micro
 
 run :: Int -> Marquee -> AST -> Int -> AST
 run fontWidth settings ast frameCounter =
-  let framesPerChar = view mqFramesPerChar settings
-      desiredWidth  = view mqWidth settings
+  let framesPerChar = settings ^. mqFramesPerChar
+      desiredWidth  = settings ^. mqWidth
+      shouldWrap    = settings ^. mqShouldWrap
+
       realWidth     = astWidth ast
       difference    = realWidth - desiredWidth in
 
-  if | difference == 0 -> ast
-     | difference <  0 ->
-       -- Pad AST
-       let padding = ASTText (Extra.spaces (- difference)) in
-         ASTs ast padding
-     | otherwise       ->
-         -- Select a part of AST
+  if | difference <= 0 && not shouldWrap ->
+         -- Pad AST
+         let padding = ASTText (Extra.spaces (- difference)) in
+           ASTs ast padding
+
+     | otherwise ->
+         -- Select a part of an "infinite" version of AST.
          let shifted = snd $
-               DzenDhall.AST.split ((frameCounter `div` framesPerChar) `mod` (difference + 1)) ast
+               DzenDhall.AST.split
+               -- `framesPerChar` is checked for zero when marshalling.
+               ((frameCounter `div` framesPerChar) `mod` realWidth)
+               (fix (ASTs ast))
              trimmed = fst $
                DzenDhall.AST.split desiredWidth shifted in
            if | framesPerChar == 1 -> trimmed
               | otherwise ->
                 let pxShift = calculatePxShift frameCounter fontWidth framesPerChar in
                   addPxShift pxShift trimmed
+
 
 -- | Calculate shift in pixels.
 calculatePxShift
@@ -42,7 +49,8 @@ calculatePxShift
   -- ^ Shift in pixels
 calculatePxShift frameCounter fontWidth framesPerChar =
   let shift = frameCounter `mod` framesPerChar in
-    fontWidth `div` 2 - ((fontWidth * shift) `div` framesPerChar)
+    fontWidth - (fontWidth * shift) `div` framesPerChar
+
 
 -- | Add sub-character shift to the AST and compensate it
 addPxShift
@@ -50,8 +58,5 @@ addPxShift
   -- ^ Shift in pixels
   -> AST
   -> AST
-addPxShift pxShift ast =
-  let shifted     = ASTProp (P (XY (  pxShift, 0))) ast
-      compensator = ASTProp (P (XY (- pxShift, 0))) mempty
-  in
-    shifted <> compensator
+addPxShift pxShift =
+  ASTProp (P (XY (pxShift, 0)))

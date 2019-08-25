@@ -25,7 +25,7 @@ let Variable = types.Variable
 
 let mkConfigs = utils.mkConfigs
 
-let defaultSettings : Settings = utils.defaultSettings
+let defaults = utils.defaults
 
 let mkVariable : Text → Variable = utils.mkVariable
 
@@ -73,4 +73,4 @@ let bar
 
 		in  join [ scope counter, scope counter ]
 
-in  mkConfigs [ { bar = bar, settings = defaultSettings } ] : List Configuration
+in  mkConfigs [ { bar = bar, settings = defaults.settings } ] : List Configuration

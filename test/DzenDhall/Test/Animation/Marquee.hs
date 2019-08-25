@@ -20,16 +20,48 @@ getTests =
   [ let
       ast = ASTText "12345"
 
-      settings = Marquee 1 3
+      settings = Marquee 1 3 False
 
       expected = [ ASTText "123"
                  , ASTText "234"
                  , ASTText "345"
+                 , ASTs (ASTText "45") (ASTText "1")
+                 , ASTs (ASTText "5") (ASTText "12")
+
                  , ASTText "123"
                  , ASTText "234"
+                 , ASTText "345"
+                 , ASTs (ASTText "45") (ASTText "1")
+                 ]
+    in
+      mkTest "shouldNotWrap #0" settings ast expected
+
+  , let
+      ast = ASTText "123"
+
+      settings = Marquee 1 5 False
+
+      expected = [ ASTs (ASTText "123") (ASTText "  ")
+                 , ASTs (ASTText "123") (ASTText "  ")
                  ]
 
     in
-      mkTest "text-only" settings ast expected
+      mkTest "shouldNotWrap #1" settings ast expected
+
+  , let
+      ast = ASTText "12345"
+
+      settings = Marquee 1 3 True
+
+      expected = [ ASTText "123"
+                 , ASTText "234"
+                 , ASTText "345"
+                 , ASTs (ASTText "45") (ASTText "1")
+                 , ASTs (ASTText "5") (ASTText "12")
+                 , (ASTText "123")
+                 ]
+
+    in
+      mkTest "shouldWrap #0" settings ast expected
 
   ]

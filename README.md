@@ -370,57 +370,87 @@ Some built-in animations are available. More may be added in the future.
 
 Sliders change their outputs, variating between `Bar`s from a given list. Transitions are rendered smoothly.
 
-E.g.
+E.g., the following piece:
+
 
 ```dhall
-slider
-{ fadeIn =
-  { direction =
-    VerticalDirection.Down -- or `Up`
-  , frameCount =
-    10
-  -- ^ How many frames to spend on switching.
-  , height =
-    20
-  -- ^ How many pixels up or down to move the output.
-  }
-, fadeOut =
-  { direction =
-    VerticalDirection.Down
-  , frameCount =
-    10
-  , height =
-    20
-  }
-, delay =
-  3000
-  -- ^ How many milliseconds to wait between output changes
-}
-[ join [ text "Mem: ", memoryUsage, text "%" ]
-, join [ text "Swap: ", swapUsage, text "%" ]
-]
+let fadeIn : Fade = mkFade VerticalDirection.Up 5 16
+       -- How many frames to spend on switching ^
+
+let fadeOut : Fade = mkFade VerticalDirection.Down 5 16
+    -- How many pixels up or down to move the output ^
+
+in	slider
+	(mkSlider fadeIn fadeOut 3000)
+                -- Delay, ms ^
+
+	[ join [ text "Mem: ", accent memoryUsage, text "%" ]
+	, join [ text "Swap: ", accent swapUsage, text "%" ]
+	]
+	: Bar
 ```
 
-results in the following output:
+[[view full example]](test/dhall/configs/sliders.dhall)
+
+results in this output:
 
 ![Slider preview](img/slider.gif)
 
 
 #### Marquees
 
-This animation type is analogous to the [deprecated marquee HTML tag](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee).
+Marquee animation type is inspired by the [deprecated marquee HTML tag](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee).
 
-For example,
+This example with multiple marquees shows how various settings affect appearance:
 
 ```dhall
-marquee
-  { framesPerCharacter = 4, width = 32 }
-  (text "The most annoying HTML code in the history of HTML codes.")
+separate
+[ marquee
+  (mkMarquee 5 15 False)
+          -- ^ Number of animation frames per character.
+  ( text
+    "The most annoying HTML code in the history of HTML codes."
+  )
+
+  , marquee
+  (mkMarquee 0 32 True)
+            -- ^ Number of characters to show.
+  ( text
+    "The most annoying HTML code in the history of HTML codes."
+  )
+
+  , marquee (mkMarquee 3 10 True) (text "test...")
+                         -- ^ Whether to repeat the input indefinitely
+                         -- if it is too short, or just pad it with spaces
+  , marquee (mkMarquee 3 10 False) (text "test...")
+
+  -- A demo with colors:
+  , marquee
+  (mkMarquee 8 15 False)
+  ( join
+    [ text "The "
+    , fg "white" (text "most ")
+    , text "annoying "
+    , fg "white" (text "HTML ")
+    , text "code "
+    , fg "white" (text "in ")
+    , text "the "
+    , fg "white" (text "history ")
+    , text "of "
+    , fg "white" (text "HTML ")
+    , text "codes. "
+    ]
+  )
+]
 ```
 
-will be rendered as:
+[[view complete example]](test/dhall/configs/marquees.dhall)
 
-![Marquee preview](img/marquee.gif)
+The output:
+
+![Marquee preview](img/marquees.gif)
+
+Obviously, marquees and sliders can be nested within each other.
 
 ### Padding text
 
@@ -534,7 +564,7 @@ in	join
   ]
 ```
 
-[[view full example]](test/dhall/configs/variables.dhall)
+[[view complete example]](test/dhall/configs/variables.dhall)
 
 At run time, it will look like this: ![](img/counter.png).
 
@@ -572,7 +602,7 @@ let counter =
 in	join [ scope counter, scope counter ]
 ```
 
-[[view full example]](test/dhall/configs/scopes.dhall)
+[[view complete example]](test/dhall/configs/scopes.dhall)
 
 ### Automata
 
@@ -686,7 +716,7 @@ let stateTransitionTable
 	  [ mkTransition Toggle ON OFF, mkTransition Toggle OFF ON ]
 ```
 
-[[view full example]](test/dhall/configs/getEvent.dhall)
+[[view complete example]](test/dhall/configs/getEvent.dhall)
 
 ### Assertions
 
@@ -714,7 +744,7 @@ check
   (Assertion.SuccessfulExit "[[ \$(date +%u) -lt 6 ]]")
 ```
 
-[[view full example]](test/dhall/configs/assertions.dhall)
+[[view complete example]](test/dhall/configs/assertions.dhall)
 
 ## Naming conventions
 
@@ -733,11 +763,11 @@ Pass `--explain` flag to turn on verbose error reporting.
 
 ### Marquee jittering
 
-Jittering may appear if `fontWidth` parameter value is too large or too small. It can be fixed by specifying the width manually. Modify `defaultSettings` at the end of your config file as follows:
+Jittering may appear if the value of `fontWidth` field in your settings is inadequate. It can be fixed by specifying the width manually:
 
 ```dhall
 [ { bar = ...
-  , settings = defaultSettings ⫽ { fontWidth = 10 }
+  , settings = defaults.settings ⫽ { fontWidth = 10 }
   }
 ]
 ```
@@ -766,12 +796,12 @@ It is possible to do so by adding another `Bar` (some code duplication is hardly
 
 ```dhall
 mkConfigs
-	  [ { bar = defaultBar, settings = defaultSettings }
+	  [ { bar = defaultBar, settings = defaults.settings }
 	  , { bar =
 		    anotherBar
 		, settings =
 			-- `-xs` dzen2 argument specifies monitor number:
-			defaultSettings ⫽ { extraArgs = [ "-xs", "1" ] }
+			defaults.settings ⫽ { extraArgs = [ "-xs", "1" ] }
 		}
 	  ]
 ```

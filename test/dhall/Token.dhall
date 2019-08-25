@@ -8,7 +8,7 @@ let Marquee = ./types/Marquee.dhall
 
 in  [ Token.Open
 	  ( OpeningTag.Marquee
-		({ framesPerCharacter = 2, width = 3 } : Marquee)
+		({ framesPerCharacter = 2, width = 3, shouldWrap = False } : Marquee)
 	  )
 	, Token.Markup "raw"
 	, Token.Source

@@ -6,8 +6,6 @@
 	./Assertion.dhall
 , Bar =
 	./Bar.dhall
-, Settings =
-	./Settings.dhall
 , Button =
 	./Button.dhall
 , Carrier =
@@ -22,6 +20,8 @@
 	./Direction.dhall
 , Event =
 	./Event.dhall
+, Fade =
+	./Fade.dhall
 , Hook =
 	./Hook.dhall
 , Image =
@@ -36,6 +36,8 @@
 	./PluginMeta.dhall
 , Position =
 	./Position.dhall
+, Settings =
+	./Settings.dhall
 , Shell =
 	./Shell.dhall
 , Slider =

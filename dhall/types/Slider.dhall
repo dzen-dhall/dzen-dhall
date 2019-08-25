@@ -1,24 +1,7 @@
 let VerticalDirection = ./VerticalDirection.dhall
 
-let Slider =
-	  { fadeIn :
-		  { direction :
-			  VerticalDirection
-		  , frameCount :
-			  Natural
-		  , height :
-			  Natural
-		  }
-	  , fadeOut :
-		  { direction :
-			  VerticalDirection
-		  , frameCount :
-			  Natural
-		  , height :
-			  Natural
-		  }
-	  , delay :
-		  Natural
-	  }
+let Fade = ./Fade.dhall
+
+let Slider = { fadeIn : Fade, fadeOut : Fade, delay : Natural }
 
 in  Slider

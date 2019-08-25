@@ -32,6 +32,7 @@ data Marquee
   = Marquee
   { _mqFramesPerChar :: Int
   , _mqWidth         :: Int
+  , _mqShouldWrap      :: Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -41,6 +42,7 @@ marqueeType :: Type Marquee
 marqueeType = record $
   Marquee <$> field "framesPerCharacter" (positive    . fromIntegral <$> natural)
           <*> field "width"              (nonNegative . fromIntegral <$> natural)
+          <*> field "shouldWrap"         bool
 
 data Direction
   = DLeft | DRight

@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d8eaa010b08fb9ce078c83af7f67d9ff0cb532b2edf8b4f667fd846c3e433fb9
+-- hash: 34c053be48f6acb49ad1bd85090e0694005671a14065ef8b02a9ba8b162761a2
 
 name:           dzen-dhall
 version:        0.0.0
@@ -66,7 +66,7 @@ extra-source-files:
     dhall/types/Variable.dhall
     dhall/types/VerticalDirection.dhall
     dhall/utils/addHook.dhall
-    dhall/utils/defaultSettings.dhall
+    dhall/utils/defaults.dhall
     dhall/utils/emit.dhall
     dhall/utils/get.dhall
     dhall/utils/getEvent.dhall
@@ -77,9 +77,12 @@ extra-source-files:
     dhall/utils/mkBashWithBinaries.dhall
     dhall/utils/mkConfigs.dhall
     dhall/utils/mkEvent.dhall
+    dhall/utils/mkFade.dhall
+    dhall/utils/mkMarquee.dhall
     dhall/utils/mkPlugin.dhall
     dhall/utils/mkReader.dhall
     dhall/utils/mkSeparateBy.dhall
+    dhall/utils/mkSlider.dhall
     dhall/utils/mkState.dhall
     dhall/utils/mkTransition.dhall
     dhall/utils/mkTransitions.dhall
@@ -88,7 +91,6 @@ extra-source-files:
     dhall/utils/query.dhall
     dhall/utils/set.dhall
     dhall/utils/showAddress.dhall
-    dhall/utils/showButton.dhall
     dhall/utils/showEvent.dhall
     dhall/utils/showState.dhall
     dhall/utils/showVariable.dhall

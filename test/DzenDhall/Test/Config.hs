@@ -42,6 +42,8 @@ getTests =
     , dummy "test/dhall/configs/variables.dhall"
     , dummy "test/dhall/configs/getEvent.dhall"
     , dummy "test/dhall/configs/deduplication.dhall"
+    , dummy "test/dhall/configs/sliders.dhall"
+    , dummy "test/dhall/configs/marquees.dhall"
     ]
   ]
 
@@ -58,12 +60,12 @@ testFile ty file expected  =
 testOpeningTag :: TestTree
 testOpeningTag =
   testFile (list openingTagType) "test/dhall/OpeningTag.dhall"
-    [ OMarquee (Marquee 2 3), OFG (Color "red"), OTrim 3 DRight ]
+    [ OMarquee (Marquee 2 3 False), OFG (Color "red"), OTrim 3 DRight ]
 
 testToken :: TestTree
 testToken =
   testFile (list tokenType) "test/dhall/Token.dhall"
-    [ TokOpen (OMarquee (Marquee 2 3))
+    [ TokOpen (OMarquee (Marquee 2 3 False))
     , TokMarkup "raw"
     , TokSource (Source { updateInterval = Just 1000
                         , command = [ "bash" ]
@@ -87,6 +89,7 @@ testMarquee =
   testFile marqueeType "test/dhall/Marquee.dhall"
     Marquee { _mqFramesPerChar = 2
             , _mqWidth = 3
+            , _mqShouldWrap = False
             }
 
 testButton :: TestTree

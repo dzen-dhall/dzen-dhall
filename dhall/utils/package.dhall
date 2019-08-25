@@ -1,7 +1,7 @@
 { addHook =
 	./addHook.dhall
-, defaultSettings =
-	./defaultSettings.dhall
+, defaults =
+	./defaults.dhall
 , intersperse =
 	./intersperse.dhall
 , mkAddress =
@@ -24,14 +24,18 @@
 	./mkBashWithBinaries.dhall
 , mkBashHook =
 	./mkBashHook.dhall
+, mkFade =
+	./mkFade.dhall
 , mkTransition =
 	./mkTransition.dhall
 , mkTransitions =
 	./mkTransitions.dhall
+, mkSlider =
+	./mkSlider.dhall
+, mkMarquee =
+	./mkMarquee.dhall
 , showAddress =
 	./showAddress.dhall
-, showButton =
-	./showButton.dhall
 , showEvent =
 	./showEvent.dhall
 , showState =

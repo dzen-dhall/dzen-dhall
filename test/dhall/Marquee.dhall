@@ -1,3 +1,3 @@
 let Marquee = ./types/Marquee.dhall
 
-in  { framesPerCharacter = 2, width = 3 }
+in  { framesPerCharacter = 2, width = 3, shouldWrap = False }

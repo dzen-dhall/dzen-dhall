@@ -1,1 +1,1 @@
-{ framesPerCharacter : Natural, width : Natural }
+{ framesPerCharacter : Natural, width : Natural, shouldWrap : Bool }

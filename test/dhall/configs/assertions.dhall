@@ -19,7 +19,7 @@ let Check = types.Check
 
 let mkConfigs = utils.mkConfigs
 
-let defaultSettings : Settings = utils.defaultSettings
+let defaults = utils.defaults
 
 let defaultBar
 	: Bar
@@ -39,6 +39,6 @@ let defaultBar
 			]
 
 in    mkConfigs
-	  [ { bar = defaultBar : Bar, settings = defaultSettings }
+	  [ { bar = defaultBar : Bar, settings = defaults.settings }
 	  ]
 	: List Configuration
