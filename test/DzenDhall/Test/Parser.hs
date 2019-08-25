@@ -39,7 +39,7 @@ getTests =
     , TokSource (Source { updateInterval = Nothing
                         , command = []
                         , input = ""
-                        , escapeMode = EscapeMode True True
+                        , escape = True
                         })
     , TokClose
     , TokClose
@@ -53,7 +53,7 @@ getTests =
                   [ BarSource (Source { updateInterval = Nothing
                                       , command = []
                                       , input = ""
-                                      , escapeMode = EscapeMode True True
+                                      , escape = True
                                       })
                   ]
                 ]

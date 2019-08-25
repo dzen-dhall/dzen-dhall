@@ -1,6 +1,4 @@
-{- An example showing how to define automata.
-   You can use this file as your `config.dhall`.
--}
+{- You can use this file as your `config.dhall`. -}
 let prelude = ./prelude/package.dhall
 
 let types = ./types/package.dhall
@@ -23,6 +21,8 @@ let Event = types.Event
 
 let Hook = types.Hook
 
+let Shell = types.Shell
+
 let State = types.State
 
 let StateMap = types.StateMap
@@ -41,7 +41,13 @@ let mkTransition = utils.mkTransition
 
 let defaultSettings : Settings = utils.defaultSettings
 
-let emit : Event → Text = utils.emit
+let emit : Event → Shell = utils.emit
+
+let getEvent : Shell = utils.getEvent
+
+let mkBashHook : Shell → Hook = utils.mkBashHook
+
+let addHook : Hook → Transition → Transition = utils.addHook
 
 let defaultBar
 	: Bar
@@ -63,9 +69,17 @@ let defaultBar
 
 		let address : Address = mkAddress "MY_AUTOMATON"
 
+		let withInspect
+			: Transition → Transition
+			= addHook (mkBashHook "notify-send ${getEvent}")
+
 		let stateTransitionTable
 			: List Transition
-			= [ mkTransition Toggle ON OFF, mkTransition Toggle OFF ON ]
+			= prelude.List.map
+			  Transition
+			  Transition
+			  withInspect
+			  [ mkTransition Toggle ON OFF, mkTransition Toggle OFF ON ]
 
 		let stateMap
 			: StateMap Bar

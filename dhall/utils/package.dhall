@@ -42,6 +42,8 @@
 	./emit.dhall
 , get =
 	./get.dhall
+, getEvent =
+	./getEvent.dhall
 , mkReader =
 	./mkReader.dhall
 , set =

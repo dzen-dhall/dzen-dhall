@@ -18,7 +18,7 @@ data SourceHandle
   = SourceHandle
   { _shOutputRef :: IORef Text
   , _shCacheRef :: Cache
-  , _shEscapeMode :: EscapeMode
+  , _shEscape :: Bool
   }
 
 makeLenses ''SourceHandle

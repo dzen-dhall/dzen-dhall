@@ -40,6 +40,8 @@ getTests =
     , dummy "test/dhall/configs/assertions.dhall"
     , dummy "test/dhall/configs/scopes.dhall"
     , dummy "test/dhall/configs/variables.dhall"
+    , dummy "test/dhall/configs/getEvent.dhall"
+    , dummy "test/dhall/configs/deduplication.dhall"
     ]
   ]
 
@@ -66,7 +68,7 @@ testToken =
     , TokSource (Source { updateInterval = Just 1000
                         , command = [ "bash" ]
                         , input = "echo 1"
-                        , escapeMode = EscapeMode True True
+                        , escape = True
                         })
     , TokTxt "txt"
     , TokClose ]
@@ -77,7 +79,7 @@ testSource =
     Source { updateInterval = Just 1000
            , command = [ "bash" ]
            , input = "echo hi"
-           , escapeMode = EscapeMode True True
+           , escape = True
            }
 
 testMarquee :: TestTree

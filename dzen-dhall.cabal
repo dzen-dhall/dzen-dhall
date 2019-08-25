@@ -4,11 +4,14 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cd7573c0ccf8165379399dd03b90254cd6e0c70f173d0317f71444efea7baaf5
+-- hash: d8eaa010b08fb9ce078c83af7f67d9ff0cb532b2edf8b4f667fd846c3e433fb9
 
 name:           dzen-dhall
-version:        0.0.0.1
-synopsis:       Configure dzen2 bars in Dhall language.
+version:        0.0.0
+synopsis:       Configure dzen2 bars in Dhall language
+description:    Configure dzen2 bars in Dhall language
+homepage:       https://github.com/dzen-dhall/dzen-dhall#readme
+bug-reports:    https://github.com/dzen-dhall/dzen-dhall/issues
 author:         Kalnitsky Vladimir <klntsky@gmail.com>
 maintainer:     Kalnitsky Vladimir <klntsky@gmail.com>
 license:        BSD-3-Clause
@@ -17,6 +20,82 @@ build-type:     Simple
 extra-source-files:
     CHANGELOG.md
     README.md
+    dhall/config.dhall
+    dhall/prelude/Bool/package.dhall
+    dhall/prelude/Double/package.dhall
+    dhall/prelude/Function/package.dhall
+    dhall/prelude/Integer/package.dhall
+    dhall/prelude/JSON/package.dhall
+    dhall/prelude/List/package.dhall
+    dhall/prelude/Map/package.dhall
+    dhall/prelude/Natural/package.dhall
+    dhall/prelude/Optional/package.dhall
+    dhall/prelude/package.dhall
+    dhall/prelude/Text/package.dhall
+    dhall/prelude/XML/package.dhall
+    dhall/types/AbsolutePosition.dhall
+    dhall/types/Address.dhall
+    dhall/types/Assertion.dhall
+    dhall/types/Bar.dhall
+    dhall/types/Button.dhall
+    dhall/types/Carrier.dhall
+    dhall/types/Check.dhall
+    dhall/types/ClosingTag.dhall
+    dhall/types/Color.dhall
+    dhall/types/Configuration.dhall
+    dhall/types/Direction.dhall
+    dhall/types/Event.dhall
+    dhall/types/Fade.dhall
+    dhall/types/Hook.dhall
+    dhall/types/Image.dhall
+    dhall/types/Marquee.dhall
+    dhall/types/OpeningTag.dhall
+    dhall/types/package.dhall
+    dhall/types/Padding.dhall
+    dhall/types/Plugin.dhall
+    dhall/types/PluginMeta.dhall
+    dhall/types/Position.dhall
+    dhall/types/Settings.dhall
+    dhall/types/Shell.dhall
+    dhall/types/Slider.dhall
+    dhall/types/Source.dhall
+    dhall/types/State.dhall
+    dhall/types/StateMap.dhall
+    dhall/types/Token.dhall
+    dhall/types/Transition.dhall
+    dhall/types/Variable.dhall
+    dhall/types/VerticalDirection.dhall
+    dhall/utils/addHook.dhall
+    dhall/utils/defaultSettings.dhall
+    dhall/utils/emit.dhall
+    dhall/utils/get.dhall
+    dhall/utils/getEvent.dhall
+    dhall/utils/intersperse.dhall
+    dhall/utils/mkAddress.dhall
+    dhall/utils/mkBash.dhall
+    dhall/utils/mkBashHook.dhall
+    dhall/utils/mkBashWithBinaries.dhall
+    dhall/utils/mkConfigs.dhall
+    dhall/utils/mkEvent.dhall
+    dhall/utils/mkPlugin.dhall
+    dhall/utils/mkReader.dhall
+    dhall/utils/mkSeparateBy.dhall
+    dhall/utils/mkState.dhall
+    dhall/utils/mkTransition.dhall
+    dhall/utils/mkTransitions.dhall
+    dhall/utils/mkVariable.dhall
+    dhall/utils/package.dhall
+    dhall/utils/query.dhall
+    dhall/utils/set.dhall
+    dhall/utils/showAddress.dhall
+    dhall/utils/showButton.dhall
+    dhall/utils/showEvent.dhall
+    dhall/utils/showState.dhall
+    dhall/utils/showVariable.dhall
+
+source-repository head
+  type: git
+  location: https://github.com/dzen-dhall/dzen-dhall
 
 library
   exposed-modules:

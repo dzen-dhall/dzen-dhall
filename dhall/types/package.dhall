@@ -20,8 +20,6 @@
 	./Configuration.dhall
 , Direction =
 	./Direction.dhall
-, EscapeMode =
-	./EscapeMode.dhall
 , Event =
 	./Event.dhall
 , Hook =

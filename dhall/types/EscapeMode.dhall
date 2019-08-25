@@ -1,1 +1,0 @@
-{ joinLines : Bool, escapeMarkup : Bool }

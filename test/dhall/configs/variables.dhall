@@ -1,3 +1,4 @@
+{- You can use this file as your `config.dhall`. -}
 let prelude = ./prelude/package.dhall
 
 let types = ./types/package.dhall

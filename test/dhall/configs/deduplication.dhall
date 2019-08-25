@@ -43,34 +43,12 @@ let bar
 
 		let scope : Bar → Bar = cr.scope
 
-		let define : Variable → Text → Bar = cr.define
-
-		let ca : Button → Shell → Bar → Bar = cr.ca
-
 		let bash : Natural → Text → Bar = utils.mkBash Bar cr
 
-		let var = mkVariable "MyVariable"
+		let counter = bash 1000 "notify-send `date +%S`"
 
-		let counter =
-			  join
-			  [ define var "0"
-			  , ca
-				Button.Left
-				''
-				shellVar=${get var}
-				${set var "\$(( shellVar - 1 ))"}
-				''
-				(text "-")
-			  , bash 1000 "echo \" ${get var} \""
-			  , ca
-				Button.Left
-				''
-				shellVar=${get var}
-				${set var "\$(( shellVar + 1 ))"}
-				''
-				(text "+")
-			  ]
+		-- You'll see one notification per second, not two:
+		in  join [ counter, counter ]
 
-		in  join [ scope counter, scope counter ]
 
 in  mkConfigs [ { bar = bar, settings = defaultSettings } ] : List Configuration

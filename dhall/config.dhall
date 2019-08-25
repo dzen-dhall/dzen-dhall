@@ -15,7 +15,6 @@ let Check = types.Check
 let Color = types.Color
 let Configuration = types.Configuration
 let Direction = types.Direction
-let EscapeMode = types.EscapeMode
 let Event = types.Event
 let Hook = types.Hook
 let Image = types.Image
@@ -49,11 +48,12 @@ let mkTransitions : Event → List State → State → Transition = utils.mkTran
 let mkVariable : Text → Variable = utils.mkVariable
 
 let addHook : Hook → Transition → Transition = utils.addHook
+let getEvent : Shell = utils.getEvent
 
 let emit : Event → Shell = utils.emit
 let get : Variable → Shell = utils.get
 let query : Address → Shell = utils.query
-let set : Variable → Text → Shell = utils.set
+let set : Variable → Shell → Shell = utils.set
 
 let mkConfigs = utils.mkConfigs
 let defaultSettings : Settings = utils.defaultSettings

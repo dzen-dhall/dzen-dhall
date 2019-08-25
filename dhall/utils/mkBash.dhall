@@ -15,8 +15,8 @@ let mkBash =
 			input
 		, updateInterval =
 			Some interval
-		, escapeMode =
-			{ joinLines = False, escapeMarkup = True }
+		, escape =
+			True
 		}
 
 in  mkBash

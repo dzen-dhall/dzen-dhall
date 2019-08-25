@@ -18,8 +18,8 @@ in  [ Token.Open
 			  [ "bash" ]
 		  , input =
 			  "echo 1"
-		  , escapeMode =
-			  { joinLines = True, escapeMarkup = True }
+		  , escape = True
+
 		  }
 		: Source
 	  )

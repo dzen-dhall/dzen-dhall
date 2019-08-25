@@ -163,7 +163,7 @@ mkBarRuntime cfg = do
 initialize
   :: Bar Marshalled
   -> App StartingUp (Bar Initialized)
-initialize (BarSource source@Source{escapeMode}) = do
+initialize (BarSource source@Source{escape}) = do
 
   state <- get
 
@@ -186,7 +186,7 @@ initialize (BarSource source@Source{escapeMode}) = do
 
   (outputRef, cacheRef) <- maybe createRefs pure mbCached
 
-  pure $ BarSource $ SourceHandle outputRef cacheRef escapeMode
+  pure $ BarSource $ SourceHandle outputRef cacheRef escape
 
 initialize (BarMarquee i p) =
   BarMarquee i <$> initialize p
@@ -417,7 +417,7 @@ collectSources
 collectSources (BarSource handle) = liftIO do
   let outputRef  = handle ^. shOutputRef
       cacheRef   = handle ^. shCacheRef
-      escapeMode = handle ^. shEscapeMode
+      escape     = handle ^. shEscape
 
   cache <- readIORef cacheRef
   case cache of
@@ -425,7 +425,7 @@ collectSources (BarSource handle) = liftIO do
       pure $ ASTText escaped
     Nothing -> do
       raw <- readIORef outputRef
-      let escaped = escape escapeMode raw
+      let escaped = escapeMarkup escape raw
       writeIORef cacheRef (Just escaped)
       pure $ ASTText escaped
 
@@ -477,19 +477,15 @@ collectSources (BarMarkup text)
   = pure $ ASTText text
 
 
--- | Escape @^@ characters and replace newlines.
-escape
-  :: EscapeMode
+-- | Escape @^@ characters.
+escapeMarkup
+  :: Bool
   -> Text
   -> Text
-escape EscapeMode{joinLines, escapeMarkup} =
-  (if escapeMarkup
+escapeMarkup escape =
+  (if escape
    then T.replace "^" "^^"
-   else id) .
-  (if joinLines
-   then T.replace "\n" ""
-   else fromMaybe "" . listToMaybe . T.lines)
-
+   else id)
 
 allButtons :: [Button]
 allButtons =

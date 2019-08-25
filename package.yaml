@@ -1,13 +1,17 @@
-name:       dzen-dhall
-version:    '0.0.0.1'
-synopsis:   Configure dzen2 bars in Dhall language.
+name:        dzen-dhall
+version:     0.0.0
+synopsis:    Configure dzen2 bars in Dhall language
+description: Configure dzen2 bars in Dhall language
 maintainer: Kalnitsky Vladimir <klntsky@gmail.com>
 license:    BSD-3-Clause
 license-file: LICENSE
 author: Kalnitsky Vladimir <klntsky@gmail.com>
+github: dzen-dhall/dzen-dhall
+
 extra-source-files:
 - CHANGELOG.md
 - README.md
+- dhall/**/*.dhall
 
 library:
   source-dirs: src

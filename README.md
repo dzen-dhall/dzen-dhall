@@ -190,7 +190,7 @@ let text : Text → Bar
 let markup : Text → Bar
 
 -- Used to combine multiple Bars into one.
-let [join](#join) : List Bar → Bar
+let join : List Bar → Bar
 
 -- [Primitives of Dzen markup language](#primitives):
 let [fg](#coloring) : Color → Bar → Bar
@@ -362,10 +362,6 @@ Example:
 let Button : Type = < Left | Middle | Right | ScrollUp | ScrollDown | ScrollLeft | ScrollRight >
 ```
 
-### Join
-
-`join` is used to concatenate multiple bars.
-
 ### Animations
 
 Some built-in animations are available. More may be added in the future.
@@ -465,7 +461,7 @@ let Source : Type =
   { command : List Text
   , input : Text
   , updateInterval : Optional Natural
-  , escapeMode : { joinLines : Bool, escapeMarkup : Bool } }
+  , escape : Bool
 ```
 
 <details><summary><strong>SHOW EXAMPLE</strong></summary>
@@ -478,7 +474,7 @@ let clocks : Source =
   { updateInterval = Some 1000
   , command = ["date", "+%H:%M"]
   , input = ""
-  , escapeMode = { joinLines = False, escapeMarkup = True }
+  , escape = True
   }
 ```
 
@@ -495,9 +491,9 @@ If `updateInterval` is not specified (i.e. set to `None Natural`), the command w
 
 ```dhall
 let mkVariable : Text → Variable
-let define : Variable → Text
+let define : Variable → Text → Bar
 let get : Variable → Shell
-let set : Variable → Text → Shell
+let set : Variable → Shell → Shell
 ```
 
 The last two don't actually do anything with variables, they rather construct shell commands that do. `dzen-dhall` works like a template engine for bash scripts.
@@ -541,85 +537,6 @@ in	join
 [[view full example]](test/dhall/configs/variables.dhall)
 
 At run time, it will look like this: ![](img/counter.png).
-
-### [Events](dhall/src/Event.dhall)
-
-Events can be emitted from within hooks, sources and clickable areas.
-
-```dhall
-let mkEvent : Text → Event
-
-let emit : Event → Shell
-```
-
-<details><summary><strong>SHOW EXAMPLES</strong></summary>
-<p>
-
-```dhall
-let mySlot : Slot = "MY_SLOT"
-
--- A hook that emits events when called:
-let myHook
-  : Hook
-  = { command =
-		[ "bash" ]
-	, input =
-		''
-		$EMIT MY_SLOT MouseLeft
-		''
-	}
-
--- A source that emits a click event each 3 seconds:
-let mySource2 : Source =
-	{ updateInterval =
-		Some 3000
-	, command =
-		[ "bash" ]
-	, input =
-		Some
-		''
-		$EMIT ${mySlot} MouseLeft
-		''
-	, escapeMode =
-		{ joinLines = False, escapeMarkup = True }
-	}
-
--- This can also be done by setting updateInterval to None
--- and writing a `while` loop inside the script:
-let mySource1 : Source =
-	{ updateInterval =
-		None Natural
-	, command =
-		[ "bash" ]
-	, input =
-		Some
-		''
-		while true; do
-			  $EMIT ${mySlot} MouseLeft
-			  sleep 10;
-		done;
-		''
-	, escapeMode =
-		{ joinLines = False, escapeMarkup = True }
-	}
-```
-
-</p>
-</details>
-
-Note that it is necessary to use `EMIT` variable **without** quotes. It contains a path to the executable that handles event routing, and a hidden argument that indicates from which [scope](#scopes) the event came from. The user should only specify a slot address and an event.
-
-When emitting mouse events, it is necessary to prepend `Mouse` to [button names](#events):
-
-```
-MouseLeft
-MouseMiddle
-MouseRight
-MouseScrollUp
-MouseScrollDown
-MouseScrollLeft
-MouseScrollRight
-```
 
 ### Scopes
 
@@ -670,7 +587,7 @@ let OFF : State = mkState ""
                        -- ^ Empty label means that this state is initial.
 let ON : State = mkState "ON"
 
-let Toggle : Event = Event.Custom "Toggle"
+let Toggle : Event = mkEvent "Toggle"
 
 let address : Address = mkAddress "MY_AUTOMATON"
 
@@ -691,7 +608,7 @@ in	ca
 	(automaton address stateTransitionTable stateMap)
 ```
 
-### [State maps](dhall/src/StateMap.dhall)
+#### [State maps](dhall/src/StateMap.dhall)
 
 `StateMap`s are used to define mappings from states to bars, i.e. they determine what to show depending on the state.
 
@@ -703,9 +620,23 @@ in  StateMap
 
 Note that `StateMap` is parametrized by the `Bar` type.
 
-### [Hooks](dhall/src/Hook.dhall)
+Also note that unlike in traditional reactive frameworks, current state of an automaton only determines which `Bar` is *shown*, not *present in the tree*. See [this section](#deduplication) for more context.
+
+#### [Events](dhall/src/Event.dhall)
+
+Events can be emitted from within [hooks](#hooks), [sources](#sources) and [clickable areas](#clickable-areas).
+
+```dhall
+let mkEvent : Text → Event
+
+let emit : Event → Shell
+```
+
+#### [Hooks](dhall/src/Hook.dhall)
 
 Hooks allow to execute arbitrary commands before state transitions of automata. When a hook exits with non-zero code, it prevents its corresponding state transition from happening. So, generally, hooks should only contain commands that exit fast.
+
+Relevant bindings:
 
 ```dhall
 let Hook
@@ -715,6 +646,11 @@ let Hook
 	  , input :
 		  Text
 	  }
+
+let addHook
+	: Hook → Transition → Transition
+
+let getEvent : Shell
 ```
 
 For example, The following hook will succeed only if a certain file exists:
@@ -726,9 +662,30 @@ let myHook : Hook =
   }
 ```
 
-Hooks can also [emit events](#events).
+Hooks can also [emit events](#events) themselves (this may lead to event storm, so the user should be really careful).
 
-A special environment variable, `EVENT`, contains the name of the event that triggered the hook. A common technique is to bind a single hook to multiple transitions and implement all the logic in the shell script.
+A special value, `getEvent`, allows to get the event that triggered the hook.
+
+For example, a hook that inspects current event can be added to all transitions of a state transition table from the [automata example](#automata):
+
+```dhall
+let withInspect
+	: Transition → Transition
+	= addHook (mkBashHook "notify-send ${getEvent}")
+
+let stateTransitionTable
+	: List Transition
+	= prelude.List.map
+	  Transition
+	  Transition
+      -- ^ Type parameters like these are always explicit in Dhall
+	  withInspect
+	  [ mkTransition Toggle ON OFF, mkTransition Toggle OFF ON ]
+```
+
+[[view full example]](test/dhall/configs/getEvent.dhall)
+
+One technique of writing automata is to bind a single hook to multiple transitions and implement all the logic in the shell script.
 
 ### Assertions
 
@@ -762,7 +719,7 @@ check
 
 These conventions are enforced by `dzen-dhall` as an attempt to lower cognitive noise for users and plugin maintainers.
 
-- [Event](#events) names should be written camel-cased, first letter capitalized: `TimeHasCome`, `ButtonClicked`, etc.
+- [Event](#events) names and [variables](#variables) should be written camel-cased, first letter capitalized: `TimeHasCome`, `ButtonClicked`, etc.
 - [Automata](#automata) addresses should contain only capital letters, numbers and `_`.
 
 ## Troubleshooting
@@ -790,7 +747,7 @@ Another possible source of this problem is non-monospace font being used. Non-mo
 
 ### Embedding shell scripts in Dhall
 
-The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file.
+The most straightforward way is to use [`./file.sh as Text` construct](https://github.com/dhall-lang/dhall-lang/wiki/Cheatsheet#programming) to embed a file as `Text` literal into the configuration. However, it is not possible when creating reusable plugins, since it is a requirement that each plugin is encapsulated in a single file, and using string interpolation is impossible too.
 
 So, the following rules apply:
 
@@ -812,7 +769,7 @@ mkConfigs
 	  , { bar =
 		    anotherBar
 		, settings =
-			-- `-xs` flag specifies monitor number:
+			-- `-xs` dzen2 argument specifies monitor number:
 			defaultSettings ⫽ { extraArgs = [ "-xs", "1" ] }
 		}
 	  ]
@@ -841,15 +798,17 @@ let Bar =
     → Bar
 ```
 
-During the stage of [config](dhall/config.dhall) processing, `Bar`s are converted to a non-recursive data called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s. These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
+During the stage of [config](dhall/config.dhall) processing, `Bar`s are converted to a type called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s (in fact, `List` is the only recursive data type in Dhall). These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
 
-After that, `dzen-dhall` spawns some threads for each output source and processes the outputs as specified in the configuration.
+After that, `dzen-dhall` [spawns some threads](src/DzenDhall/App/StartingUp.hs) for each output source and processes the outputs as specified in the configuration.
 
 ### Deduplication
 
 This is a really tricky part: identical-by-definition sources or automata within the same scope are always treated as a single one, no matter how many times they appear in a `Bar` tree.
 
-This is done to handle gracefully the situation where we have an automaton with a `StateMap` of multiple states, some of which contain the same sources and/or automata. Do we want to create these duplicating things for each possible state? Of course, not: this is like saying no to performance from the start. The chosen solution was to just remove these duplicates from runtime.
+A simplest example that makes deduplication observable can be found [here](test/dhall/configs/deduplication.dhall).
+
+Deduplication was introduced to handle gracefully the situation where we have an automaton with a `StateMap` of multiple states, some of which contain the same sources and/or automata. Do we want to create these duplicating things for each possible state? Of course, not: this is like saying no to performance from the start. The chosen solution was to just remove these duplicates from runtime.
 
 The reason why we have to deal with this problem at all (while normal reactive frameworks don't have to) is because all sources in a `StateMap` are being run at the same time in background (no matter in which state the automaton is), but the user is only able to observe the output corresponding to exactly one state. This may seem strange, but in fact this approach has its own benefits. For example, output is always available immediately after a state change. And the implementation is much simpler, because there is no need to kill output sources and launch them anew.
 

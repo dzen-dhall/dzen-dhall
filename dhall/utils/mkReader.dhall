@@ -1,5 +1,19 @@
 {- A function that constructs a Bar that contains a source that reads a given
    variable repeatedly, with a specified interval (in milliseconds).
+
+The following pieces of code are equivalent:
+
+```dhall
+bash 500
+    ''
+    echo "${get var}"
+    ''
+```
+
+```dhall
+reader var 500
+```
+
 -}
 let types = ../types/package.dhall
 
@@ -23,8 +37,8 @@ let mkReader =
 			"\$GET ${showVariable var}"
 		, updateInterval =
 			Some updateInterval
-		, escapeMode =
-			{ joinLines = False, escapeMarkup = True }
+		, escape =
+			True
 		}
 
 in  mkReader

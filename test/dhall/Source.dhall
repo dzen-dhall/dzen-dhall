@@ -6,6 +6,5 @@ in  { updateInterval =
 		[ "bash" ]
 	, input =
 		"echo hi"
-	, escapeMode =
-		{ joinLines = True, escapeMarkup = True }
+	, escape = True
 	}

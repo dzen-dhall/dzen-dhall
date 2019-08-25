@@ -404,26 +404,13 @@ stateMapType = H.fromList <$>
          (,) <$> field "state" strictText
              <*> field "bar"   (list tokenType))
 
-data EscapeMode = EscapeMode
-  { joinLines    :: Bool
-  , escapeMarkup :: Bool
-  }
-  deriving (Show, Eq, Generic)
-
-instance Hashable EscapeMode
-
-escapeModeType :: Type EscapeMode
-escapeModeType = record $
-  EscapeMode <$> field "joinLines"    bool
-             <*> field "escapeMarkup" bool
-
 data Source
   = Source
   { updateInterval :: Maybe Int
   -- ^ In microseconds
   , command        :: [String]
   , input          :: Text
-  , escapeMode     :: EscapeMode
+  , escape         :: Bool
   } deriving (Show, Eq, Generic)
 
 instance Hashable Source
@@ -433,7 +420,7 @@ sourceSettingsType = record $
   Source <$> field "updateInterval" (Dhall.maybe $ (* 1000) . fromIntegral <$> natural)
          <*> field "command"        (list string)
          <*> field "input"          strictText
-         <*> field "escapeMode"     escapeModeType
+         <*> field "escape"         bool
 
 data Configuration = Configuration
   { _cfgBarTokens   :: [Token]
