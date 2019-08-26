@@ -88,6 +88,9 @@ library:
   - FlexibleInstances
   - BlockArguments
 
+  generated-other-modules:
+    - Paths_dzen_dhall
+
 executables:
   dzen-dhall:
     main: Main.hs

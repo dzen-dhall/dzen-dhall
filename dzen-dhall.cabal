@@ -127,6 +127,8 @@ library
   other-modules:
       DzenDhall.Commands.Unplug
       Paths_dzen_dhall
+  autogen-modules:
+      Paths_dzen_dhall
   hs-source-dirs:
       src
   default-extensions: DeriveFunctor DeriveGeneric FlexibleContexts GeneralizedNewtypeDeriving LambdaCase MultiWayIf NamedFieldPuns OverloadedStrings RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections FlexibleInstances BlockArguments
