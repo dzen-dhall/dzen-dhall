@@ -2,10 +2,10 @@ name:        dzen-dhall
 version:     1.0.1
 synopsis:    Configure dzen2 bars in Dhall language
 description: Configure dzen2 bars in Dhall language
-maintainer: Kalnitsky Vladimir <klntsky@gmail.com>
+maintainer: Vladimir Kalnitsky <klntsky@gmail.com>
 license:    BSD-3-Clause
 license-file: LICENSE
-author: Kalnitsky Vladimir <klntsky@gmail.com>
+author: Vladimir Kalnitsky <klntsky@gmail.com>
 github: dzen-dhall/dzen-dhall
 
 extra-source-files:
@@ -20,7 +20,7 @@ library:
   dependencies:
   - ansi-terminal
   - prettyprinter-ansi-terminal
-  - base
+  - base >=4.12 && <5
   - bytestring
   - dhall==1.25.0
   - directory

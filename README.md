@@ -37,7 +37,7 @@ This repository contains data type and function definitions in Dhall that form a
 
 In effect, `dzen-dhall` introduces a new approach to desktop scripting/customization with Dzen. Basically, it provides solutions for all of the aforementioned problems. `dzen-dhall` is smart when formatting text, handles newlines gracefully, runs output sources in parallel, and its [plugin system](#installing-plugins) solves the problem of code reuse.
 
-### Quick example
+### A quick example
 
 The essence of the DSL can be illustrated by the following excerpt from [the default config file](dhall/config.dhall) (with additional comments):
 

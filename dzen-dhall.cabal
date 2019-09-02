@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 755cddbb194c2b8a74e6da3aa812b7edeba500ed46a38b201db5d7a563fd8d25
+-- hash: b68721f6e4d0f2557c8dd8e71bbc259433931d8686268ad8fb851180c946fe4b
 
 name:           dzen-dhall
 version:        1.0.1
@@ -135,7 +135,7 @@ library
   ghc-options: -Wall
   build-depends:
       ansi-terminal
-    , base
+    , base >=4.12 && <5
     , bytestring
     , dhall ==1.25.0
     , directory
