@@ -14,13 +14,13 @@ import           DzenDhall.Extra
 
 type AutomatonState = Text
 
-stateType :: Type AutomatonState
-stateType = union $ constructor "State" strictText
+stateDecoder :: Decoder AutomatonState
+stateDecoder = union $ constructor "State" strictText
 
 type AutomatonAddress = Text
 
-automatonAddressType :: Type AutomatonAddress
-automatonAddressType = union $ constructor "Address" strictText
+automatonAddressDecoder :: Decoder AutomatonAddress
+automatonAddressDecoder = union $ constructor "Address" strictText
 
 type Scope            = Text
 type VariableName     = Text
@@ -38,8 +38,8 @@ data Marquee
 
 makeLenses ''Marquee
 
-marqueeType :: Type Marquee
-marqueeType = record $
+marqueeDecoder :: Decoder Marquee
+marqueeDecoder = record $
   Marquee <$> field "framesPerCharacter" (positive    . fromIntegral <$> natural)
           <*> field "width"              (nonNegative . fromIntegral <$> natural)
           <*> field "shouldWrap"         bool
@@ -48,8 +48,8 @@ data Direction
   = DLeft | DRight
   deriving (Show, Eq, Generic)
 
-directionType :: Type Direction
-directionType = union
+directionDecoder :: Decoder Direction
+directionDecoder = union
   $  (DLeft  <$ constructor "Left"   unit)
   <> (DRight <$ constructor "Right" unit)
 
@@ -57,8 +57,8 @@ data VerticalDirection
   = VUp | VDown
   deriving (Show, Eq, Generic)
 
-verticalDirectionType :: Type VerticalDirection
-verticalDirectionType = union
+verticalDirectionDecoder :: Decoder VerticalDirection
+verticalDirectionDecoder = union
   $  (VUp   <$ constructor "Up"   unit)
   <> (VDown <$ constructor "Down" unit)
 
@@ -67,8 +67,8 @@ data Assertion
   | SuccessfulExit Text
   deriving (Show, Eq, Generic)
 
-assertionType :: Type Assertion
-assertionType = union
+assertionDecoder :: Decoder Assertion
+assertionDecoder = union
   $  (BinaryInPath    <$> constructor "BinaryInPath" strictText)
   <> (SuccessfulExit  <$> constructor "SuccessfulExit"  strictText)
 
@@ -80,10 +80,10 @@ data Check
 
 makeLenses ''Check
 
-checkType :: Type Check
-checkType = record $
+checkDecoder :: Decoder Check
+checkDecoder = record $
   Check <$> field "message"   strictText
-        <*> field "assertion" assertionType
+        <*> field "assertion" assertionDecoder
 
 data Button
   = MouseLeft
@@ -97,8 +97,8 @@ data Button
 
 instance Hashable Button
 
-buttonType :: Type Button
-buttonType = union
+buttonDecoder :: Decoder Button
+buttonDecoder = union
   $  (MouseLeft        <$ constructor "Left"        unit)
   <> (MouseMiddle      <$ constructor "Middle"      unit)
   <> (MouseRight       <$ constructor "Right"       unit)
@@ -113,8 +113,8 @@ newtype Event
 
 instance Hashable Event
 
-eventType :: Type Event
-eventType = union $ (Event <$> constructor "Event" strictText)
+eventDecoder :: Decoder Event
+eventDecoder = union $ (Event <$> constructor "Event" strictText)
 
 data Fade
   = Fade
@@ -126,9 +126,9 @@ data Fade
 
 makeLenses ''Fade
 
-fadeType :: Type Fade
-fadeType = record $
-  Fade <$> field "direction"  verticalDirectionType
+fadeDecoder :: Decoder Fade
+fadeDecoder = record $
+  Fade <$> field "direction"  verticalDirectionDecoder
        <*> field "frameCount" (fromIntegral <$> natural)
        <*> field "height"     (fromIntegral <$> natural)
 
@@ -143,10 +143,10 @@ data Slider
 
 makeLenses ''Slider
 
-sliderType :: Type Slider
-sliderType = record $
-  Slider <$> field "fadeIn"  fadeType
-         <*> field "fadeOut" fadeType
+sliderDecoder :: Decoder Slider
+sliderDecoder = record $
+  Slider <$> field "fadeIn"  fadeDecoder
+         <*> field "fadeOut" fadeDecoder
          <*> field "delay"   (fromIntegral <$> natural)
 
 data Hook
@@ -158,8 +158,8 @@ data Hook
 
 makeLenses ''Hook
 
-hookType :: Type Hook
-hookType = record $
+hookDecoder :: Decoder Hook
+hookDecoder = record $
   Hook <$> field "command"          (list strictText)
        <*> field "input"            strictText
 
@@ -168,13 +168,13 @@ newtype StateTransitionTable
         }
   deriving (Show, Eq, Generic)
 
-stateTransitionTableType :: Type StateTransitionTable
-stateTransitionTableType = STT . H.fromList . concatMap collect <$> list
+stateTransitionTableDecoder :: Decoder StateTransitionTable
+stateTransitionTableDecoder = STT . H.fromList . concatMap collect <$> list
   ( record
-    ( pack5 <$> field "events" (list eventType)
-            <*> field "from"   (list stateType)
-            <*> field "to"     stateType
-            <*> field "hooks"  (list hookType)
+    ( pack5 <$> field "events" (list eventDecoder)
+            <*> field "from"   (list stateDecoder)
+            <*> field "to"     stateDecoder
+            <*> field "hooks"  (list hookDecoder)
     )
   )
   where
@@ -194,8 +194,8 @@ _scope = _1
 newtype Color = Color Text
   deriving (Show, Eq, Generic)
 
-colorType :: Type Color
-colorType = Color <$> strictText
+colorDecoder :: Decoder Color
+colorDecoder = Color <$> strictText
 
 data AbsolutePosition
   = AbsolutePosition { _apX :: Int, _apY :: Int }
@@ -203,8 +203,8 @@ data AbsolutePosition
 
 makeLenses ''AbsolutePosition
 
-absolutePositionType :: Type AbsolutePosition
-absolutePositionType = record $
+absolutePositionDecoder :: Decoder AbsolutePosition
+absolutePositionDecoder = record $
   AbsolutePosition <$> field "x" (fromIntegral <$> integer)
                    <*> field "y" (fromIntegral <$> integer)
 
@@ -232,8 +232,8 @@ data Position =
   P_BOTTOM
   deriving (Show, Eq, Generic)
 
-positionType :: Type Position
-positionType = union
+positionDecoder :: Decoder Position
+positionDecoder = union
   $  (XY           <$> constructor "XY"        xy)
   <> (P_RESET_Y    <$  constructor "_RESET_Y"  unit)
   <> (P_LOCK_X     <$  constructor "_LOCK_X"   unit)
@@ -254,9 +254,9 @@ data ClickableArea
 
 makeLenses ''ClickableArea
 
-clickableAreaType :: Type ClickableArea
-clickableAreaType = record $
-  ClickableArea <$> field "button"  buttonType
+clickableAreaDecoder :: Decoder ClickableArea
+clickableAreaDecoder = record $
+  ClickableArea <$> field "button"  buttonDecoder
                 <*> field "command" strictText
 
 data Padding
@@ -265,8 +265,8 @@ data Padding
   | PSides
   deriving (Show, Eq, Generic)
 
-paddingType :: Type Padding
-paddingType = union
+paddingDecoder :: Decoder Padding
+paddingDecoder = union
   $  (PLeft  <$ constructor "Left"  unit)
   <> (PRight <$ constructor "Right" unit)
   <> (PSides <$ constructor "Sides" unit)
@@ -287,36 +287,36 @@ data OpeningTag
   | OScope
   deriving (Show, Eq, Generic)
 
-openingTagType :: Type OpeningTag
-openingTagType = union
-  $  (OMarquee     <$> constructor "Marquee"     marqueeType)
-  <> (OSlider      <$> constructor "Slider"      sliderType)
-  <> (OFG          <$> constructor "FG"          colorType)
-  <> (OBG          <$> constructor "BG"          colorType)
-  <> (OP           <$> constructor "P"           positionType)
-  <> (OPA          <$> constructor "PA"          absolutePositionType)
-  <> (OCA          <$> constructor "CA"          clickableAreaType)
+openingTagDecoder :: Decoder OpeningTag
+openingTagDecoder = union
+  $  (OMarquee     <$> constructor "Marquee"     marqueeDecoder)
+  <> (OSlider      <$> constructor "Slider"      sliderDecoder)
+  <> (OFG          <$> constructor "FG"          colorDecoder)
+  <> (OBG          <$> constructor "BG"          colorDecoder)
+  <> (OP           <$> constructor "P"           positionDecoder)
+  <> (OPA          <$> constructor "PA"          absolutePositionDecoder)
+  <> (OCA          <$> constructor "CA"          clickableAreaDecoder)
   <> (OIB          <$  constructor "IB"          unit)
 
-  <> (uncurry OPadding   <$> constructor "Padding"
+  <> (uncurry OPadding <$> constructor "Padding"
        ( record $ (,) <$> field "width"   (fromIntegral <$> natural)
-                      <*> field "padding" paddingType
+                      <*> field "padding" paddingDecoder
        )
      )
 
-  <> (uncurry OTrim      <$> constructor "Trim"
+  <> (uncurry OTrim <$> constructor "Trim"
        ( record $ (,) <$> field "width"     (fromIntegral <$> natural)
-                      <*> field "direction" directionType
+                      <*> field "direction" directionDecoder
        )
      )
 
   <> (uncurry OAutomaton <$> constructor "Automaton"
-       ( record $ (,) <$> field "address"  automatonAddressType
-                      <*> field "stt"      stateTransitionTableType
+       ( record $ (,) <$> field "address"  automatonAddressDecoder
+                      <*> field "stt"      stateTransitionTableDecoder
        )
      )
 
-  <> (OStateMapKey <$> constructor "StateMapKey" stateType)
+  <> (OStateMapKey <$> constructor "StateMapKey" stateDecoder)
   <> (OScope       <$  constructor "Scope"       unit)
 
 data BarSettings
@@ -335,8 +335,8 @@ data BarSettings
 
 makeLenses ''BarSettings
 
-barSettingsType :: Type BarSettings
-barSettingsType = record $
+barSettingsDecoder :: Decoder BarSettings
+barSettingsDecoder = record $
   BarSettings <$> field "monitor"        (fromIntegral <$> natural)
               <*> field "extraArgs"      (list string)
               <*> field "updateInterval" ((* 1000) . fromIntegral <$> natural)
@@ -350,8 +350,8 @@ data ShapeSize
 
 makeLenses ''ShapeSize
 
-shapeSizeType :: Type ShapeSize
-shapeSizeType = record $
+shapeSizeDecoder :: Decoder ShapeSize
+shapeSizeDecoder = record $
   ShapeSize <$> field "w" (fromIntegral <$> natural)
             <*> field "h" (fromIntegral <$> natural)
 
@@ -363,8 +363,8 @@ data Variable
 
 makeLenses ''Variable
 
-variableType :: Type Variable
-variableType = record $
+variableDecoder :: Decoder Variable
+variableDecoder = record $
   Variable <$> field "name"  strictText
            <*> field "value" strictText
 
@@ -384,27 +384,27 @@ data Token
   | TokDefine Variable
   deriving (Show, Eq, Generic)
 
-tokenType :: Type Token
-tokenType = union
-  $  (TokOpen      <$> constructor "Open"      openingTagType)
+tokenDecoder :: Decoder Token
+tokenDecoder = union
+  $  (TokOpen      <$> constructor "Open"      openingTagDecoder)
   <> (TokClose     <$  constructor "Close"     unit)
   <> (TokSeparator <$  constructor "Separator" unit)
   <> (TokTxt       <$> constructor "Txt"       strictText)
-  <> (TokSource    <$> constructor "Source"    sourceSettingsType)
+  <> (TokSource    <$> constructor "Source"    sourceSettingsDecoder)
   <> (TokMarkup    <$> constructor "Markup"    strictText)
   <> (TokI         <$> constructor "I"         strictText)
-  <> (TokR         <$> constructor "R"         shapeSizeType)
-  <> (TokRO        <$> constructor "RO"        shapeSizeType)
+  <> (TokR         <$> constructor "R"         shapeSizeDecoder)
+  <> (TokRO        <$> constructor "RO"        shapeSizeDecoder)
   <> (TokC         <$> constructor "C"         (fromIntegral <$> natural))
   <> (TokCO        <$> constructor "CO"        (fromIntegral <$> natural))
-  <> (TokCheck     <$> constructor "Check"     checkType)
-  <> (TokDefine    <$> constructor "Define"    variableType)
+  <> (TokCheck     <$> constructor "Check"     checkDecoder)
+  <> (TokDefine    <$> constructor "Define"    variableDecoder)
 
-stateMapType :: Type (H.HashMap Text [Token])
-stateMapType = H.fromList <$>
+stateMapDecoder :: Decoder (H.HashMap Text [Token])
+stateMapDecoder = H.fromList <$>
   list (record $
          (,) <$> field "state" strictText
-             <*> field "bar"   (list tokenType))
+             <*> field "bar"   (list tokenDecoder))
 
 data Source
   = Source
@@ -417,8 +417,8 @@ data Source
 
 instance Hashable Source
 
-sourceSettingsType :: Type Source
-sourceSettingsType = record $
+sourceSettingsDecoder :: Decoder Source
+sourceSettingsDecoder = record $
   Source <$> field "updateInterval" (Dhall.maybe $ (* 1000) . fromIntegral <$> natural)
          <*> field "command"        (list string)
          <*> field "input"          strictText
@@ -432,10 +432,10 @@ data Configuration = Configuration
 
 makeLenses ''Configuration
 
-configurationType :: Type Configuration
-configurationType = record $
-  Configuration <$> field "bar"      (list tokenType)
-                <*> field "settings" barSettingsType
+configurationDecoder :: Decoder Configuration
+configurationDecoder = record $
+  Configuration <$> field "bar"      (list tokenDecoder)
+                <*> field "settings" barSettingsDecoder
 
 data PluginMeta = PluginMeta
   { _pmName             :: Text
@@ -451,8 +451,8 @@ data PluginMeta = PluginMeta
 
 makeLenses ''PluginMeta
 
-pluginMetaType :: Type PluginMeta
-pluginMetaType = record $
+pluginMetaDecoder :: Decoder PluginMeta
+pluginMetaDecoder = record $
   PluginMeta <$> field "name"             strictText
              <*> field "author"           strictText
              <*> field "email"            (Dhall.maybe strictText)

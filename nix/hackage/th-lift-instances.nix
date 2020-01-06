@@ -12,6 +12,7 @@ mkDerivation {
   testHaskellDepends = [
     base bytestring containers QuickCheck template-haskell text vector
   ];
+  doHaddock = false;
   doCheck = false;
   homepage = "http://github.com/bennofs/th-lift-instances/";
   description = "Lift instances for template-haskell for common data types";

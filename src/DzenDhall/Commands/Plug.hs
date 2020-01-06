@@ -13,7 +13,7 @@ import           Control.Monad.Trans.Except
 import           Data.Either
 import           Data.Maybe
 import           Data.Text (Text)
-import           Dhall
+import           Dhall hiding (void)
 import           Dhall.Core
 import           Lens.Micro
 import           Network.HTTP.Client.Conduit
@@ -285,7 +285,7 @@ readPluginMeta sourceSpec contents = do
 
 
   -- TODO: convert exception to `NoParse`
-  meta <- explained $ inputWithSettings inputSettings pluginMetaType metaBody
+  meta <- explained $ inputWithSettings inputSettings pluginMetaDecoder metaBody
 
   let name          = meta ^. pmName
       parseResult   = P.runParser saneIdentifier () "Plugin name" (T.unpack name)

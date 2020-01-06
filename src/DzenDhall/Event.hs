@@ -172,7 +172,7 @@ runHooks environment barRuntime scope hooks = do
 
     let binary = T.unpack $
           head $ hook ^. hookCommand
-          -- ^ this is safe, because we checked the list for emptiness
+          -- this is safe, because we have checked the list for emptiness
           -- during validation.
         args   = map T.unpack $
           tail $ hook ^. hookCommand

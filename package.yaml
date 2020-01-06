@@ -22,7 +22,7 @@ library:
   - prettyprinter-ansi-terminal
   - base >=4.12 && <5
   - bytestring
-  - dhall==1.25.0
+  - dhall
   - directory
   - filepath
   - file-embed-lzma
@@ -111,7 +111,7 @@ tests:
     - HUnit
     - QuickCheck
     - base
-    - dhall==1.25.0
+    - dhall
     - dzen-dhall
     - filepath
     - hspec
