@@ -9,6 +9,7 @@ import           Data.IORef
 import           Dhall hiding (maybe)
 import           Lens.Micro.TH
 import           System.IO
+import           System.Process (ProcessHandle)
 import qualified Data.HashMap.Strict as H
 
 apiVersion :: Int
@@ -90,7 +91,7 @@ data BarRuntime = BarRuntime
   , _brHandle :: Handle
   -- ^ A handle to write to. The value is either stdin of a @dzen2@ process or
   -- 'System.IO.stdout', if @--stdout@ flag is passed.
+  , _brDzenHandle :: Maybe ProcessHandle
   }
-  deriving (Eq, Show)
 
 makeLenses ''BarRuntime

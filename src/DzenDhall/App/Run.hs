@@ -15,6 +15,7 @@ import           Control.Monad
 import           Lens.Micro
 import           Lens.Micro.Extras
 import           System.Exit
+import           System.Process (ProcessHandle, waitForProcess)
 import           Control.Concurrent (threadDelay)
 
 
@@ -36,7 +37,7 @@ useConfigurations = do
 
     withEither
       (Parser.runBarParser barTokens)
-      (invalidTokens barTokens) $
+      (invalidTokens barTokens)
       \(bar :: Bar Marshalled) -> do
 
         (bar', subscriptions, barRuntime, clickableAreas) <-
@@ -45,6 +46,9 @@ useConfigurations = do
         runAppForked barRuntime (launchEventListener subscriptions clickableAreas)
 
         runAppForked barRuntime (updateForever bar')
+
+        whenJust (barRuntime ^. brDzenHandle)
+          (runAppForked barRuntime . waitForDzen)
 
         -- This delay is required to preserve the order of multiple dzen2 instances.
         -- We want them to overlap in exactly the same order as defined in `config.dhall`.
@@ -65,7 +69,12 @@ checkDzen2Executable = do
         exitWith $ ExitFailure 1)
 
 
-invalidTokens :: Show a => [Token] -> a -> App Common ()
+waitForDzen :: ProcessHandle -> App Forked ()
+waitForDzen handle = do
+  void $ liftIO $ waitForProcess handle
+
+
+invalidTokens :: Show a => [Token] -> a -> App Common b
 invalidTokens barTokens err = do
   App.exit 3 $ fromLines
     [ "Internal error when parsing configuration, debug info: " <> showPack barTokens
