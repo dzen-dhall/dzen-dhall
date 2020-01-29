@@ -37,7 +37,7 @@ This repository contains data type and function definitions in Dhall that form a
 
 In effect, `dzen-dhall` introduces a new approach to desktop scripting/customization with Dzen. Basically, it provides solutions for all of the aforementioned problems. `dzen-dhall` is smart when formatting text, handles newlines gracefully, runs output sources in parallel, and its [plugin system](#installing-plugins) solves the problem of code reuse.
 
-### Quick example
+### A quick example
 
 The essence of the DSL can be illustrated by the following excerpt from [the default config file](dhall/config.dhall) (with additional comments):
 
@@ -175,7 +175,7 @@ After running `dzen-dhall` again, you should be able to see the output of the ne
 
 This chapter describes `dzen-dhall` DSL in depth. It's best to read the [Dhall wiki](https://github.com/dhall-lang/dhall-lang/wiki) to become familiar with Dhall syntax before you proceed.
 
-### [Bars](dhall/src/Bar.dhall)
+### [Bars](dhall/types/Bar.dhall)
 
 The most important concept of the DSL is `Bar`. Essentially, `Bar` is a tree data structure containing text, images, shapes, etc. in its leaves. [Default config file](dhall/config.dhall) exposes some functions for working with `Bar`s:
 
@@ -630,7 +630,7 @@ in	ca
 	(automaton address stateTransitionTable stateMap)
 ```
 
-#### [State maps](dhall/src/StateMap.dhall)
+#### [State maps](dhall/types/StateMap.dhall)
 
 `StateMap`s are used to define mappings from states to bars, i.e. they determine what to show depending on the state.
 
@@ -644,7 +644,7 @@ Note that `StateMap` is parametrized by the `Bar` type.
 
 Also note that unlike in traditional reactive frameworks, current state of an automaton only determines which `Bar` is *shown*, not *present in the tree*. See [this section](#deduplication) for more context.
 
-#### [Events](dhall/src/Event.dhall)
+#### [Events](dhall/types/Event.dhall)
 
 Events can be emitted from within [hooks](#hooks), [sources](#sources) and [clickable areas](#clickable-areas). The only way to react to some event is to use an automaton.
 
@@ -654,7 +654,7 @@ let mkEvent : Text → Event
 let emit : Event → Shell
 ```
 
-#### [Hooks](dhall/src/Hook.dhall)
+#### [Hooks](dhall/types/Hook.dhall)
 
 Hooks allow to execute arbitrary commands before state transitions of automata. When a hook exits with non-zero code, it prevents its corresponding state transition from happening. So, generally, hooks should only contain commands that exit fast, to prevent excessive delays.
 
@@ -816,9 +816,9 @@ Read this section if you want to understand how `dzen-dhall` works. It is not re
 
 Dhall does not support recursive ADTs (which are obviously required to construct tree-like statusbar configurations), but there is a [trick](https://github.com/dhall-lang/dhall-lang/wiki/How-to-translate-recursive-code-to-Dhall) to bypass that, called [Boehm-Berarducci encoding](http://okmij.org/ftp/tagless-final/course/Boehm-Berarducci.html).
 
-We use this method in a slightly modified variant: [`Carrier`](dhall/src/Carrier.dhall) type is introduced to hide all the constructors in a huge record.
+We use this method in a slightly modified variant: [`Carrier`](dhall/types/Carrier.dhall) type is introduced to hide all the constructors in a huge record.
 
-Essentially, [our definition of `Bar`](dhall/src/Bar.dhall) is equivalent to something like the following, which is a direct Boehm-Berarducci encoding:
+Essentially, [our definition of `Bar`](dhall/types/Bar.dhall) is equivalent to something like the following, which is a direct Boehm-Berarducci encoding:
 
 ```dhall
 let Bar =
@@ -831,7 +831,7 @@ let Bar =
     → Bar
 ```
 
-During the stage of [config](dhall/config.dhall) processing, `Bar`s are converted to a type called [Plugin](dhall/src/Plugin.dhall), which is a list of [Token](dhall/src/Token.dhall)s (in fact, `List` is the only recursive data type in Dhall). These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
+During the stage of [config](dhall/config.dhall) processing, `Bar`s are converted to a type called [Plugin](dhall/types/Plugin.dhall), which is a list of [Token](dhall/types/Token.dhall)s (in fact, `List` is the only recursive data type in Dhall). These tokens can be marshalled into Haskell, and then [parsed back](src/DzenDhall/Parser.hs) into a tree structure ([DzenDhall.Data.Bar](src/DzenDhall/Data.hs)).
 
 After that, `dzen-dhall` [spawns some threads](src/DzenDhall/App/StartingUp.hs) for each output source and processes the outputs as specified in the configuration.
 

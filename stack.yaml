@@ -1,4 +1,4 @@
-resolver: nightly-2019-06-06
+resolver: nightly-2020-01-05
 packages:
 - .
 nix:
@@ -13,5 +13,7 @@ nix:
   # using `stack exec dzen-dhall`.
   pure: false
 extra-deps:
-  - dhall-1.25.0
+- dhall-1.28.0
+- cborg-json-0.2.2.0
+
 compiler: ghc-8.6.4

@@ -56,11 +56,10 @@ newtype StartingUp = StartingUp Void
 newtype Forked     = Forked     Void
 
 -- | Maps app execution stages to app states.
-type family StateOf a
-
-type instance StateOf Common     = ()
-type instance StateOf StartingUp = StartupState
-type instance StateOf Forked     = BarRuntime
+type family StateOf a where
+  StateOf Common     = ()
+  StateOf StartingUp = StartupState
+  StateOf Forked     = BarRuntime
 
 -- | 'Runtime' is read-only; mutable state type depends on the current stage of execution of the 'App'.
 newtype App stage a = App { unApp :: StateT (StateOf stage) (ReaderT Runtime IO) a }
@@ -171,6 +170,7 @@ highlight text = do
     else
       text
 
+-- | Apply @Dhall.detailed@ settings.
 explained :: IO a -> App stage a
 explained io = do
   shouldExplain <- getRuntime <&> (\args -> args ^. rtArguments . explain)

@@ -38,7 +38,7 @@ readRuntime args = do
   configurations :: [Configuration] <- do
     (if args ^. explain == Explain
      then detailed
-     else id) $ inputFile (list configurationType) configFile
+     else id) $ inputFile (list configurationDecoder) configFile
 
   supportsANSI <- System.Console.ANSI.hSupportsANSI System.IO.stdout
 

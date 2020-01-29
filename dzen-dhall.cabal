@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 755cddbb194c2b8a74e6da3aa812b7edeba500ed46a38b201db5d7a563fd8d25
+-- hash: 1ae7fb1f6448098f1475fb76351c2d6d557d0bd608d7185decdd42dd7e0b8682
 
 name:           dzen-dhall
 version:        1.0.1
@@ -12,8 +12,8 @@ synopsis:       Configure dzen2 bars in Dhall language
 description:    Configure dzen2 bars in Dhall language
 homepage:       https://github.com/dzen-dhall/dzen-dhall#readme
 bug-reports:    https://github.com/dzen-dhall/dzen-dhall/issues
-author:         Kalnitsky Vladimir <klntsky@gmail.com>
-maintainer:     Kalnitsky Vladimir <klntsky@gmail.com>
+author:         Vladimir Kalnitsky <klntsky@gmail.com>
+maintainer:     Vladimir Kalnitsky <klntsky@gmail.com>
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
@@ -135,9 +135,9 @@ library
   ghc-options: -Wall
   build-depends:
       ansi-terminal
-    , base
+    , base >=4.12 && <5
     , bytestring
-    , dhall ==1.25.0
+    , dhall
     , directory
     , file-embed-lzma
     , filepath
@@ -198,7 +198,7 @@ test-suite tasty
       HUnit
     , QuickCheck
     , base
-    , dhall ==1.25.0
+    , dhall
     , dzen-dhall
     , filepath
     , generic-random

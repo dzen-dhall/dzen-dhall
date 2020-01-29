@@ -20,7 +20,7 @@ let
     packageOverrides = pkgs: rec {
       haskellPackages = pkgs.haskellPackages.override {
         overrides = haskellPackagesNew: haskellPackagesOld: rec {
-          dzen-dhall = haskellPackagesNew.callPackage ./dzen-dhall.nix { };
+          dzen-dhall = haskellPackagesNew.callCabal2nix "dzen-dhall" (pkgs.lib.cleanSource ../.) { };
 
           # Direct dependencies
           dhall = haskellPackagesNew.callPackage ./hackage/dhall.nix { };
@@ -30,6 +30,9 @@ let
           repline = haskellPackagesNew.callPackage ./hackage/repline.nix { };
           th-lift-instances = haskellPackagesNew.callPackage ./hackage/th-lift-instances.nix { };
           th-lift = haskellPackagesNew.callPackage ./hackage/th-lift.nix { };
+          atomic-write = haskellPackagesNew.callPackage ./hackage/atomic-write.nix { };
+          generic-random = haskellPackagesNew.callPackage ./hackage/generic-random.nix { };
+          prettyprinter = haskellPackagesNew.callPackage ./hackage/prettyprinter.nix { };
 
         };
       };

@@ -3,7 +3,7 @@ module DzenDhall.Test.Config where
 import           DzenDhall.Config
 
 import           Control.Monad
-import           Dhall
+import           Dhall hiding (void)
 import           Lens.Micro
 import           System.IO (FilePath)
 import           Test.Tasty (TestTree, testGroup)
@@ -47,8 +47,7 @@ getTests =
     ]
   ]
 
-testFile :: (Eq a, Show a) =>
-            Type a -> FilePath -> a -> TestTree
+testFile :: (Eq a, Show a) => Decoder a -> FilePath -> a -> TestTree
 testFile ty file expected  =
   Test.Tasty.HUnit.testCase (file <> " marshalling") $ do
     program <- Data.Text.IO.readFile file
@@ -59,12 +58,12 @@ testFile ty file expected  =
 
 testOpeningTag :: TestTree
 testOpeningTag =
-  testFile (list openingTagType) "test/dhall/OpeningTag.dhall"
+  testFile (list openingTagDecoder) "test/dhall/OpeningTag.dhall"
     [ OMarquee (Marquee 2 3 False), OFG (Color "red"), OTrim 3 DRight ]
 
 testToken :: TestTree
 testToken =
-  testFile (list tokenType) "test/dhall/Token.dhall"
+  testFile (list tokenDecoder) "test/dhall/Token.dhall"
     [ TokOpen (OMarquee (Marquee 2 3 False))
     , TokMarkup "raw"
     , TokSource (Source { updateInterval = Just 1000
@@ -77,7 +76,7 @@ testToken =
 
 testSource :: TestTree
 testSource =
-  testFile sourceSettingsType "test/dhall/Source.dhall"
+  testFile sourceSettingsDecoder "test/dhall/Source.dhall"
     Source { updateInterval = Just 1000
            , command = [ "bash" ]
            , input = "echo hi"
@@ -86,7 +85,7 @@ testSource =
 
 testMarquee :: TestTree
 testMarquee =
-  testFile marqueeType "test/dhall/Marquee.dhall"
+  testFile marqueeDecoder "test/dhall/Marquee.dhall"
     Marquee { _mqFramesPerChar = 2
             , _mqWidth = 3
             , _mqShouldWrap = False
@@ -94,7 +93,7 @@ testMarquee =
 
 testButton :: TestTree
 testButton =
-  testFile (list buttonType) "test/dhall/Button.dhall"
+  testFile (list buttonDecoder) "test/dhall/Button.dhall"
     [ MouseLeft
     , MouseMiddle
     , MouseRight
@@ -106,29 +105,29 @@ testButton =
 
 testPadding :: TestTree
 testPadding =
-  testFile (list paddingType) "test/dhall/Padding.dhall"
+  testFile (list paddingDecoder) "test/dhall/Padding.dhall"
     [ PLeft, PRight, PSides ]
 
 testEvent :: TestTree
 testEvent =
-  testFile (list eventType) "test/dhall/Event.dhall"
+  testFile (list eventDecoder) "test/dhall/Event.dhall"
     [ Event "some text"
     ]
 
 testCheck :: TestTree
 testCheck =
-  testFile (list checkType) "test/dhall/Check.dhall"
+  testFile (list checkDecoder) "test/dhall/Check.dhall"
   [ Check "" $ SuccessfulExit ""
   , Check "" $ BinaryInPath ""
   ]
 
 testFade :: TestTree
 testFade =
-  testFile fadeType "test/dhall/Fade.dhall" (Fade VUp 3 4)
+  testFile fadeDecoder "test/dhall/Fade.dhall" (Fade VUp 3 4)
 
 testBarSettings :: TestTree
 testBarSettings =
-  testFile barSettingsType "test/dhall/Settings.dhall"
+  testFile barSettingsDecoder "test/dhall/Settings.dhall"
     BarSettings { _bsMonitor = 1
                 , _bsExtraArgs = [ "-l", "10" ]
                 , _bsUpdateInterval = 250000
@@ -138,7 +137,7 @@ testBarSettings =
 
 testConfiguration :: TestTree
 testConfiguration =
-  testFile (list configurationType) "test/dhall/Configuration.dhall"
+  testFile (list configurationDecoder) "test/dhall/Configuration.dhall"
     [ Configuration { _cfgBarTokens = [ TokClose ]
                     , _cfgBarSettings = BarSettings { _bsMonitor = 1
                                                     , _bsExtraArgs = [ "-l", "10" ]
@@ -151,7 +150,7 @@ testConfiguration =
 
 testStateTransitionTable :: TestTree
 testStateTransitionTable =
-  testFile stateTransitionTableType "test/dhall/StateTransitionTable.dhall" $
+  testFile stateTransitionTableDecoder "test/dhall/StateTransitionTable.dhall" $
     STT ( H.fromList [ (("", Event "A", "" ), ("1", []))
                      , (("", Event "B", "" ), ("1", []))
                      , (("", Event "A", "1"), ("2", []))
@@ -163,7 +162,7 @@ testStateTransitionTable =
 
 testPluginMeta :: TestTree
 testPluginMeta =
-  testFile pluginMetaType "test/dhall/PluginMeta.dhall" $
+  testFile pluginMetaDecoder "test/dhall/PluginMeta.dhall" $
     PluginMeta "1" "2" (Just "3") (Just "4") (Just "5") "6" "7" 8
 
 -- These tests assert succesful input reading (i.e. that "contracts" (in dhall terminology)
@@ -175,4 +174,4 @@ dummy file =
     program <- Data.Text.IO.readFile file
     void $
       inputWithSettings (defaultInputSettings & rootDirectory .~ dhallDir)
-      (list configurationType) program
+      (list configurationDecoder) program

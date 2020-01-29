@@ -172,7 +172,7 @@ runHooks environment barRuntime scope hooks = do
 
     let binary = T.unpack $
           head $ hook ^. hookCommand
-          -- ^ this is safe, because we checked the list for emptiness
+          -- this is safe, because we have checked the list for emptiness
           -- during validation.
         args   = map T.unpack $
           tail $ hook ^. hookCommand
@@ -186,17 +186,14 @@ runHooks environment barRuntime scope hooks = do
           barRuntime ^. brSetterScript  <> " " <> T.unpack scope
 
         process =
-          (proc binary args) { std_out = CreatePipe
-                             , std_in  = CreatePipe
-                             , std_err = CreatePipe
-                             , env = Just $
+          (proc binary args) { env = Just $
                                [ ("EMIT", emitter)
                                , ("SET",  setter)
                                , ("GET",  getter)
                                ] <> environment
                              }
 
-    (exitCode, _stdOut, _stdErr) <- lift $
+    (exitCode, _stdout, _stderr) <- lift $
       readCreateProcessWithExitCode process (T.unpack input)
     when (exitCode /= ExitSuccess) $
       throwMaybe

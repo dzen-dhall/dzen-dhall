@@ -3,14 +3,15 @@
 }:
 mkDerivation {
   pname = "th-lift";
-  version = "0.8.0.1";
-  sha256 = "a05133d8eac584fe47d8ff02163bb86193ce1f5de325ba73c98e95f0daa2d8a8";
+  version = "0.8.1";
+  sha256 = "3fa1f4193794d8d6dc7864e20a2f89ab268c321a4b3d254fd38282619f8e5ed7";
   libraryHaskellDepends = [
     base ghc-prim template-haskell th-abstraction
   ];
   testHaskellDepends = [ base ghc-prim template-haskell ];
+  doHaddock = false;
   doCheck = false;
-  homepage = "http://github.com/mboes/th-lift";
+  homepage = "http://github.com/RyanGlScott/th-lift";
   description = "Derive Template Haskell's Lift class for datatypes";
   license = stdenv.lib.licenses.bsd3;
 }

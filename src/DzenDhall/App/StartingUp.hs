@@ -132,27 +132,37 @@ mkBarRuntime cfg = do
           ownerReadMode    `unionFileModes`
           groupReadMode
 
-  handle <- case runtime ^. rtArguments ^. stdoutFlag of
+  (handle, mbProcessHandle) <-
+    case runtime ^. rtArguments ^. stdoutFlag of
 
-    ToStdout -> pure System.IO.stdout
+      ToStdout -> pure (System.IO.stdout, Nothing)
 
-    ToDzen -> do
-      (mb_stdin, _, _, _) <- liftIO $
-        createProcess $
-          (proc (runtime ^. rtDzenBinary) args)
-            { std_out = CreatePipe
-            , std_in  = CreatePipe }
+      ToDzen -> do
+        (mb_stdin, _, _, ph) <- liftIO $
+          createProcess $
+            (proc (runtime ^. rtDzenBinary) args)
+              { std_in  = CreatePipe } -- we never close it
 
-      case mb_stdin of
-        (Just stdin) -> liftIO $ do
-          hSetEncoding  stdin  System.IO.utf8
-          hSetBuffering stdin  LineBuffering
-          pure stdin
-        _ -> App.exit 4 $
-          "Couldn't open IO handles for dzen binary " <>
-          showPack dzenBinary
+        case mb_stdin of
 
-  pure $ BarRuntime cfg 0 namedPipe emitterFile getterFile setterFile handle
+          (Just stdin) -> liftIO $ do
+            hSetEncoding  stdin  System.IO.utf8
+            hSetBuffering stdin  LineBuffering
+            pure (stdin, Just ph)
+
+          _ -> App.exit 4 $
+            "Couldn't open IO handles for dzen binary " <> showPack dzenBinary
+
+  pure $
+    BarRuntime
+    cfg
+    0
+    namedPipe
+    emitterFile
+    getterFile
+    setterFile
+    handle
+    mbProcessHandle
 
 
 -- | During initialization, IORefs for source outputs and caches are created.
@@ -386,7 +396,7 @@ runSourceProcess cp outputRef cacheRef input = do
   (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl, ph) <- createProcess cp
 
   case (mb_stdin_hdl, mb_stdout_hdl, mb_stderr_hdl) of
-    (Just stdin, Just stdout, _) -> do
+    (Just stdin, Just stdout, Just stderr) -> do
       hSetEncoding  stdin  System.IO.utf8
       hSetEncoding  stdout System.IO.utf8
       hSetBuffering stdin  LineBuffering
@@ -402,10 +412,13 @@ runSourceProcess cp outputRef cacheRef input = do
           writeIORef cacheRef Nothing
           writeIORef outputRef (T.pack line)
 
-      void $ waitForProcess ph
+      hClose stdout
+      hClose stderr
 
     _ -> do
       putStrLn "dzen-dhall error: Couldn't open IO handle(s)"
+
+  void $ waitForProcess ph
 
 
 -- | Reads outputs of 'SourceHandle's and puts them into an AST.
