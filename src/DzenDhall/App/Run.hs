@@ -29,10 +29,10 @@ useConfigurations = do
 
   forM_ (view rtConfigurations runtime) \cfg -> do
 
-    (errors, barTokens) <- liftIO $
+    (errors, barTokens) <- liftIO do
       Validation.run $ cfg ^. cfgBarTokens
 
-    unless (null errors) $
+    unless (null errors) do
       App.exit 3 $ Validation.report errors
 
     withEither
@@ -60,13 +60,14 @@ useConfigurations = do
 checkDzen2Executable :: App stage ()
 checkDzen2Executable = do
   runtime <- getRuntime
-  liftIO $
-    checkExecutables [runtime ^. rtDzenBinary] >>= mapM_
-    (\executable -> do
+  liftIO do
+    executables <- checkExecutables [runtime ^. rtDzenBinary]
+    forM_ executables
+      \executable -> do
         putStrLn $
           "Executable not in PATH: " <> executable <>
           ". See --dzen-binary argument."
-        exitWith $ ExitFailure 1)
+        exitWith $ ExitFailure 1
 
 
 waitForDzen :: ProcessHandle -> App Forked ()

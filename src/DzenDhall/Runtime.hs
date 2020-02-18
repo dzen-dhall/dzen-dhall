@@ -7,6 +7,7 @@ import           DzenDhall.Config hiding (Hook)
 
 import           Control.Monad
 import           Control.Arrow
+import           Control.Concurrent.MVar
 import           Data.Maybe
 import           Dhall hiding (maybe)
 import           Lens.Micro
@@ -24,10 +25,11 @@ readRuntime :: Arguments -> IO Runtime
 readRuntime args = do
   let dzenBinary = fromMaybe "dzen2" (args ^. mbDzenBinary)
 
+  exitMVar <- newEmptyMVar
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure (args ^. mbConfigDir)
   exists <- doesDirectoryExist configDir
 
-  unless exists $ do
+  unless exists do
     putStrLn "Configuration directory does not exist, you should create it first by running `dzen-dhall init`."
     exitWith $ ExitFailure 2
 
@@ -48,6 +50,7 @@ readRuntime args = do
     dzenBinary
     args
     supportsANSI
+    exitMVar
 
 
 -- | Create config directory and set file permissions.
@@ -59,7 +62,7 @@ initCommand args = do
 
   exists <- doesDirectoryExist configDir
 
-  when exists $ do
+  when exists do
     putStrLn $ "Configuration directory already exists: " <> configDir
     exitWith (ExitFailure 1)
 

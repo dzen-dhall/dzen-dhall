@@ -38,7 +38,7 @@ run tokens = do
 
 
 filterOutAssertions :: [Token] -> [Token]
-filterOutAssertions = filter $ \case
+filterOutAssertions = filter \case
   TokCheck _ -> False
   _          -> True
 
@@ -107,7 +107,7 @@ getError parser =
 -- | Pretty-print errors.
 report :: [Error] -> Text
 report [] = "No errors."
-report errors = mappend header $ foldMap ((<> "\n\n") . reportError) errors
+report errors = header <> (foldMap ((<> "\n\n") . reportError) errors)
   where
     header = "Some errors encountered while trying to read the configuration:\n\n\n"
 

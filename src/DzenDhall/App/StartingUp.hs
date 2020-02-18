@@ -25,9 +25,9 @@ import           System.Process
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified System.IO
-import qualified Pipes.Prelude as P
 import qualified Pipes as P
+import qualified Pipes.Prelude as P
+import qualified System.IO
 
 
 startUp
@@ -42,11 +42,11 @@ startUp cfg bar = do
 
   environment <- liftIO getEnvironment
 
-  forM_ (state ^. ssSourceQueue) $
+  forM_ (state ^. ssSourceQueue)
     \(source, outputRef, cacheRef, scope) -> do
       mkThread environment barRuntime source outputRef cacheRef scope
 
-  forM_ (state ^. ssVariableDefinitions) $
+  forM_ (state ^. ssVariableDefinitions)
     \(scope, name, value) -> do
 
       let fileName =
@@ -55,7 +55,7 @@ startUp cfg bar = do
             "-v-" <>
             T.unpack name
 
-      liftIO $ do
+      liftIO do
         T.writeFile fileName value
         setFileMode fileName $
           ownerReadMode  `unionFileModes`
@@ -63,8 +63,8 @@ startUp cfg bar = do
           ownerWriteMode `unionFileModes`
           groupWriteMode
 
-  forM_ (H.toList $ state ^. ssImages) $
-    \(imageContents, imageId) -> liftIO $ do
+  forM_ (H.toList $ state ^. ssImages)
+    \(imageContents, imageId) -> liftIO do
       T.writeFile
         (state ^. ssImagePathPrefix <> T.unpack imageId <> ".xbm") imageContents
 
@@ -91,10 +91,10 @@ mkBarRuntime cfg = do
       setterFile         = state ^. ssSetterFile
       variableFilePrefix = state ^. ssVariableFilePrefix
 
-  liftIO $
+  liftIO do
     createNamedPipe namedPipe (ownerReadMode `unionFileModes` ownerWriteMode)
 
-  liftIO $ do
+  liftIO do
     forM_ [ ( [ "#!/usr/bin/env bash"
               , "SCOPE=\"$1\""
               , "EVENT=\"$2\""
@@ -121,7 +121,7 @@ mkBarRuntime cfg = do
               ]
             , setterFile
             )
-          ] $
+          ]
 
       \(codeLines, file) -> do
 
@@ -145,7 +145,7 @@ mkBarRuntime cfg = do
 
         case mb_stdin of
 
-          (Just stdin) -> liftIO $ do
+          (Just stdin) -> liftIO do
             hSetEncoding  stdin  System.IO.utf8
             hSetBuffering stdin  LineBuffering
             pure (stdin, Just ph)
@@ -186,10 +186,10 @@ initialize (BarSource source@Source{escape}) = do
 
       createRefs :: App StartingUp (IORef Text, Cache)
       createRefs = do
-        (outputRef, cacheRef) <- liftIO $
+        (outputRef, cacheRef) <- liftIO do
           liftA2 (,) (newIORef "") (newIORef Nothing)
-        modify $ ssSourceQueue <>~
-          [(source, outputRef, cacheRef, state ^. ssScopeName)]
+        modify $ ssSourceQueue %~
+          ((source, outputRef, cacheRef, state ^. ssScopeName) :)
         pure (outputRef, cacheRef)
 
   (outputRef, cacheRef) <- maybe createRefs pure mbCached
@@ -203,7 +203,8 @@ initialize (BarSlider slider children) = do
 
   -- Convert delay of a slider from microseconds to frames.
   let updateInterval = barSettings ^. bsUpdateInterval
-      slider' = slider & sliderDelay %~ (\x -> x * 1000 `div` positive updateInterval)
+      slider' = slider & sliderDelay %~
+        (\delay -> delay * 1000 `div` positive updateInterval)
 
   BarSlider slider' <$> mapM initialize children
 
@@ -233,7 +234,7 @@ initialize (BarAutomaton address rawSTT rawStateMap) = do
 
         -- Create a reference to the current Bar (so that collectSources will not need to
         -- look up the correct Bar in stateMap).
-        barRef :: IORef (Bar Initialized) <- liftIO $
+        barRef :: IORef (Bar Initialized) <- liftIO do
           newIORef $ fromMaybe mempty (H.lookup initialState stateMap)
 
         let subscription = [ AutomatonSubscription address stt stateMap stateRef barRef ]
@@ -339,7 +340,7 @@ mkThread
   -> App StartingUp ()
 mkThread _ _ Source { command = [] } outputRef cacheRef _scope = do
   let message = "dzen-dhall error: no command specified"
-  liftIO $ do
+  liftIO do
     writeIORef cacheRef $ Just message
     writeIORef outputRef message
 mkThread
@@ -381,7 +382,7 @@ mkThread
 
       -- If update interval is not specified, run the source once.
       Nothing ->
-        liftIO $
+        liftIO do
           runSourceProcess sourceProcess outputRef cacheRef input
 
 
@@ -410,6 +411,7 @@ runSourceProcess cp outputRef cacheRef input = do
 
           -- Drop cache
           writeIORef cacheRef Nothing
+
           writeIORef outputRef (T.pack line)
 
       hClose stdout
@@ -466,6 +468,7 @@ collectSources (BarPad width padding child) = do
 
 collectSources (BarTrim width direction child) = do
   ast <- collectSources child
+
   case direction of
     DRight ->
       pure $ fst $ split width ast

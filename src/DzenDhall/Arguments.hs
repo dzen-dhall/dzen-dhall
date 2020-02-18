@@ -47,6 +47,7 @@ data Command
   | Plug PlugCommand
   | Unplug UnplugCommand
   | Validate ValidateCommand
+  | Version
   deriving (Show, Eq)
 
 data Arguments
@@ -104,6 +105,11 @@ argParser = Arguments
           ( info
             ( Validate <$> validateCommandParser )
             ( progDesc "Validate the configuration without running it." )
+          )
+       <> command "version"
+          ( info
+            ( pure Version )
+            ( progDesc "Print version info" )
           )
         )
       )
