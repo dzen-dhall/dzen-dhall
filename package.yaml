@@ -1,5 +1,5 @@
 name:        dzen-dhall
-version:     1.0.1
+version:     1.0.2
 synopsis:    Configure dzen2 bars in Dhall language
 description: Configure dzen2 bars in Dhall language
 maintainer: Vladimir Kalnitsky <klntsky@gmail.com>

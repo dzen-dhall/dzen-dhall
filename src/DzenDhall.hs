@@ -9,11 +9,13 @@ import           DzenDhall.Commands.Validate
 import           DzenDhall.Runtime
 import           DzenDhall.Extra (waitForever)
 
+import qualified Paths_dzen_dhall as Paths
+
+import           Data.Version (showVersion)
 import           Lens.Micro
 import           Options.Applicative (execParser)
 import qualified GHC.IO.Encoding
 import qualified System.IO
-
 
 main :: IO ()
 main = do
@@ -45,3 +47,6 @@ main = do
     Just (Validate commandArgs) -> do
       runtime <- readRuntime arguments
       runApp runtime () (validateCommand commandArgs)
+
+    Just Version -> do
+      putStrLn $ "v" ++ showVersion Paths.version
