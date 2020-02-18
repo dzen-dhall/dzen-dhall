@@ -205,3 +205,10 @@ timely interval task = do
                 sec * 1000000 + nsec `div` 1000
 
       liftIO $ threadDelay $ fromIntegral delay
+
+
+waitForExit :: App a ()
+waitForExit = do
+  runtime <- getRuntime
+  liftIO do
+    takeMVar (runtime ^. rtExitMVar)

@@ -7,7 +7,6 @@ import           DzenDhall.Commands.Plug
 import           DzenDhall.Commands.Unplug
 import           DzenDhall.Commands.Validate
 import           DzenDhall.Runtime
-import           DzenDhall.Extra (waitForever)
 
 import qualified Paths_dzen_dhall as Paths
 
@@ -29,7 +28,7 @@ main = do
       runtime <- readRuntime arguments
       runApp runtime () do
         useConfigurations
-        liftIO waitForever
+        waitForExit
 
     Just Init -> do
       initCommand arguments

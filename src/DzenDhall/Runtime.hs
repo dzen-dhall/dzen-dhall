@@ -7,6 +7,7 @@ import           DzenDhall.Config hiding (Hook)
 
 import           Control.Monad
 import           Control.Arrow
+import           Control.Concurrent.MVar
 import           Data.Maybe
 import           Dhall hiding (maybe)
 import           Lens.Micro
@@ -24,6 +25,7 @@ readRuntime :: Arguments -> IO Runtime
 readRuntime args = do
   let dzenBinary = fromMaybe "dzen2" (args ^. mbDzenBinary)
 
+  exitMVar <- newEmptyMVar
   configDir <- maybe (getXdgDirectory XdgConfig "dzen-dhall") pure (args ^. mbConfigDir)
   exists <- doesDirectoryExist configDir
 
@@ -48,6 +50,7 @@ readRuntime args = do
     dzenBinary
     args
     supportsANSI
+    exitMVar
 
 
 -- | Create config directory and set file permissions.

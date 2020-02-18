@@ -25,9 +25,9 @@ import           System.Process
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified System.IO
-import qualified Pipes.Prelude as P
 import qualified Pipes as P
+import qualified Pipes.Prelude as P
+import qualified System.IO
 
 
 startUp

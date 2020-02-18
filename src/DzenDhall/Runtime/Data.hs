@@ -5,6 +5,7 @@ import           DzenDhall.Arguments
 import           DzenDhall.Data
 import           DzenDhall.Config hiding (Hook)
 
+import           Control.Concurrent.MVar
 import           Data.IORef
 import           Dhall hiding (maybe)
 import           Lens.Micro.TH
@@ -21,8 +22,9 @@ data Runtime = Runtime
   , _rtDzenBinary :: String
   , _rtArguments :: Arguments
   , _rtSupportsANSI :: Bool
+  , _rtExitMVar :: MVar ()
   }
-  deriving (Eq, Show)
+  deriving (Eq)
 
 makeLenses ''Runtime
 
