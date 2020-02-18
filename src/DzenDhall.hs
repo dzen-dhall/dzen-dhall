@@ -21,10 +21,11 @@ main = do
   GHC.IO.Encoding.setLocaleEncoding System.IO.utf8
 
   arguments <- execParser argumentsParser
+
   case arguments ^. mbCommand of
     Nothing -> do
       runtime <- readRuntime arguments
-      runApp runtime () $ do
+      runApp runtime () do
         useConfigurations
         liftIO waitForever
 
@@ -33,12 +34,12 @@ main = do
 
     Just (Plug commandArgs) -> do
       runtime <- readRuntime arguments
-      runApp runtime () $
+      runApp runtime () do
         plugCommand commandArgs
 
     Just (Unplug commandArgs) -> do
       runtime <- readRuntime arguments
-      runApp runtime () $
+      runApp runtime () do
         unplugCommand commandArgs
 
     Just (Validate commandArgs) -> do

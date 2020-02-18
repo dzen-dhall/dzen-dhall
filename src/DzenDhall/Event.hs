@@ -51,15 +51,15 @@ launchEventListener subscriptions clickableAreas = do
   environment <- liftIO getEnvironment
 
 
-  liftIO $ runEffect $ do
+  liftIO $ runEffect do
 
-    fh <- lift $ handle handler $ do
+    fh <- lift $ handle handler do
       fh <- openFile namedPipe ReadWriteMode
       hSetBuffering fh LineBuffering
       pure fh
 
     for (P.fromHandle fh) \line -> do
-      lift $ do
+      lift do
 
         case parsePipeCommand line of
 
@@ -75,7 +75,7 @@ launchEventListener subscriptions clickableAreas = do
           Just (Click scope identifier) -> do
             whenJust (H.lookup identifier clickableAreas) $
               \command -> do
-                void $ forkIO $ do
+                void $ forkIO do
 
                   let emitter =
                         barRuntime ^. brEmitterScript <> " " <> T.unpack scope
@@ -119,7 +119,7 @@ processSubscriptions barRuntime scope event subscriptions = do
           -- Match "any" event.
           H.lookup (scope, Event "*", currentState) transitions
 
-      whenJust mbNext \(nextState, hooks) -> void $ forkIO $ do
+      whenJust mbNext \(nextState, hooks) -> void $ forkIO do
 
         let environment' =
               [ ( "EVENT"  , T.unpack $ runRender event)
@@ -142,7 +142,7 @@ processSubscriptions barRuntime scope event subscriptions = do
             -- Somethimes a transition is only added for its outside-world effects,
             -- and we can't distinguish between such a transition and a normal one.
 
-            when (isJust mbUnit) $ do
+            when (isJust mbUnit) do
               writeIORef barRef nextBar
               writeIORef stateRef nextState
               runStateVariableSetter barRuntime scope address nextState
